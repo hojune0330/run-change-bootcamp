@@ -1,0 +1,91 @@
+.demo-entry {
+  align-items: center;
+  background: var(--color-canvas);
+  color: var(--color-text);
+  display: grid;
+  min-block-size: 100dvb;
+  padding: var(--space-6) var(--space-4);
+}
+
+.demo-entry__panel {
+  display: grid;
+  gap: var(--space-4);
+  inline-size: min(100%, 42rem);
+  margin-inline: auto;
+  min-inline-size: 0;
+}
+
+.demo-entry__header {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  padding-block-end: var(--space-4);
+}
+
+.demo-entry__header > p {
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  margin: var(--space-5) 0 var(--space-2);
+}
+
+.demo-entry__header h1 {
+  font-size: var(--font-size-display);
+  line-height: 1.15;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.demo-entry__header > span,
+.demo-entry__note {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: var(--space-3) 0 0;
+  word-break: keep-all;
+}
+
+.demo-entry__note span {
+  display: block;
+}
+
+.demo-entry__choices,
+.demo-entry__field {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.demo-entry__field > span {
+  font-size: var(--font-size-small);
+  font-weight: 620;
+}
+
+.demo-entry__field select {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  color: var(--color-text);
+  min-block-size: var(--target-min);
+  padding-inline: var(--space-3);
+}
+
+.demo-entry__field select:focus-visible {
+  outline: var(--focus-width) solid var(--color-accent);
+  outline-offset: var(--space-1);
+}
+
+.demo-entry__actions {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+}
+
+.app-shell__main .participant-screen p {
+  overflow-wrap: break-word;
+  word-break: keep-all;
+}
+
+@media (min-width: 48rem) {
+  .demo-entry {
+    padding: var(--space-10) var(--space-6);
+  }
+}

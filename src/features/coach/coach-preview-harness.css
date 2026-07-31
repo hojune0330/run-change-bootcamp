@@ -1,0 +1,12 @@
+.coach-preview-harness {
+  inline-size: min(100%, var(--content-max));
+  margin-inline: auto;
+  min-inline-size: 0;
+  padding: var(--space-6) var(--space-4) var(--space-12);
+}
+
+@media (min-width: 48rem) {
+  .coach-preview-harness {
+    padding-inline: var(--space-6);
+  }
+}

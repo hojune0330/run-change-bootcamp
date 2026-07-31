@@ -1,0 +1,10 @@
+project_id = "run-change-bootcamp"
+
+[functions.screenshot-to-metric-draft]
+verify_jwt = true
+
+[functions.draft-feedback]
+verify_jwt = true
+
+[functions.review-feedback]
+verify_jwt = true

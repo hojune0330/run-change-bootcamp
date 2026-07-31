@@ -1,0 +1,185 @@
+.coach-roster,
+.coach-detail {
+  min-inline-size: 0;
+}
+
+.coach-section-heading {
+  align-items: flex-end;
+  display: flex;
+  gap: var(--space-4);
+  justify-content: space-between;
+  margin-block-end: var(--space-4);
+  min-inline-size: 0;
+}
+
+.coach-section-heading h2,
+.coach-detail h2,
+.coach-detail h3 {
+  font-size: var(--font-size-h2);
+  line-height: 1.35;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.coach-section-heading > span,
+.coach-eyebrow {
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  font-weight: 620;
+}
+
+.coach-eyebrow {
+  letter-spacing: 0.04em;
+  margin: 0 0 var(--space-1);
+}
+
+.coach-roster__table-region {
+  display: none;
+}
+
+.coach-roster__table-region table {
+  border-collapse: collapse;
+  inline-size: 100%;
+  table-layout: fixed;
+}
+
+.coach-roster__name-column {
+  inline-size: 24%;
+}
+
+.coach-roster__cohort-column {
+  inline-size: 12%;
+}
+
+.coach-roster__table-region th,
+.coach-roster__table-region td {
+  border-block-end: var(--border-width) solid var(--color-border);
+  font-size: var(--font-size-small);
+  padding: var(--space-3) var(--space-2);
+  text-align: start;
+  vertical-align: top;
+}
+
+.coach-roster__table-region thead th {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-label);
+  font-weight: 620;
+}
+
+.coach-name-button,
+.coach-detail-button {
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--color-accent);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 620;
+  min-block-size: var(--target-min);
+  overflow-wrap: anywhere;
+  padding: var(--space-2);
+  text-align: start;
+}
+
+.coach-name-button {
+  display: block;
+  inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coach-name-button:focus-visible,
+.coach-detail-button:focus-visible {
+  outline: var(--focus-width) solid var(--color-accent);
+  outline-offset: var(--space-1);
+}
+
+.coach-name-button[aria-pressed="true"],
+.coach-detail-button[aria-pressed="true"] {
+  background: var(--color-accent-soft);
+}
+
+.coach-detail-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.coach-roster__cards {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.coach-participant-card {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-panel);
+  min-inline-size: 0;
+  padding: var(--space-4);
+}
+
+.coach-participant-card[aria-current="true"] {
+  border-color: var(--color-accent);
+}
+
+.coach-participant-card__heading {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+  min-inline-size: 0;
+}
+
+.coach-participant-card__heading > div {
+  min-inline-size: 0;
+}
+
+.coach-participant-card__heading p {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-label);
+  margin: 0 0 var(--space-1);
+}
+
+.coach-participant-card__heading h3 {
+  font-size: var(--font-size-body);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.coach-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+}
+
+.coach-empty {
+  background: var(--color-surface-muted);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-panel);
+  color: var(--color-text-muted);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+
+@media (min-width: 80rem) {
+  .coach-roster__table-region {
+    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-panel);
+    display: block;
+    overflow-inline: auto;
+  }
+
+  .coach-roster__cards {
+    display: none;
+  }
+
+  .coach-roster__table-region table {
+    min-inline-size: 58rem;
+  }
+}

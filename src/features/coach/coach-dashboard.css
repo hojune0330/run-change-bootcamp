@@ -1,0 +1,107 @@
+.coach-dashboard {
+  display: grid;
+  gap: var(--space-8);
+  min-inline-size: 0;
+}
+
+.coach-dashboard__header {
+  align-items: flex-end;
+  border-block-end: var(--border-width) solid var(--color-border);
+  display: flex;
+  gap: var(--space-4);
+  justify-content: space-between;
+  padding-block-end: var(--space-6);
+}
+
+.coach-dashboard__header > div {
+  min-inline-size: 0;
+}
+
+.coach-dashboard__header p,
+.coach-dashboard__section-heading p {
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  font-weight: 620;
+  letter-spacing: 0.04em;
+  margin: 0 0 var(--space-2);
+}
+
+.coach-dashboard__header h1 {
+  font-size: clamp(var(--font-size-h1), 6vw, var(--font-size-display));
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.coach-dashboard__header span {
+  color: var(--color-text-muted);
+  display: block;
+  line-height: 1.55;
+  margin-block-start: var(--space-3);
+  max-inline-size: 44rem;
+}
+
+.coach-summary {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(min(8rem, 100%), 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.coach-summary li {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-panel);
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  padding: var(--space-4);
+}
+
+.coach-summary span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-label);
+  font-weight: 620;
+}
+
+.coach-summary strong {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-metric);
+  overflow-wrap: anywhere;
+}
+
+.coach-dashboard__participants,
+.coach-dashboard__publishers,
+.coach-dashboard__review {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr);
+  min-inline-size: 0;
+}
+
+.coach-dashboard__section {
+  border-block-start: var(--border-width) solid var(--color-border);
+  min-inline-size: 0;
+  padding-block-start: var(--space-6);
+}
+
+.coach-dashboard__section-heading {
+  margin-block-end: var(--space-4);
+}
+
+.coach-dashboard__section-heading h2 {
+  font-size: var(--font-size-h1);
+  margin: 0;
+}
+
+@media (min-width: 64rem) {
+  .coach-dashboard__publishers,
+  .coach-dashboard__review {
+    align-items: start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

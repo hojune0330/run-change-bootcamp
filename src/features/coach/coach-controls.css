@@ -1,0 +1,98 @@
+.coach-filters {
+  align-items: end;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-panel);
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+  padding: var(--space-4);
+}
+
+.coach-field {
+  color: var(--color-text-muted);
+  display: grid;
+  font-size: var(--font-size-label);
+  font-weight: 620;
+  gap: var(--space-2);
+  min-inline-size: 0;
+}
+
+.coach-field input,
+.coach-field select,
+.coach-field textarea {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  color: var(--color-text);
+  inline-size: 100%;
+  min-block-size: var(--target-min);
+  min-inline-size: 0;
+  padding: var(--space-2) var(--space-3);
+}
+
+.coach-field textarea {
+  line-height: 1.5;
+  min-block-size: calc(var(--space-12) * 2);
+  resize: vertical;
+}
+
+.coach-field input:focus-visible,
+.coach-field select:focus-visible,
+.coach-field textarea:focus-visible,
+.coach-choice:focus-within {
+  outline: var(--focus-width) solid var(--color-accent);
+  outline-offset: var(--space-1);
+}
+
+.coach-field--search {
+  grid-column: span 1;
+}
+
+.coach-filters__result {
+  align-self: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  margin: 0;
+}
+
+.coach-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.coach-form__grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+}
+
+.coach-form__actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}
+
+.coach-checkbox {
+  align-items: center;
+  color: var(--color-text-muted);
+  display: inline-flex;
+  font-size: var(--font-size-small);
+  font-weight: 620;
+  gap: var(--space-2);
+  min-block-size: var(--target-min);
+}
+
+.coach-checkbox input {
+  accent-color: var(--color-accent);
+  block-size: var(--space-5);
+  inline-size: var(--space-5);
+}
+
+@media (min-width: 48rem) {
+  .coach-field--search {
+    grid-column: span 2;
+  }
+}

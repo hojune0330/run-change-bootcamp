@@ -1,0 +1,170 @@
+.button {
+  align-items: center;
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 620;
+  gap: var(--space-2);
+  justify-content: center;
+  min-block-size: var(--target-min);
+  padding: var(--space-2) var(--space-4);
+  text-align: center;
+  text-decoration: none;
+  transition:
+    transform var(--motion-fast) var(--ease-out),
+    opacity var(--motion-fast) var(--ease-out);
+}
+
+.button:hover {
+  text-decoration: none;
+}
+
+.button:active {
+  transform: scale(0.98);
+}
+
+.button:focus-visible {
+  outline: var(--focus-width) solid var(--color-accent);
+  outline-offset: var(--space-1);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+
+.button--primary {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.button--primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.button--secondary {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.button--secondary:hover {
+  background: var(--color-surface-muted);
+}
+
+.button--quiet {
+  background: transparent;
+  color: var(--color-accent);
+}
+
+.button--quiet:hover {
+  background: var(--color-accent-soft);
+}
+
+.button__icon {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.badge {
+  align-items: center;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-control);
+  display: inline-flex;
+  font-size: var(--font-size-label);
+  font-weight: 620;
+  inline-size: fit-content;
+  letter-spacing: 0.02em;
+  min-block-size: var(--space-6);
+  padding: var(--space-1) var(--space-2);
+}
+
+.badge--neutral {
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+}
+
+.badge--success {
+  background: var(--color-success-soft);
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+
+.badge--warning {
+  background: var(--color-warning-soft);
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.badge--critical {
+  background: var(--color-critical-soft);
+  border-color: var(--color-critical);
+  color: var(--color-critical);
+}
+
+.card {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-panel);
+  min-inline-size: 0;
+  padding: var(--space-5);
+}
+
+.card--muted {
+  background: var(--color-surface-muted);
+}
+
+.card__header {
+  align-items: flex-start;
+  display: flex;
+  gap: var(--space-4);
+  justify-content: space-between;
+}
+
+.card__heading {
+  min-inline-size: 0;
+}
+
+.card__eyebrow {
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  font-weight: 560;
+  letter-spacing: 0.04em;
+  margin: 0 0 var(--space-2);
+  overflow-wrap: anywhere;
+}
+
+.card__title {
+  font-size: var(--font-size-h2);
+  font-weight: 620;
+  line-height: 1.35;
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.card__action {
+  flex: 0 0 auto;
+}
+
+.card__body {
+  margin-block-start: var(--space-4);
+  min-inline-size: 0;
+}
+
+@media (min-width: 48rem) {
+  .card {
+    padding: var(--space-6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition-duration: 0.01ms;
+  }
+}
