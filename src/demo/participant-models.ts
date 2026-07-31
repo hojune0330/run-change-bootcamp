@@ -1,3 +1,4 @@
+import { toBrowserPath } from "../app/base-path.ts"
 import type {
   FeedViewModel,
   MyChangeViewModel,
@@ -68,7 +69,7 @@ export function feedModel(state: DemoState, participantId: DemoParticipantId): F
         authorName: participant(comment.authorId).displayName,
         body: comment.body,
       })),
-      shareUrl: `${window.location.origin}/feed#${post.id}`,
+      shareUrl: `${window.location.origin}${toBrowserPath("/feed")}#${post.id}`,
     })),
   }
 }

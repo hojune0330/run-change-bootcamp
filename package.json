@@ -9,8 +9,11 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/clean-dist.mjs && tsc --noEmit && vite build",
+    "build": "node scripts/clean-dist.mjs && tsc --noEmit && vite build --mode pages && node scripts/prepare-pages.mjs",
+    "build:local": "node scripts/clean-dist.mjs && tsc --noEmit && vite build --mode preview",
+    "serve:pages": "node scripts/pages-static-server.mjs",
     "preview": "vite preview",
+    "preview:pages": "vite preview --mode pages",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",

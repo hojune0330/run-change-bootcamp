@@ -1,6 +1,7 @@
 import type { MouseEvent, ReactNode } from "react"
 import { Badge } from "../components/primitives/index.ts"
 import "./AppShell.css"
+import { toBrowserPath } from "./base-path.ts"
 import { type AppMode, MODE_LABELS, MODE_SWITCH_LINKS, NAVIGATION_BY_MODE } from "./navigation.tsx"
 
 export type AppShellProps = {
@@ -35,7 +36,7 @@ export function AppShell({
         <a
           aria-label="RUN CHANGE 홈"
           className="app-shell__brand"
-          href="/"
+          href={toBrowserPath("/")}
           onClick={(event) => navigate(event, "/")}
         >
           <span>RUN</span>
@@ -45,7 +46,7 @@ export function AppShell({
           <Badge tone="neutral">{sessionLabel}</Badge>
           <a
             className="app-shell__mode-switch"
-            href={modeSwitchLink.href}
+            href={toBrowserPath(modeSwitchLink.href)}
             onClick={(event) => navigate(event, modeSwitchLink.href)}
           >
             {modeSwitchLink.label}
@@ -62,7 +63,7 @@ export function AppShell({
                 <a
                   aria-current={isCurrent ? "page" : undefined}
                   className="app-shell__navigation-link"
-                  href={item.href}
+                  href={toBrowserPath(item.href)}
                   onClick={(event) => navigate(event, item.href)}
                 >
                   <span className="app-shell__navigation-icon">{item.icon}</span>

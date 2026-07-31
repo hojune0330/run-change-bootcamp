@@ -1,5 +1,10 @@
 import { defineConfig } from "@playwright/test"
 
+const readEnvironment = (name: string) => process.env[name]
+const usePagesStaticServer = readEnvironment("PAGES_STATIC_SERVER") === "1"
+const usePagesPreview = readEnvironment("PAGES_PREVIEW") === "1"
+const serverPort = readEnvironment("PLAYWRIGHT_PORT") ?? "4173"
+
 export default defineConfig({
   testDir: "./e2e",
   outputDir: ".artifacts/playwright",
@@ -8,7 +13,7 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL: `http://127.0.0.1:${serverPort}`,
     colorScheme: "light",
     locale: "ko-KR",
     screenshot: "only-on-failure",
@@ -29,8 +34,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm preview --host 127.0.0.1 --port 4173",
-    url: "http://127.0.0.1:4173",
+    command: usePagesStaticServer
+      ? `pnpm serve:pages --host 127.0.0.1 --port ${serverPort}`
+      : usePagesPreview
+        ? `pnpm preview:pages --host 127.0.0.1 --port ${serverPort}`
+        : `pnpm preview --host 127.0.0.1 --port ${serverPort}`,
+    url: `http://127.0.0.1:${serverPort}`,
     reuseExistingServer: false,
   },
 })
