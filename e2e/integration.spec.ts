@@ -15,7 +15,7 @@ test("participant journey persists completion and a manual record at 375px", asy
 }, testInfo) => {
   test.skip(testInfo.project.name !== "mobile-375", "mobile participant journey")
   // Given
-  await page.goto("/")
+  await page.goto("./")
   await page.evaluate(() => window.localStorage.clear())
   await page.reload()
   await page.getByRole("button", { name: "참여자로 시작" }).click()
@@ -72,7 +72,7 @@ test("coach journey confirms and persists a revised schedule at 1280px", async (
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop-1280", "desktop coach journey")
   // Given
-  await page.goto("/")
+  await page.goto("./")
   await page.evaluate(() => window.localStorage.clear())
   await page.reload()
   await page.getByRole("button", { name: "코치로 시작" }).click()

@@ -1,6 +1,10 @@
 import { defineConfig } from "@playwright/test"
 
-export default defineConfig({
+const serverPort = process.env["PLAYWRIGHT_PORT"] ?? "4173"
+const serverOrigin = `http://127.0.0.1:${serverPort}`
+const pagesBasePath = "/run-change-bootcamp/"
+
+export const sharedPlaywrightConfig = defineConfig({
   testDir: "./e2e",
   outputDir: ".artifacts/playwright",
   fullyParallel: true,
@@ -8,7 +12,6 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
   use: {
-    baseURL: "http://127.0.0.1:4173",
     colorScheme: "light",
     locale: "ko-KR",
     screenshot: "only-on-failure",
@@ -28,9 +31,15 @@ export default defineConfig({
       use: { viewport: { width: 1280, height: 800 } },
     },
   ],
+})
+
+export default defineConfig(sharedPlaywrightConfig, {
+  use: {
+    baseURL: `${serverOrigin}${pagesBasePath}`,
+  },
   webServer: {
-    command: "pnpm preview --host 127.0.0.1 --port 4173",
-    url: "http://127.0.0.1:4173",
+    command: `pnpm serve:pages --host 127.0.0.1 --port ${serverPort}`,
+    url: `${serverOrigin}${pagesBasePath}`,
     reuseExistingServer: false,
   },
 })

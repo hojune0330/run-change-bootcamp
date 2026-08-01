@@ -1,23 +1,25 @@
 import { useEffect, useState, useSyncExternalStore } from "react"
 import { createDemoRepository } from "../demo/index.ts"
-import "./App.css"
+import { toAppPath, toBrowserPath } from "./base-path.ts"
 import { CoachApp } from "./CoachApp.tsx"
 import { DemoSessionChooser } from "./DemoSessionChooser.tsx"
 import { ParticipantApp } from "./ParticipantApp.tsx"
 import { resolveRoute } from "./routes.ts"
+import "./App.css"
 
 export function App() {
   const [repository] = useState(() => createDemoRepository(window.localStorage))
   const state = useSyncExternalStore(repository.subscribe, repository.getSnapshot)
-  const [pathname, setPathname] = useState(() => window.location.pathname)
+  const [pathname, setPathname] = useState(() => toAppPath(window.location.pathname))
   useEffect(() => {
-    const syncPath = () => setPathname(window.location.pathname)
+    const syncPath = () => setPathname(toAppPath(window.location.pathname))
     window.addEventListener("popstate", syncPath)
     return () => window.removeEventListener("popstate", syncPath)
   }, [])
   const navigate = (href: string) => {
-    window.history.pushState({}, "", href)
-    setPathname(href)
+    const browserPath = toBrowserPath(href)
+    window.history.pushState({}, "", browserPath)
+    setPathname(toAppPath(browserPath))
   }
   const route = resolveRoute(pathname)
 

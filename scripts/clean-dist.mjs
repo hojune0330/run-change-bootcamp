@@ -1,10 +1,17 @@
 import { existsSync, readdirSync, rmdirSync, unlinkSync } from "node:fs"
-import { dirname, join, resolve } from "node:path"
+import { join, resolve, sep } from "node:path"
 
 const projectRoot = process.cwd()
-const distPath = resolve(projectRoot, "dist")
+const outputDirectory = process.argv[2] ?? "dist"
+const allowedOutputDirectories = new Set(["dist", ".artifacts/local-preview"])
 
-if (dirname(distPath) !== projectRoot) {
+if (!allowedOutputDirectories.has(outputDirectory)) {
+  throw new Error(`Refusing to clean unsupported output directory: ${outputDirectory}`)
+}
+
+const distPath = resolve(projectRoot, outputDirectory)
+
+if (distPath === projectRoot || !distPath.startsWith(`${projectRoot}${sep}`)) {
   throw new Error("Refusing to clean a directory outside the project root.")
 }
 
