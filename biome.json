@@ -54,6 +54,7 @@
       "includes": [
         "vite.config.ts",
         "vitest.deployment.config.ts",
+        "vitest.integration.config.ts",
         "playwright.config.ts",
         "playwright.local.config.ts"
       ],

@@ -1,7 +1,6 @@
 import { defineConfig } from "@playwright/test"
 
-const readEnvironment = (name: string) => process.env[name]
-const serverPort = readEnvironment("PLAYWRIGHT_PORT") ?? "4173"
+const serverPort = process.env["PLAYWRIGHT_PORT"] ?? "4173"
 const serverOrigin = `http://127.0.0.1:${serverPort}`
 const pagesBasePath = "/run-change-bootcamp/"
 

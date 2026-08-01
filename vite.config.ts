@@ -12,6 +12,7 @@ const PROJECT_TEST_EXCLUDES = [
   "dev-dist/**",
   "dist/**",
   "scripts/pages-deployment.test.ts",
+  "src/app/*.integration.test.tsx",
 ] as const
 
 export default defineConfig(({ mode }) => {

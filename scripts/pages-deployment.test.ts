@@ -4,10 +4,10 @@ import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
+import { deploymentBuildTimeoutMs } from "./pages-deployment-timeouts.ts"
 
 const repositoryRoot = resolve(import.meta.dirname, "..")
 const viteCli = resolve(repositoryRoot, "node_modules", "vite", "bin", "vite.js")
-const deploymentBuildTimeoutMs = 15_000
 const ManifestSchema = z.object({
   start_url: z.string(),
   scope: z.string(),

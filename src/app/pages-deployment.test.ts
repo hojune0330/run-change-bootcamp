@@ -3,7 +3,7 @@ import { toAppPath, toBrowserPath } from "./base-path.ts"
 import { resolveRoute } from "./routes.ts"
 
 describe("GitHub Pages subpath routing", () => {
-  it("resolves a direct participant route below the repository base path", () => {
+  it("resolves only an exact participant route below the repository base path", () => {
     // Given
     const directRoutePath = "/run-change-bootcamp/record"
 
@@ -12,6 +12,9 @@ describe("GitHub Pages subpath routing", () => {
 
     // Then
     expect(route).toEqual({ kind: "participant", href: "/record" })
+    expect(resolveRoute(`${directRoutePath}/abc`, "/run-change-bootcamp/")).toEqual({
+      kind: "not_found",
+    })
   })
 
   it("keeps client-side links inside the repository base path", () => {
