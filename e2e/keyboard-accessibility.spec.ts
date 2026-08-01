@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test"
 
 test("chooser keyboard traversal reaches every control in reading order", async ({ page }) => {
   // Given
-  await page.goto("/")
+  await page.goto("./")
   await page.evaluate(() => window.localStorage.clear())
   await page.reload()
 

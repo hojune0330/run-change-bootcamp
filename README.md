@@ -27,14 +27,32 @@ RUN CHANGE 부트캠프 PoC는 8주 러닝 부트캠프 운영을 위해 만든 
 ```bash
 pnpm install
 pnpm test
+pnpm test:deployment
 pnpm typecheck
 pnpm lint
-pnpm build
 pnpm test:e2e
 pnpm dev
 ```
 
-개발 서버가 뜨면 브라우저에서 표시된 Vite URL을 엽니다.
+`pnpm test:e2e`는 Pages용 `dist`를 새로 빌드한 뒤 정적 호스트 충실도 서버에서 전체
+Playwright 시나리오를 실행합니다. 따라서 앞서 어떤 모드로 빌드했는지에 의존하지 않습니다.
+
+빌드와 미리보기 모드는 다음처럼 짝을 맞춥니다.
+
+```bash
+# 기본값: GitHub Pages 경로(/run-change-bootcamp/)용 dist
+pnpm build
+pnpm preview
+
+# 원점 루트(/)용 .artifacts/local-preview
+pnpm build:local
+pnpm preview:local
+pnpm test:e2e:local
+```
+
+개발 중에는 `pnpm dev`가 원점 루트에서 실행됩니다. Pages 정적 호스트의 실제 404 응답까지
+확인하려면 `pnpm build` 후 `pnpm serve:pages`를 사용합니다. PR과 배포 워크플로의 현재 상태,
+명령 계약, 직접 경로 검증은 [GitHub Pages 배포 문서](docs/github-pages.md)에 정리되어 있습니다.
 
 ## 데모 접근
 

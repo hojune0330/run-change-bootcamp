@@ -1,6 +1,6 @@
 import { createReadStream, existsSync, statSync } from "node:fs"
 import { createServer } from "node:http"
-import { extname, resolve } from "node:path"
+import { extname, isAbsolute, relative, resolve, sep } from "node:path"
 import { createGzip } from "node:zlib"
 
 const distRoot = resolve(process.cwd(), "dist")
@@ -16,6 +16,7 @@ const contentTypes = {
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
   ".svg": "image/svg+xml",
+  ".txt": "text/plain; charset=utf-8",
   ".webmanifest": "application/manifest+json",
   ".woff": "font/woff",
   ".woff2": "font/woff2",
@@ -23,19 +24,30 @@ const contentTypes = {
 const compressibleExtensions = new Set([".css", ".html", ".js", ".json", ".svg", ".webmanifest"])
 
 function distPathFor(pathname) {
-  if (pathname === "/" || pathname === pagesBasePath) return resolve(distRoot, "index.html")
-  const artifactPath = pathname
-  const relativePath = artifactPath.startsWith(pagesBasePath)
-    ? artifactPath.slice(pagesBasePath.length - 1)
-    : artifactPath
-  const targetPath = resolve(distRoot, `.${relativePath}`)
-  if (!targetPath.startsWith(distRoot)) return null
+  if (!pathname.startsWith(pagesBasePath)) return null
+  const artifactPath = pathname.slice(pagesBasePath.length)
+  const targetPath = resolve(distRoot, artifactPath || "index.html")
+  const relativeTarget = relative(distRoot, targetPath)
+  if (
+    relativeTarget === ".." ||
+    relativeTarget.startsWith(`..${sep}`) ||
+    isAbsolute(relativeTarget)
+  ) {
+    return null
+  }
   return targetPath
 }
 
 const server = createServer((request, response) => {
   const requestUrl = new URL(request.url ?? "/", `http://${host}:${port}`)
   const targetPath = distPathFor(requestUrl.pathname)
+  if (targetPath === null) {
+    response.statusCode = 404
+    response.setHeader("Content-Type", "text/plain; charset=utf-8")
+    response.setHeader("Cache-Control", "no-cache")
+    response.end("Not Found")
+    return
+  }
   const fallbackPath = resolve(distRoot, "404.html")
   const filePath =
     targetPath !== null && existsSync(targetPath) && statSync(targetPath).isFile()
@@ -43,23 +55,23 @@ const server = createServer((request, response) => {
       : fallbackPath
   const extension = extname(filePath)
   const fileStats = statSync(filePath)
-  const entityTag = `W/"${fileStats.size}-${Math.trunc(fileStats.mtimeMs)}"`
+  const isCompressible = compressibleExtensions.has(extension)
+  const usesGzip = isCompressible && request.headers["accept-encoding"]?.includes("gzip") === true
+  const representation = usesGzip ? "gzip" : "identity"
+  const entityTag = `W/"${fileStats.size}-${Math.trunc(fileStats.mtimeMs)}-${representation}"`
 
   response.statusCode = filePath === fallbackPath ? 404 : 200
   response.setHeader("Content-Type", contentTypes[extension] ?? "application/octet-stream")
   response.setHeader("Cache-Control", "no-cache")
   response.setHeader("ETag", entityTag)
+  if (isCompressible) response.setHeader("Vary", "Accept-Encoding")
   if (response.statusCode === 200 && request.headers["if-none-match"] === entityTag) {
     response.statusCode = 304
     response.end()
     return
   }
-  if (
-    compressibleExtensions.has(extension) &&
-    request.headers["accept-encoding"]?.includes("gzip")
-  ) {
+  if (usesGzip) {
     response.setHeader("Content-Encoding", "gzip")
-    response.setHeader("Vary", "Accept-Encoding")
     createReadStream(filePath).pipe(createGzip()).pipe(response)
     return
   }

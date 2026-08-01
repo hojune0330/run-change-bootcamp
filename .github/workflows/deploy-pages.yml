@@ -36,6 +36,9 @@ jobs:
       - name: Run unit and integration tests
         run: pnpm test
 
+      - name: Run serialized deployment tests
+        run: pnpm test:deployment
+
       - name: Check types
         run: pnpm typecheck
 
@@ -44,6 +47,12 @@ jobs:
 
       - name: Build the Pages artifact
         run: pnpm build
+
+      - name: Install deterministic Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run Pages browser, PWA, and direct-route gate
+        run: pnpm test:e2e:pages:artifact
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa

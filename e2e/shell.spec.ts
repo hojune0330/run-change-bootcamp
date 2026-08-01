@@ -5,7 +5,7 @@ test("shell stays usable without horizontal overflow at its configured viewport"
 }, testInfo) => {
   // Given
   await page.emulateMedia({ reducedMotion: "reduce" })
-  await page.goto("/")
+  await page.goto("./")
 
   // When
   const hasHorizontalOverflow = await page.locator("html").evaluate((element) => {
@@ -25,7 +25,7 @@ test("authenticated participant shell uses side navigation at 768px", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "tablet-768", "tablet shell evidence")
-  await page.goto("/")
+  await page.goto("./")
   await page.evaluate(() => window.localStorage.clear())
   await page.reload()
   await page.getByRole("button", { name: "참여자로 시작" }).click()
@@ -42,4 +42,20 @@ test("authenticated participant shell uses side navigation at 768px", async ({
   expect(layout).not.toBeNull()
   expect(layout?.navigationRight).toBeLessThanOrEqual(layout?.mainLeft ?? 0)
   await page.screenshot({ path: testInfo.outputPath("authenticated-shell.png") })
+})
+
+test("reloads the supported /record route without losing the app shell", async ({ page }) => {
+  // Given
+  await page.goto("./")
+  await page.evaluate(() => window.localStorage.clear())
+  await page.reload()
+  await page.locator("button").first().click()
+
+  // When
+  await page.goto("./record")
+  await page.reload()
+
+  // Then
+  await expect(page).toHaveURL(/\/record$/)
+  await expect(page.locator(".app-shell")).toBeVisible()
 })

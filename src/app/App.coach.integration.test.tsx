@@ -85,5 +85,5 @@ describe("coach demo integration", () => {
     render(<App />)
     expect(screen.getByRole("radio", { name: /2회차/ })).toBeChecked()
     expect(screen.getByRole("radio", { name: "5K" })).toBeChecked()
-  }, 10_000)
+  })
 })

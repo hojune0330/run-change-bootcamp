@@ -1,11 +1,11 @@
 import { defineConfig } from "@playwright/test"
 
 const readEnvironment = (name: string) => process.env[name]
-const usePagesStaticServer = readEnvironment("PAGES_STATIC_SERVER") === "1"
-const usePagesPreview = readEnvironment("PAGES_PREVIEW") === "1"
 const serverPort = readEnvironment("PLAYWRIGHT_PORT") ?? "4173"
+const serverOrigin = `http://127.0.0.1:${serverPort}`
+const pagesBasePath = "/run-change-bootcamp/"
 
-export default defineConfig({
+export const sharedPlaywrightConfig = defineConfig({
   testDir: "./e2e",
   outputDir: ".artifacts/playwright",
   fullyParallel: true,
@@ -13,7 +13,6 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
   use: {
-    baseURL: `http://127.0.0.1:${serverPort}`,
     colorScheme: "light",
     locale: "ko-KR",
     screenshot: "only-on-failure",
@@ -33,13 +32,15 @@ export default defineConfig({
       use: { viewport: { width: 1280, height: 800 } },
     },
   ],
+})
+
+export default defineConfig(sharedPlaywrightConfig, {
+  use: {
+    baseURL: `${serverOrigin}${pagesBasePath}`,
+  },
   webServer: {
-    command: usePagesStaticServer
-      ? `pnpm serve:pages --host 127.0.0.1 --port ${serverPort}`
-      : usePagesPreview
-        ? `pnpm preview:pages --host 127.0.0.1 --port ${serverPort}`
-        : `pnpm preview --host 127.0.0.1 --port ${serverPort}`,
-    url: `http://127.0.0.1:${serverPort}`,
+    command: `pnpm serve:pages --host 127.0.0.1 --port ${serverPort}`,
+    url: `${serverOrigin}${pagesBasePath}`,
     reuseExistingServer: false,
   },
 })

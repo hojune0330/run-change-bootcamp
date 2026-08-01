@@ -6,7 +6,13 @@ import { COLOR_TOKENS } from "./src/design/color-tokens.ts"
 const LOCAL_BASE_PATH = "/"
 const PAGES_BASE_PATH = "/run-change-bootcamp/"
 const PAGES_BUILD_MODE = "pages"
-const PROJECT_TEST_EXCLUDES = [".omo/**", ".artifacts/**", "dev-dist/**", "dist/**"] as const
+const PROJECT_TEST_EXCLUDES = [
+  ".omo/**",
+  ".artifacts/**",
+  "dev-dist/**",
+  "dist/**",
+  "scripts/pages-deployment.test.ts",
+] as const
 
 export default defineConfig(({ mode }) => {
   const basePath = mode === PAGES_BUILD_MODE ? PAGES_BASE_PATH : LOCAL_BASE_PATH

@@ -7,6 +7,7 @@ import { z } from "zod"
 
 const repositoryRoot = resolve(import.meta.dirname, "..")
 const viteCli = resolve(repositoryRoot, "node_modules", "vite", "bin", "vite.js")
+const deploymentBuildTimeoutMs = 15_000
 const ManifestSchema = z.object({
   start_url: z.string(),
   scope: z.string(),
@@ -26,7 +27,12 @@ function buildWithMode(mode: "preview" | "pages"): BuildOutput {
     execFileSync(
       process.execPath,
       [viteCli, "build", "--mode", mode, "--outDir", outputDirectory],
-      { cwd: repositoryRoot, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+      {
+        cwd: repositoryRoot,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: deploymentBuildTimeoutMs,
+      },
     )
     return {
       index: readFileSync(join(outputDirectory, "index.html"), "utf8"),
@@ -58,7 +64,7 @@ describe("Vite/PWA deployment modes", () => {
       output.manifest.icons.every((icon) => !icon.src.startsWith("/run-change-bootcamp/")),
     ).toBe(true)
     expect(output.serviceWorker).toContain('createHandlerBoundToURL("/index.html")')
-  }, 30_000)
+  })
 
   it("scopes Pages assets and navigation to the repository path", () => {
     // Given
@@ -78,5 +84,5 @@ describe("Vite/PWA deployment modes", () => {
       'createHandlerBoundToURL("/run-change-bootcamp/index.html")',
     )
     expect(output.serviceWorker).not.toContain('createHandlerBoundToURL("/index.html")')
-  }, 30_000)
+  })
 })
