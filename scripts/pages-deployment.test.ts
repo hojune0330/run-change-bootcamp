@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process"
 import { mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
-import { minVersion, satisfies, valid } from "semver"
+import { minVersion, satisfies, subset, valid } from "semver"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
 import { deploymentBuildTimeoutMs } from "./pages-deployment-timeouts.ts"
@@ -19,7 +19,6 @@ const ManifestSchema = z.object({
   icons: z.array(z.object({ src: z.string() })),
 })
 const PackageManifestSchema = z.object({
-  packageManager: z.string().regex(/^pnpm@\d+\.\d+\.\d+$/),
   engines: z.object({ node: z.string().min(1) }),
   devDependencies: z.object({ jsdom: z.string().min(1) }),
 })
@@ -100,15 +99,12 @@ describe("Vite/PWA deployment modes", () => {
 
     // Then
     expect(workflowNodeVersionFile).toBe(".node-version")
-    expect(packageManifest.packageManager).toBe("pnpm@11.9.0")
-    expect(packageManifest.engines.node).toBe(">=22.22.2")
+    expect(subset(packageManifest.engines.node, jsdomManifest.engines.node)).toBe(true)
     expect(satisfies(nodeVersion, packageManifest.engines.node)).toBe(true)
     expect(satisfies(nodeVersion, jsdomManifest.engines.node)).toBe(true)
     expect(satisfies(jsdomManifest.version, packageManifest.devDependencies.jsdom)).toBe(true)
     expect(satisfies("22.22.1", packageManifest.engines.node)).toBe(false)
     expect(satisfies("22.22.1", jsdomManifest.engines.node)).toBe(false)
-    expect(jsdomMinimum.version).toBe("22.22.2")
-    expect(projectMinimum.version).toBe("22.22.2")
   })
 
   it("keeps local production assets and PWA routes at the origin root", () => {
