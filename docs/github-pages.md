@@ -1,15 +1,22 @@
 # GitHub Pages deployment
 
 Status as of 2026-08-01: [PR #1](https://github.com/hojune0330/run-change-bootcamp/pull/1)
-was merged into `main`. The first `main` workflow run, [30679484294](https://github.com/hojune0330/run-change-bootcamp/actions/runs/30679484294),
-failed during runtime setup because it selected Node.js 22.12.0 while pnpm 11.9.0 requires a newer
-Node runtime. [PR #2](https://github.com/hojune0330/run-change-bootcamp/pull/2) is the open draft
-remediation: it aligns the project, frozen jsdom dependency, local runtime source, and Pages
-workflow. A successful Pages deployment has not been established yet.
+merged the Pages workflow. Its first `main` run,
+[30679484294](https://github.com/hojune0330/run-change-bootcamp/actions/runs/30679484294),
+failed during runtime setup because it selected Node.js 22.12.0 while pnpm 11.9.0 requires a
+newer Node runtime. [PR #2](https://github.com/hojune0330/run-change-bootcamp/pull/2) merged the
+Node runtime and frozen-jsdom remediation; its Pages run
+[30684336169](https://github.com/hojune0330/run-change-bootcamp/actions/runs/30684336169)
+succeeded. [PR #3](https://github.com/hojune0330/run-change-bootcamp/pull/3) merged the CJK
+200% zoom fix at commit `19120516acdbe8ed5fe92a2f7001a42f5c4389be`; its Pages run
+[30688513967](https://github.com/hojune0330/run-change-bootcamp/actions/runs/30688513967)
+also succeeded (build job [91338916652](https://github.com/hojune0330/run-change-bootcamp/actions/runs/30688513967/job/91338916652),
+deploy job [91339065601](https://github.com/hojune0330/run-change-bootcamp/actions/runs/30688513967/job/91339065601)).
+Deployment `5702409847` has successful status `16217793869`.
 
 Repository: `hojune0330/run-change-bootcamp`
 
-Public URL (deployment status must be confirmed by a successful workflow run):
+The current public seeded preview is deployed at:
 
 `https://hojune0330.github.io/run-change-bootcamp/`
 
@@ -36,6 +43,14 @@ generated `404.html` with an actual 404 status for the supported direct route
 `/run-change-bootcamp/record`, matching GitHub Pages while still allowing the client router to mount.
 `/record/abc` is not a supported application route.
 
+## GitHub Pages SPA semantics
+
+`GET /run-change-bootcamp/record` returns HTTP 404 with the generated custom fallback, whose body
+contains the same SPA shell as the root document. In a fresh unauthenticated browser context that
+shell renders the session chooser. After selecting and persisting a participant session, navigating
+to the direct route or hard-reloading it renders the record UI; the direct-route HTTP status remains
+404. `/run-change-bootcamp/record/abc` remains unsupported and must not be treated as an SPA route.
+
 ## Deployment gate
 
 Before uploading `dist`, `.github/workflows/deploy-pages.yml` runs the normal Vitest suite, the
@@ -49,7 +64,7 @@ fallback are emitted below `/run-change-bootcamp/`. No runtime or deployment sec
 
 ## Deployment status
 
-After PR #2 is reviewed and merged, a new push to `main` (or an intentional manual dispatch) must
-complete the `Deploy to GitHub Pages` workflow before the public URL is treated as deployed. The
-workflow publishes the `dist` artifact through the existing Pages configuration and exposes the final
-URL through the `github-pages` deployment environment.
+The `Deploy to GitHub Pages` workflow publishes the `dist` artifact through the existing Pages
+configuration and exposes the final URL through the `github-pages` deployment environment. The
+successful PR #3 run and deployment listed above are the current status; future changes still need
+the same workflow gate before they replace the public preview.
