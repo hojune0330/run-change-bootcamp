@@ -1,15 +1,15 @@
 # GitHub Pages deployment
 
 Status as of 2026-08-01: [PR #1](https://github.com/hojune0330/run-change-bootcamp/pull/1)
-is open from `agent/pages-preview` into `main`. GitHub Pages is already enabled with
-`build_type=workflow`, and the `github-pages` deployment environment exists. No first deployment has
-run yet, so the public URL is expected to return 404 while the PR is still draft. Marking PR #1 ready
-and merging it into `main` produces the first `main` push and triggers the deployment workflow; no
-post-merge Pages source-selection step is required.
+was merged into `main`. The first `main` workflow run, [30679484294](https://github.com/hojune0330/run-change-bootcamp/actions/runs/30679484294),
+failed during runtime setup because it selected Node.js 22.12.0 while pnpm 11.9.0 requires a newer
+Node runtime. [PR #2](https://github.com/hojune0330/run-change-bootcamp/pull/2) is the open draft
+remediation: it aligns the project, frozen jsdom dependency, local runtime source, and Pages
+workflow. A successful Pages deployment has not been established yet.
 
 Repository: `hojune0330/run-change-bootcamp`
 
-Public URL (currently 404 until the first deployment succeeds):
+Public URL (deployment status must be confirmed by a successful workflow run):
 
 `https://hojune0330.github.io/run-change-bootcamp/`
 
@@ -47,9 +47,9 @@ metadata, compression and representation validators, and traversal/base-path rej
 The PWA manifest, service-worker registration, icon URLs, service-worker scope, and navigation
 fallback are emitted below `/run-change-bootcamp/`. No runtime or deployment secrets are required.
 
-## First deployment
+## Deployment status
 
-After PR #1 is marked ready and merged, the resulting push to `main` runs `Deploy to GitHub Pages`.
-The workflow publishes the `dist` artifact through the existing Pages configuration and exposes the
-final URL through the `github-pages` deployment environment. A manual dispatch remains available for
-later redeployments.
+After PR #2 is reviewed and merged, a new push to `main` (or an intentional manual dispatch) must
+complete the `Deploy to GitHub Pages` workflow before the public URL is treated as deployed. The
+workflow publishes the `dist` artifact through the existing Pages configuration and exposes the final
+URL through the `github-pages` deployment environment.

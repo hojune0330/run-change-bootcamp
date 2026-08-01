@@ -2,17 +2,48 @@ import { execFileSync } from "node:child_process"
 import { mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
+import { minVersion, satisfies, subset, valid } from "semver"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
 import { deploymentBuildTimeoutMs } from "./pages-deployment-timeouts.ts"
 
 const repositoryRoot = resolve(import.meta.dirname, "..")
 const viteCli = resolve(repositoryRoot, "node_modules", "vite", "bin", "vite.js")
+const packageManifestPath = resolve(repositoryRoot, "package.json")
+const nodeVersionPath = resolve(repositoryRoot, ".node-version")
+const jsdomManifestPath = resolve(repositoryRoot, "node_modules", "jsdom", "package.json")
+const pagesWorkflowPath = resolve(repositoryRoot, ".github", "workflows", "deploy-pages.yml")
 const ManifestSchema = z.object({
   start_url: z.string(),
   scope: z.string(),
   icons: z.array(z.object({ src: z.string() })),
 })
+const PackageManifestSchema = z.object({
+  engines: z.object({ node: z.string().min(1) }),
+  devDependencies: z.object({ jsdom: z.string().min(1) }),
+})
+const JsdomManifestSchema = z.object({
+  version: z.string(),
+  engines: z.object({ node: z.string().min(1) }),
+})
+
+function readWorkflowNodeVersionFile(): string {
+  const workflow = readFileSync(pagesWorkflowPath, "utf8")
+  const setupNodeStart = workflow.indexOf("- name: Set up Node.js")
+  if (setupNodeStart < 0) {
+    throw new Error("Pages workflow must declare a setup-node step")
+  }
+  const nextStep = workflow.indexOf("\n      - name:", setupNodeStart + 1)
+  const setupNodeStep = workflow.slice(setupNodeStart, nextStep < 0 ? workflow.length : nextStep)
+  if (/^\s*node-version:/m.test(setupNodeStep)) {
+    throw new Error("Pages workflow must not hardcode node-version")
+  }
+  const sourcePath = /^\s*node-version-file:\s*([^\r\n#]+)/m.exec(setupNodeStep)?.[1]?.trim()
+  if (sourcePath === undefined) {
+    throw new Error("Pages workflow must reference node-version-file")
+  }
+  return sourcePath
+}
 
 type BuildOutput = {
   readonly index: string
@@ -47,6 +78,35 @@ function buildWithMode(mode: "preview" | "pages"): BuildOutput {
 }
 
 describe("Vite/PWA deployment modes", () => {
+  it("keeps the Pages Node runtime compatible with project and frozen jsdom engines", () => {
+    // Given
+    const packageManifest = PackageManifestSchema.parse(
+      JSON.parse(readFileSync(packageManifestPath, "utf8")),
+    )
+    const jsdomManifest = JsdomManifestSchema.parse(
+      JSON.parse(readFileSync(jsdomManifestPath, "utf8")),
+    )
+    const nodeVersion = valid(readFileSync(nodeVersionPath, "utf8").trim())
+    const projectMinimum = minVersion(packageManifest.engines.node)
+    const jsdomMinimum = minVersion(jsdomManifest.engines.node)
+
+    if (nodeVersion === null) throw new Error(".node-version must contain a valid semver")
+    if (projectMinimum === null) throw new Error("package.json engines.node must be a semver range")
+    if (jsdomMinimum === null) throw new Error("jsdom engines.node must be a semver range")
+
+    // When
+    const workflowNodeVersionFile = readWorkflowNodeVersionFile()
+
+    // Then
+    expect(workflowNodeVersionFile).toBe(".node-version")
+    expect(subset(packageManifest.engines.node, jsdomManifest.engines.node)).toBe(true)
+    expect(satisfies(nodeVersion, packageManifest.engines.node)).toBe(true)
+    expect(satisfies(nodeVersion, jsdomManifest.engines.node)).toBe(true)
+    expect(satisfies(jsdomManifest.version, packageManifest.devDependencies.jsdom)).toBe(true)
+    expect(satisfies("22.22.1", packageManifest.engines.node)).toBe(false)
+    expect(satisfies("22.22.1", jsdomManifest.engines.node)).toBe(false)
+  })
+
   it("keeps local production assets and PWA routes at the origin root", () => {
     // Given
     const output = buildWithMode("preview")
