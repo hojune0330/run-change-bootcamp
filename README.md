@@ -22,7 +22,8 @@ RUN CHANGE 부트캠프 PoC는 8주 러닝 부트캠프 운영을 위해 만든 
 
 ## 로컬 실행
 
-필수 런타임은 Node.js 22.12 이상과 pnpm 11.9입니다.
+필수 런타임은 Node.js 22.22.2 이상과 pnpm 11.9입니다. 저장소의 `.node-version`에 고정된
+Node.js 22.23.2를 사용하면 로컬 실행과 GitHub Pages 워크플로가 같은 런타임을 사용합니다.
 
 ```bash
 pnpm install
