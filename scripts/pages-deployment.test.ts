@@ -8,11 +8,60 @@ import { deploymentBuildTimeoutMs } from "./pages-deployment-timeouts.ts"
 
 const repositoryRoot = resolve(import.meta.dirname, "..")
 const viteCli = resolve(repositoryRoot, "node_modules", "vite", "bin", "vite.js")
+const packageManifestPath = resolve(repositoryRoot, "package.json")
+const pagesWorkflowPath = resolve(repositoryRoot, ".github", "workflows", "deploy-pages.yml")
 const ManifestSchema = z.object({
   start_url: z.string(),
   scope: z.string(),
   icons: z.array(z.object({ src: z.string() })),
 })
+const PackageManifestSchema = z.object({
+  packageManager: z.string().regex(/^pnpm@\d+\.\d+\.\d+$/),
+  engines: z.object({ node: z.string().regex(/^>=\d+\.\d+\.\d+$/) }),
+})
+
+type NodeVersion = Readonly<{
+  major: number
+  minor: number
+  patch: number
+}>
+
+function parseNodeVersion(value: string): NodeVersion {
+  const [majorText, minorText, patchText] = value.split(".")
+  if (majorText === undefined || minorText === undefined || patchText === undefined) {
+    throw new Error(`Invalid Node version: ${value}`)
+  }
+
+  const version = {
+    major: Number(majorText),
+    minor: Number(minorText),
+    patch: Number(patchText),
+  }
+  if (Object.values(version).some((part) => !Number.isInteger(part) || part < 0)) {
+    throw new Error(`Invalid Node version: ${value}`)
+  }
+  return version
+}
+
+function compareNodeVersions(left: NodeVersion, right: NodeVersion): number {
+  if (left.major !== right.major) return left.major - right.major
+  if (left.minor !== right.minor) return left.minor - right.minor
+  return left.patch - right.patch
+}
+
+function parseNodeEngineLowerBound(engine: string): NodeVersion {
+  const minimumVersion = engine.slice(2)
+  return parseNodeVersion(minimumVersion)
+}
+
+function readWorkflowNodeVersion(): Readonly<{ text: string; version: NodeVersion }> {
+  const workflow = readFileSync(pagesWorkflowPath, "utf8")
+  const versionText = /node-version:\s*([0-9]+\.[0-9]+\.[0-9]+)/.exec(workflow)?.[1]
+  if (versionText === undefined) {
+    throw new Error("Pages workflow must declare a setup-node version")
+  }
+  return { text: versionText, version: parseNodeVersion(versionText) }
+}
 
 type BuildOutput = {
   readonly index: string
@@ -47,6 +96,30 @@ function buildWithMode(mode: "preview" | "pages"): BuildOutput {
 }
 
 describe("Vite/PWA deployment modes", () => {
+  it("keeps the Pages Node runtime compatible with project and pnpm engines", () => {
+    // Given
+    const packageManifest = PackageManifestSchema.parse(
+      JSON.parse(readFileSync(packageManifestPath, "utf8")),
+    )
+    const workflowNode = readWorkflowNodeVersion()
+    const projectNodeLowerBound = parseNodeEngineLowerBound(packageManifest.engines.node)
+    const pnpm11_9_0NodeLowerBound = parseNodeVersion("22.13.0")
+
+    // When
+    const projectNodeComparison = compareNodeVersions(workflowNode.version, projectNodeLowerBound)
+    const pnpmNodeComparison = compareNodeVersions(workflowNode.version, pnpm11_9_0NodeLowerBound)
+
+    // Then
+    expect(
+      projectNodeComparison,
+      `Pages Node ${workflowNode.text} must satisfy project engine ${packageManifest.engines.node}`,
+    ).toBeGreaterThanOrEqual(0)
+    expect(
+      pnpmNodeComparison,
+      `Pages Node ${workflowNode.text} must satisfy ${packageManifest.packageManager} Node >=22.13`,
+    ).toBeGreaterThanOrEqual(0)
+  })
+
   it("keeps local production assets and PWA routes at the origin root", () => {
     // Given
     const output = buildWithMode("preview")
