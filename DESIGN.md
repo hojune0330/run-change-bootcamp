@@ -22,10 +22,13 @@ off-white paper-like shell; borders and tonal shifts create structure without de
 ## 2. Color
 
 The sole code color source is `src/design/color-tokens.ts`. It exports the typed
-`COLOR_TOKENS` map and `COLOR_TOKEN_ENTRIES`; the main app (`src/main.tsx`) and coach
-preview (`src/features/coach/coach-preview.tsx`) import those entries and inject them
-on `document.documentElement` as CSS custom properties. `src/design/tokens.css` remains
-the source for non-color design tokens such as typography, spacing, radius, and motion.
+`COLOR_TOKENS` map and `COLOR_TOKEN_ENTRIES`. The runtime style consumers in the main app
+(`src/main.tsx`) and coach preview (`src/features/coach/coach-preview.tsx`) import
+`COLOR_TOKEN_ENTRIES` and inject them on `document.documentElement` as CSS custom properties.
+The build-time consumer `vite.config.ts` imports `COLOR_TOKENS` directly for the PWA
+manifest's `background_color` and `theme_color`; it cannot consume runtime CSS variables.
+`src/design/tokens.css` remains the source for non-color design tokens such as typography,
+spacing, radius, and motion.
 
 | Role | Token | Value | Usage |
 |---|---|---:|---|
@@ -54,8 +57,9 @@ Rules:
 - Accent is reserved for actions, focus, and current location.
 - Sensitive-health or risk semantics use text plus an icon or label, never color alone.
 - Raw color values may appear only in `src/design/color-tokens.ts` and this DESIGN.md.
-  All other source and styles consume the injected CSS custom properties; keep
-  non-color token declarations in `src/design/tokens.css`.
+  Runtime application styles consume the injected CSS custom properties; the documented
+  build-time exception is `vite.config.ts`, which reads typed `COLOR_TOKENS` for PWA metadata.
+  Keep non-color token declarations in `src/design/tokens.css`.
 - No gradients are used.
 
 ## 3. Typography
