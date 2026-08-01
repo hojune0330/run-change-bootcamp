@@ -1,14 +1,15 @@
 # GitHub Pages deployment
 
 Status as of 2026-08-01: [PR #1](https://github.com/hojune0330/run-change-bootcamp/pull/1)
-is open from `agent/pages-preview` into `main`. The branch is pushed, but the repository does not
-currently have an enabled Pages site and this workspace has not deployed one. Opening or updating the
-PR does not deploy the app: the workflow runs only after a push to `main` or a deliberate manual
-dispatch.
+is open from `agent/pages-preview` into `main`. GitHub Pages is already enabled with
+`build_type=workflow`, and the `github-pages` deployment environment exists. No first deployment has
+run yet, so the public URL is expected to return 404 while the PR is still draft. Marking PR #1 ready
+and merging it into `main` produces the first `main` push and triggers the deployment workflow; no
+post-merge Pages source-selection step is required.
 
 Repository: `hojune0330/run-change-bootcamp`
 
-Expected public URL after Pages is enabled and the first deployment succeeds:
+Public URL (currently 404 until the first deployment succeeds):
 
 `https://hojune0330.github.io/run-change-bootcamp/`
 
@@ -46,8 +47,9 @@ metadata, compression and representation validators, and traversal/base-path rej
 The PWA manifest, service-worker registration, icon URLs, service-worker scope, and navigation
 fallback are emitted below `/run-change-bootcamp/`. No runtime or deployment secrets are required.
 
-## Enablement step (GitHub owner action)
+## First deployment
 
-After the PR is merged, open **Settings → Pages**, select **GitHub Actions** as the source, and save.
-Then allow the `Deploy to GitHub Pages` workflow to run from `main` (or dispatch it deliberately).
-GitHub exposes the final URL through the deployment environment.
+After PR #1 is marked ready and merged, the resulting push to `main` runs `Deploy to GitHub Pages`.
+The workflow publishes the `dist` artifact through the existing Pages configuration and exposes the
+final URL through the `github-pages` deployment environment. A manual dispatch remains available for
+later redeployments.
