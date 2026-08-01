@@ -49,3 +49,37 @@ test("chooser keyboard traversal reaches every control in reading order", async 
     await expect(controls.nth(index)).toBeFocused()
   }
 })
+
+test("chooser keeps the exact 세션 substring on one line at 200% CSS zoom", async ({ page }) => {
+  // Given
+  await page.goto("./")
+  await page.evaluate(() => window.localStorage.clear())
+  await page.reload()
+
+  // When
+  await page.evaluate(() => {
+    document.documentElement.style.zoom = "2"
+  })
+  const sessionRects = await page.locator("#demo-session-title").evaluate((heading) => {
+    const phrase = "세션"
+    const walker = document.createTreeWalker(heading, NodeFilter.SHOW_TEXT)
+    const textNode = walker.nextNode()
+    if (!(textNode instanceof Text)) throw new Error("chooser heading text is missing")
+
+    const phraseStart = textNode.data.indexOf(phrase)
+    if (phraseStart < 0) throw new Error("chooser heading does not contain the target substring")
+
+    const range = document.createRange()
+    range.setStart(textNode, phraseStart)
+    range.setEnd(textNode, phraseStart + phrase.length)
+    return Array.from(range.getClientRects(), ({ x, y, width, height }) => ({
+      x,
+      y,
+      width,
+      height,
+    }))
+  })
+
+  // Then
+  expect(sessionRects).toHaveLength(1)
+})
