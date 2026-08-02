@@ -1,49 +1,50 @@
-import { useEffect, useState, useSyncExternalStore } from "react"
-import { createDemoRepository } from "../demo/index.ts"
-import { toAppPath, toBrowserPath } from "./base-path.ts"
-import { CoachApp } from "./CoachApp.tsx"
-import { DemoSessionChooser } from "./DemoSessionChooser.tsx"
-import { ParticipantApp } from "./ParticipantApp.tsx"
-import { resolveRoute } from "./routes.ts"
+import { lazy, Suspense } from "react"
+import type { PilotGatewayFactory } from "../integrations/supabase/pilot-gateway.ts"
+import {
+  type RuntimeEnvironment,
+  resolveRuntimeConfiguration,
+} from "../integrations/supabase/runtime-config.ts"
+import { PreviewApp } from "./PreviewApp.tsx"
+import { PilotConfigurationBlocked } from "./pilot/PilotConfigurationBlocked.tsx"
+import { PilotRuntime } from "./pilot/PilotRuntime.tsx"
 import "./App.css"
 
-export function App() {
-  const [repository] = useState(() => createDemoRepository(window.localStorage))
-  const state = useSyncExternalStore(repository.subscribe, repository.getSnapshot)
-  const [pathname, setPathname] = useState(() => toAppPath(window.location.pathname))
-  useEffect(() => {
-    const syncPath = () => setPathname(toAppPath(window.location.pathname))
-    window.addEventListener("popstate", syncPath)
-    return () => window.removeEventListener("popstate", syncPath)
-  }, [])
-  const navigate = (href: string) => {
-    const browserPath = toBrowserPath(href)
-    window.history.pushState({}, "", browserPath)
-    setPathname(toAppPath(browserPath))
-  }
-  const route = resolveRoute(pathname)
+const BrowserPilotRuntime = lazy(() =>
+  import("./pilot/BrowserPilotRuntime.tsx").then(({ BrowserPilotRuntime }) => ({
+    default: BrowserPilotRuntime,
+  })),
+)
 
-  switch (route.kind) {
-    case "chooser":
-    case "not_found":
-      return <DemoSessionChooser onNavigate={navigate} repository={repository} />
-    case "participant":
-      return state.session?.role === "participant" ? (
-        <ParticipantApp
-          href={route.href}
-          onNavigate={navigate}
-          participantId={state.session.participantId}
-          repository={repository}
-          state={state}
-        />
-      ) : (
-        <DemoSessionChooser onNavigate={navigate} repository={repository} />
-      )
-    case "coach":
-      return state.session?.role === "coach" ? (
-        <CoachApp href={route.href} onNavigate={navigate} repository={repository} state={state} />
-      ) : (
-        <DemoSessionChooser onNavigate={navigate} repository={repository} />
-      )
+type AppProps = {
+  readonly pilotGatewayFactory?: PilotGatewayFactory
+  readonly runtimeEnvironment?: RuntimeEnvironment
+}
+
+export function App({ pilotGatewayFactory, runtimeEnvironment = import.meta.env }: AppProps = {}) {
+  const runtime = resolveRuntimeConfiguration(runtimeEnvironment)
+  switch (runtime.kind) {
+    case "blocked":
+      return <PilotConfigurationBlocked reason={runtime.reason} />
+    case "ready":
+      switch (runtime.mode) {
+        case "preview":
+          return <PreviewApp />
+        case "pilot":
+          return pilotGatewayFactory === undefined ? (
+            <Suspense
+              fallback={
+                <main className="demo-entry" id="main-content">
+                  <p aria-live="polite" className="pilot-entry__status">
+                    파일럿 연결 모듈을 불러오고 있습니다.
+                  </p>
+                </main>
+              }
+            >
+              <BrowserPilotRuntime config={runtime.config} />
+            </Suspense>
+          ) : (
+            <PilotRuntime config={runtime.config} gatewayFactory={pilotGatewayFactory} />
+          )
+      }
   }
 }

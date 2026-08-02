@@ -11,6 +11,19 @@ RUN CHANGE 부트캠프 PoC는 8주 러닝 부트캠프 운영을 위해 만든 
 - 배포 기록과 직접 경로의 HTTP 404/SPA 동작은 [GitHub Pages 배포 문서](docs/github-pages.md)에서 확인할 수 있습니다.
 - 공개 URL은 운영 계정이나 배포된 백엔드와 연결되지 않은 브라우저 로컬 프리뷰입니다. 입력값·파일 처리·리셋 범위는 아래 데이터·개인정보·AI 안전 섹션에 정리합니다.
 
+## 검증·준비 상태의 표현
+
+| 표현 | 이 저장소에서 뜻하는 범위 | 현재 상태 |
+|---|---|---|
+| 정적 계약 확인(static contract checked) | 타입, 단위/통합 테스트, SQL/RLS 계약을 로컬에서 검사 | 확인됨 |
+| 로컬 런타임(local runtime) | Node 22 브라우저 프리뷰와 Playwright 시나리오를 로컬 프로세스로 실행 | 프리뷰 확인됨; Supabase 로컬 스택은 미확인 |
+| 호스팅 프리뷰(hosted preview) | GitHub Pages의 공개 시드 데모 | 배포됨; 운영 백엔드와 분리됨 |
+| 파일럿 준비(pilot ready) | 호스팅 Supabase, 실제 인증 설정, 마이그레이션/RLS, 운영 계정 시나리오까지 검증 | 아직 아님 |
+
+T9의 첫 브라우저 경계는 파일럿 모드의 설정 차단, Supabase 인증 세션/OTP/로그아웃,
+동의·감사 데이터 게이트웨이 계약까지만 제공합니다. 실제 자격 증명이나 호스팅 Supabase를
+검증했다는 뜻은 아니며, 파일럿 화면에도 운영 데이터 연결이 준비 단계라고 명시합니다.
+
 ## 주요 기능
 
 - 참가자 데모: 오늘의 과제, 피드, 수동 기록, 스크린샷 기반 기록 초안 검토, 공유 동의 흐름
@@ -26,6 +39,7 @@ RUN CHANGE 부트캠프 PoC는 8주 러닝 부트캠프 운영을 위해 만든 
 - Biome
 - 공개 프리뷰의 저장·처리 경계는 아래 데이터·개인정보·AI 안전 섹션을 기준으로 합니다.
 - Supabase SQL migrations 및 Edge Function 초안
+- 공개 URL/공개 키만 받는 Supabase 브라우저 클라이언트와 파일럿 인증 경계
 - OpenAI Responses API 연동 계약 초안
 
 ## 로컬 실행
@@ -75,6 +89,27 @@ pnpm test:e2e:local
 확인하려면 `pnpm build` 후 `pnpm serve:pages`를 사용합니다. PR과 배포 워크플로의 현재 상태,
 명령 계약, 직접 경로 검증은 [GitHub Pages 배포 문서](docs/github-pages.md)에 정리되어 있습니다.
 
+## 런타임 모드와 공개 설정
+
+`VITE_APP_RUNTIME`은 `preview` 또는 `pilot`만 허용하며, 생략하면 `preview`입니다. 프리뷰는 기존
+`DemoRepository`와 `localStorage` 흐름을 그대로 사용합니다. 파일럿은 데모 저장소를 만들거나
+읽지 않습니다. 파일럿을 명시했는데 공개 설정이 없거나 잘못되면 로그인 화면 대신 한국어
+설정 차단 화면만 표시합니다.
+
+```bash
+# 기본 프리뷰
+VITE_APP_RUNTIME=preview
+
+# 파일럿 브라우저 경계: 둘 다 공개 가능한 값이어야 함
+VITE_APP_RUNTIME=pilot
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_replace_me
+```
+
+레거시 공개 anon 키는 `VITE_SUPABASE_ANON_KEY`로 대신 줄 수 있지만 두 공개 키 변수를 동시에
+설정하면 모호한 설정으로 차단합니다. `.env.example`에는 권장 publishable 키만 예시로 둡니다.
+서비스 역할 키, OpenAI 키, VAPID 비공개 키는 서버 전용이며 브라우저 빌드 설정에 넣지 않습니다.
+
 ## 데모 접근
 
 공개 URL 또는 로컬 실행 주소를 열고 첫 화면에서 참가자 또는 코치 세션을 선택합니다.
@@ -101,15 +136,20 @@ pnpm test:e2e:local
 브라우저 저장소를 지울 때까지 유지됩니다. 공개 프리뷰에는 실제 개인·건강정보를 입력하거나
 실제 파일을 선택하지 마세요.
 
-공개 프리뷰는 Supabase Auth, Database, Storage, Realtime, Edge Functions, notification/OCR/OpenAI
-운영 시크릿, 실제 참가자 데이터와 연결되지 않습니다.
+기본 공개 프리뷰는 Supabase Auth, Database, Storage, Realtime, Edge Functions,
+notification/OCR/OpenAI 운영 시크릿, 실제 참가자 데이터와 연결되지 않습니다. 파일럿 모드는
+공개 URL과 공개 키가 유효할 때에만 Supabase Auth 세션 확인, 등록 이메일 OTP 요청, 로그아웃을
+사용합니다. 운영 참여자·코치 데이터 UI는 연결하지 않았습니다.
 
 `supabase/`와 `docs/backend/`에는 운영 백엔드 설계를 위한 SQL/RLS, 저장소, 감사 로그, 동의, AI 초안 처리 계약이 들어 있습니다. OpenAI 연동은 서버 Edge Function에서만 키를 사용하고, `store: false`, 엄격한 JSON 스키마, 비식별 텍스트, 코치/관리자 승인 전 draft-only 저장을 전제로 합니다. 스크린샷은 운영 전 서버 측 OCR/마스킹 검토가 필요합니다.
 
 ## 현재 한계
 
-- `T9 프로덕션 파일럿`은 현재 공개 프리뷰와 별도이며, 운영 전 명시적인 서비스·데이터 경계가 필요합니다.
-- 프로덕션 설정에는 Supabase Auth, Database, Storage, Realtime, Edge Functions와 notification/OCR/OpenAI 서버 운영 시크릿, 인증 토큰 기반 시나리오, 개인정보 영향 검토가 필요합니다. 현재 Supabase 마이그레이션과 Edge Function은 설계/초안 상태입니다.
+- T9 첫 경계는 브라우저 파일럿의 설정·인증·동의/감사 계약까지만 구현합니다. 호스팅 프로젝트,
+  실제 계정, 이메일 템플릿/OTP 전달, 운영 데이터 UI는 검증하지 않았습니다.
+- 파일럿 준비 판정에는 Supabase Auth, Database, Storage, Realtime, Edge Functions와
+  notification/OCR/OpenAI 서버 운영 시크릿, 인증 토큰 기반 역할별 시나리오, 개인정보 영향
+  검토가 필요합니다. 현재 Supabase 마이그레이션과 Edge Function은 설계/초안 상태입니다.
 - AI 결과는 자동 게시되지 않고 코치/관리자 승인 흐름을 전제로 합니다.
 - 공개 저장소이므로 비밀키, `.env*`, 실제 참가자 데이터, 내부 운영 문서, 생성 산출물을 커밋하지 마세요.
 
