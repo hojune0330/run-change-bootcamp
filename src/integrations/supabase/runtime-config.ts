@@ -39,6 +39,7 @@ const ALLOWED_BROWSER_ENV_KEYS = [
 const LOCAL_SUPABASE_HOSTS = ["127.0.0.1", "[::1]", "localhost"] as const
 const PUBLIC_LEGACY_JWT_ROLES = ["anon"] as const
 const PUBLIC_PUBLISHABLE_KEY_PREFIX = "sb_publishable_"
+const LEGACY_JWT_HEADER_SEGMENT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
 const JWT_SEGMENT_PATTERN = /^[A-Za-z0-9_-]+$/
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
@@ -76,7 +77,14 @@ function isSupportedPublicKey(value: string): boolean {
 
   const header = parseJwtObject(encodedHeader)
   const payload = parseJwtObject(encodedPayload)
-  if (typeof header?.["alg"] !== "string" || payload === undefined) return false
+  if (
+    encodedHeader !== LEGACY_JWT_HEADER_SEGMENT ||
+    header?.["alg"] !== "HS256" ||
+    header?.["typ"] !== "JWT" ||
+    payload === undefined
+  ) {
+    return false
+  }
 
   return PUBLIC_LEGACY_JWT_ROLES.some((role) => role === payload["role"])
 }

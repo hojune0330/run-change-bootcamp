@@ -44,4 +44,37 @@ describe("runtime configuration authenticated session boundary", () => {
     // Then
     expect(result).toEqual({ kind: "blocked", mode: "pilot", reason: "invalid_public_config" })
   })
+
+  it.each([
+    {
+      label: "unsupported algorithm",
+      headerJson: '{"alg":"RS256","typ":"JWT"}',
+    },
+    {
+      label: "missing typ",
+      headerJson: '{"alg":"HS256"}',
+    },
+    {
+      label: "leading whitespace",
+      headerJson: ' {"alg":"HS256","typ":"JWT"}',
+    },
+    {
+      label: "noncanonical property order",
+      headerJson: '{"typ":"JWT","alg":"HS256"}',
+    },
+  ])("rejects an anon-role JWT with a noncanonical header: $label", ({ headerJson }) => {
+    // Given
+    const publicKey = legacyJwtWithHeaderJson({ role: "anon" }, headerJson)
+    const environment = {
+      VITE_APP_RUNTIME: "pilot",
+      VITE_SUPABASE_ANON_KEY: publicKey,
+      VITE_SUPABASE_URL: VALID_URL,
+    }
+
+    // When
+    const result = resolveRuntimeConfiguration(environment)
+
+    // Then
+    expect(result).toEqual({ kind: "blocked", mode: "pilot", reason: "invalid_public_config" })
+  })
 })
