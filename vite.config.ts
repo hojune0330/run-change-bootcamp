@@ -53,6 +53,7 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ["**/*.{html,js,css,svg,woff,woff2}"],
+          globIgnores: ["**/BrowserPilotRuntime-*.js"],
           navigateFallback: `${basePath}index.html`,
           cleanupOutdatedCaches: true,
         },

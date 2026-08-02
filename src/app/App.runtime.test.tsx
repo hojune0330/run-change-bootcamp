@@ -1,0 +1,182 @@
+import { render, screen, waitFor } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { DEMO_STORAGE_KEY } from "../demo/index.ts"
+import type {
+  PilotGateway,
+  PilotGatewayFactory,
+  PilotSessionState,
+} from "../integrations/supabase/pilot-gateway.ts"
+import { App } from "./App.tsx"
+
+const VALID_PILOT_ENVIRONMENT = {
+  VITE_APP_RUNTIME: "pilot",
+  VITE_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_boundary_test_1234567890",
+  VITE_SUPABASE_URL: "https://boundary-test.supabase.co",
+} as const
+
+function createGateway(session: PilotSessionState = { kind: "signed_out" }): PilotGateway {
+  return {
+    getSession: vi.fn<PilotGateway["getSession"]>(async () => ({ ok: true, value: session })),
+    grantMetricConsent: vi.fn<PilotGateway["grantMetricConsent"]>(async () => ({
+      ok: true,
+      value: { id: "33333333-3333-4333-8333-333333333333" },
+    })),
+    listAuditEvents: vi.fn<PilotGateway["listAuditEvents"]>(async () => ({
+      ok: true,
+      value: [],
+    })),
+    requestEmailOtp: vi.fn<PilotGateway["requestEmailOtp"]>(async () => ({
+      ok: true,
+      value: undefined,
+    })),
+    revokeMetricConsent: vi.fn<PilotGateway["revokeMetricConsent"]>(async () => ({
+      ok: true,
+      value: { id: "33333333-3333-4333-8333-333333333333" },
+    })),
+    signOut: vi.fn<PilotGateway["signOut"]>(async () => ({ ok: true, value: undefined })),
+    subscribeToSession: vi.fn<PilotGateway["subscribeToSession"]>(() => () => undefined),
+  }
+}
+
+describe("App runtime boundary", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    window.history.replaceState({}, "", "/")
+    vi.restoreAllMocks()
+  })
+
+  it("imports a blocked pilot boundary without loading Supabase storage side effects", async () => {
+    // Given
+    vi.resetModules()
+    vi.doMock("../integrations/supabase/browser-client.ts", () => {
+      window.localStorage.setItem("supabase-import-probe", "loaded")
+      return { createBrowserPilotGateway: vi.fn() }
+    })
+    const getItem = vi.spyOn(Storage.prototype, "getItem")
+    const removeItem = vi.spyOn(Storage.prototype, "removeItem")
+    const setItem = vi.spyOn(Storage.prototype, "setItem")
+
+    try {
+      // When
+      const { App: IsolatedApp } = await import("./App.tsx")
+      IsolatedApp({ runtimeEnvironment: { VITE_APP_RUNTIME: "pilot" } })
+
+      // Then
+      expect(getItem).not.toHaveBeenCalled()
+      expect(removeItem).not.toHaveBeenCalled()
+      expect(setItem).not.toHaveBeenCalled()
+    } finally {
+      vi.doUnmock("../integrations/supabase/browser-client.ts")
+    }
+  })
+
+  it("keeps the existing chooser and seeded storage when runtime mode is omitted", () => {
+    // Given
+    const pilotGatewayFactory = vi.fn<PilotGatewayFactory>()
+
+    // When
+    render(<App pilotGatewayFactory={pilotGatewayFactory} runtimeEnvironment={{}} />)
+
+    // Then
+    expect(screen.getByRole("region", { name: "데모 세션 선택" })).toBeVisible()
+    expect(screen.getByRole("button", { name: "참여자로 시작" })).toBeEnabled()
+    expect(screen.getByRole("button", { name: "코치로 시작" })).toBeEnabled()
+    expect(window.localStorage.getItem(DEMO_STORAGE_KEY)).toMatch(/^\{"version":1,/)
+    expect(pilotGatewayFactory).not.toHaveBeenCalled()
+  })
+
+  it("blocks pilot mode before touching stale demo storage when public config is missing", () => {
+    // Given
+    const staleDemoState = JSON.stringify({ participant: "participant-19" })
+    window.localStorage.setItem(DEMO_STORAGE_KEY, staleDemoState)
+    const getItem = vi.spyOn(Storage.prototype, "getItem")
+    const removeItem = vi.spyOn(Storage.prototype, "removeItem")
+    const setItem = vi.spyOn(Storage.prototype, "setItem")
+    const pilotGatewayFactory = vi.fn<PilotGatewayFactory>()
+
+    // When
+    render(
+      <App
+        pilotGatewayFactory={pilotGatewayFactory}
+        runtimeEnvironment={{ VITE_APP_RUNTIME: "pilot" }}
+      />,
+    )
+
+    // Then
+    expect(screen.getByRole("alert")).toBeVisible()
+    expect(screen.getByRole("heading", { name: "파일럿 설정이 필요합니다" })).toBeVisible()
+    expect(screen.queryByRole("button", { name: "참여자로 시작" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "코치로 시작" })).not.toBeInTheDocument()
+    expect(screen.queryByText("participant-19")).not.toBeInTheDocument()
+    expect(getItem).not.toHaveBeenCalled()
+    expect(removeItem).not.toHaveBeenCalled()
+    expect(setItem).not.toHaveBeenCalled()
+    expect(pilotGatewayFactory).not.toHaveBeenCalled()
+    getItem.mockRestore()
+    expect(window.localStorage.getItem(DEMO_STORAGE_KEY)).toBe(staleDemoState)
+  })
+
+  it("renders the pilot auth shell through the injected factory when public config is valid", async () => {
+    // Given
+    const gateway = createGateway()
+    const pilotGatewayFactory = vi.fn<PilotGatewayFactory>(() => gateway)
+
+    // When
+    render(
+      <App
+        pilotGatewayFactory={pilotGatewayFactory}
+        runtimeEnvironment={VALID_PILOT_ENVIRONMENT}
+      />,
+    )
+
+    // Then
+    expect(await screen.findByRole("heading", { name: "파일럿 로그인" })).toBeVisible()
+    expect(screen.getByRole("textbox", { name: "이메일" })).toBeEnabled()
+    expect(screen.getByRole("button", { name: "이메일 OTP 요청" })).toBeEnabled()
+    expect(screen.queryByRole("button", { name: "참여자로 시작" })).not.toBeInTheDocument()
+    expect(pilotGatewayFactory).toHaveBeenCalledWith({
+      publicKey: VALID_PILOT_ENVIRONMENT.VITE_SUPABASE_PUBLISHABLE_KEY,
+      url: VALID_PILOT_ENVIRONMENT.VITE_SUPABASE_URL,
+    })
+  })
+
+  it("requests an email OTP from the signed-out pilot shell", async () => {
+    // Given
+    const user = userEvent.setup()
+    const gateway = createGateway()
+
+    render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
+    const email = await screen.findByRole("textbox", { name: "이메일" })
+
+    // When
+    await user.type(email, "runner@example.com")
+    await user.click(screen.getByRole("button", { name: "이메일 OTP 요청" }))
+
+    // Then
+    await waitFor(() =>
+      expect(gateway.requestEmailOtp).toHaveBeenCalledWith({ email: "runner@example.com" }),
+    )
+    expect(screen.getByRole("status")).toBeVisible()
+  })
+
+  it("shows a signed-in identity and signs out without exposing demo choices", async () => {
+    // Given
+    const user = userEvent.setup()
+    const gateway = createGateway({
+      kind: "signed_in",
+      user: { email: "coach@example.com", id: "11111111-1111-4111-8111-111111111111" },
+    })
+    render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
+    const signOut = await screen.findByRole("button", { name: "로그아웃" })
+    expect(screen.getByText("coach@example.com")).toBeVisible()
+
+    // When
+    await user.click(signOut)
+
+    // Then
+    expect(gateway.signOut).toHaveBeenCalledOnce()
+    expect(await screen.findByRole("textbox", { name: "이메일" })).toBeEnabled()
+    expect(screen.queryByRole("button", { name: "코치로 시작" })).not.toBeInTheDocument()
+  })
+})

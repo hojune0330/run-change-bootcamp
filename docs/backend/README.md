@@ -24,6 +24,32 @@ drop/create policies. Run them on a new local Supabase database before any hoste
 - Realtime publishes operational/feed tables only. Metrics, uploads, consents, audit events,
   AI jobs, push subscriptions, and the outbox are deliberately excluded.
 
+## Browser pilot boundary
+
+The browser has two explicit modes. `preview` is the default and keeps the seeded
+`DemoRepository`/localStorage behavior. `pilot` never constructs that repository. Missing,
+partial, ambiguous, or malformed public Supabase configuration renders a fail-closed screen
+before a Supabase client or demo storage adapter is created.
+
+Pilot accepts one project URL and exactly one public publishable/legacy anon key. The client
+uses PKCE, a dedicated `run-change:pilot-auth` storage key, persisted auto-refresh, and
+`detectSessionInUrl: false`; this boundary does not consume auth parameters from arbitrary
+browser URLs. Its current auth facade is deliberately limited to session read/subscription,
+registered-email `signInWithOtp` with implicit signup disabled, and sign-out. OTP verification
+or callback exchange is not implemented in this slice.
+
+The injected pilot gateway exposes the smallest SQL-backed consent/audit contract:
+
+- consent grant inserts `metric_consents`; `owner_profile_id` is derived from the authenticated
+  Supabase session and RLS rechecks `auth.uid()`;
+- revocation updates only `revoked_at` and optional `revocation_reason` for a consent id;
+- audit access selects the trigger-written `audit_events` projection; the browser cannot insert,
+  update, or delete audit rows;
+- caller inputs are strict and reject extra identity or secret fields.
+
+Operational participant/coach data is not wired into the pilot UI. These are static and local
+browser contract claims only, not evidence of a hosted Supabase project or real credentials.
+
 ## Storage convention
 
 Use the private `screenshots` or `health-imports` bucket and this object key:

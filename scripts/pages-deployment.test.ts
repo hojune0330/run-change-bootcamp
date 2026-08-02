@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process"
-import { mkdtempSync, readFileSync, rmSync } from "node:fs"
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { minVersion, satisfies, subset, valid } from "semver"
@@ -46,6 +46,7 @@ function readWorkflowNodeVersionFile(): string {
 }
 
 type BuildOutput = {
+  readonly assets: readonly string[]
   readonly index: string
   readonly manifest: z.infer<typeof ManifestSchema>
   readonly serviceWorker: string
@@ -66,6 +67,7 @@ function buildWithMode(mode: "preview" | "pages"): BuildOutput {
       },
     )
     return {
+      assets: readdirSync(join(outputDirectory, "assets")),
       index: readFileSync(join(outputDirectory, "index.html"), "utf8"),
       manifest: ManifestSchema.parse(
         JSON.parse(readFileSync(join(outputDirectory, "manifest.webmanifest"), "utf8")),
@@ -144,5 +146,24 @@ describe("Vite/PWA deployment modes", () => {
       'createHandlerBoundToURL("/run-change-bootcamp/index.html")',
     )
     expect(output.serviceWorker).not.toContain('createHandlerBoundToURL("/index.html")')
+  })
+
+  it("precaches the core shell without fetching the pilot-only runtime", () => {
+    // Given
+    const output = buildWithMode("pages")
+    const coreScript = /src="[^"]+\/assets\/([^" ]+\.js)"/.exec(output.index)?.[1]
+    const pilotChunks = output.assets.filter(
+      (asset) => asset.startsWith("BrowserPilotRuntime-") && asset.endsWith(".js"),
+    )
+
+    // When
+    const precachesPilotRuntime = pilotChunks.some((chunk) => output.serviceWorker.includes(chunk))
+
+    // Then
+    expect(coreScript).toBeDefined()
+    expect(pilotChunks).toHaveLength(1)
+    expect(output.serviceWorker).toContain(coreScript)
+    expect(output.serviceWorker).toContain("index.html")
+    expect(precachesPilotRuntime).toBe(false)
   })
 })
