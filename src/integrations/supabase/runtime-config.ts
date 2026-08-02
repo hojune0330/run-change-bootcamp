@@ -38,6 +38,7 @@ const ALLOWED_BROWSER_ENV_KEYS = [
 
 const LOCAL_SUPABASE_HOSTS = ["127.0.0.1", "[::1]", "localhost"] as const
 const PUBLIC_LEGACY_JWT_ROLES = ["anon", "authenticated"] as const
+const PUBLIC_PUBLISHABLE_KEY_PREFIX = "sb_publishable_"
 const JWT_SEGMENT_PATTERN = /^[A-Za-z0-9_-]+$/
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
@@ -58,11 +59,14 @@ function parseJwtObject(segment: string): Readonly<Record<string, unknown>> | un
   }
 }
 
-function hasPublicLegacyJwtRole(value: string): boolean {
-  if (!value.startsWith("eyJ")) return true
+function isSupportedPublicKey(value: string): boolean {
+  if (value.startsWith(PUBLIC_PUBLISHABLE_KEY_PREFIX)) return true
 
   const segments = value.split(".")
-  if (segments.length !== 3 || segments.some((segment) => !JWT_SEGMENT_PATTERN.test(segment))) {
+  if (
+    segments.length !== 3 ||
+    segments.some((segment) => segment.length === 0 || !JWT_SEGMENT_PATTERN.test(segment))
+  ) {
     return false
   }
 
@@ -102,7 +106,7 @@ const SupabasePublicKeySchema = z
   .max(4096)
   .regex(/^[A-Za-z0-9._-]+$/)
   .refine((value) => !value.startsWith("sb_secret_"))
-  .refine(hasPublicLegacyJwtRole)
+  .refine(isSupportedPublicKey)
 
 function configuredString(environment: RuntimeEnvironment, key: string): string | undefined {
   const value = environment[key]

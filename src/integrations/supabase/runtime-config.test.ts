@@ -11,6 +11,16 @@ function legacyJwt(payload: Readonly<Record<string, unknown>>): string {
   return `${encode({ alg: "HS256", typ: "JWT" })}.${encode(payload)}.test-signature`
 }
 
+function legacyJwtWithHeaderJson(
+  payload: Readonly<Record<string, unknown>>,
+  headerJson: string,
+): string {
+  const encode = (value: string) =>
+    btoa(value).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "")
+
+  return `${encode(headerJson)}.${encode(JSON.stringify(payload))}.test-signature`
+}
+
 describe("runtime configuration", () => {
   it("defaults to preview when no runtime mode is supplied", () => {
     // Given
@@ -157,6 +167,24 @@ describe("runtime configuration", () => {
     const environment = {
       VITE_APP_RUNTIME: "pilot",
       VITE_SUPABASE_ANON_KEY: legacyJwt({ role }),
+      VITE_SUPABASE_URL: VALID_URL,
+    }
+
+    // When
+    const result = resolveRuntimeConfiguration(environment)
+
+    // Then
+    expect(result).toEqual({ kind: "blocked", mode: "pilot", reason: "invalid_public_config" })
+  })
+
+  it("rejects a privileged legacy JWT when the decoded header is not eyJ-prefixed", () => {
+    // Given
+    const environment = {
+      VITE_APP_RUNTIME: "pilot",
+      VITE_SUPABASE_ANON_KEY: legacyJwtWithHeaderJson(
+        { role: "service_role" },
+        ' {"alg":"HS256","typ":"JWT"}',
+      ),
       VITE_SUPABASE_URL: VALID_URL,
     }
 
