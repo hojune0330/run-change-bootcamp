@@ -1,8 +1,15 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { resolveRuntimeConfiguration } from "./runtime-config.ts"
 
 const VALID_PUBLIC_KEY = "sb_publishable_boundary_test_1234567890"
 const VALID_URL = "https://boundary-test.supabase.co"
+
+function legacyJwt(payload: Readonly<Record<string, unknown>>): string {
+  const encode = (value: Readonly<Record<string, unknown>>) =>
+    btoa(JSON.stringify(value)).replaceAll("+", "-").replaceAll("/", "_").replaceAll("=", "")
+
+  return `${encode({ alg: "HS256", typ: "JWT" })}.${encode(payload)}.test-signature`
+}
 
 describe("runtime configuration", () => {
   it("defaults to preview when no runtime mode is supplied", () => {
@@ -10,6 +17,23 @@ describe("runtime configuration", () => {
     const environment = {}
 
     // When
+    const result = resolveRuntimeConfiguration(environment)
+
+    // Then
+    expect(result).toEqual({ kind: "ready", mode: "preview" })
+  })
+
+  it.each([
+    {
+      environment: { VITE_DISABLE_REACT_DEVTOOLS: "1" },
+      label: "default",
+    },
+    {
+      environment: { VITE_APP_RUNTIME: "preview", VITE_DISABLE_REACT_DEVTOOLS: "1" },
+      label: "explicit",
+    },
+  ])("keeps $label preview when React devtools instrumentation is disabled", ({ environment }) => {
+    // Given / When
     const result = resolveRuntimeConfiguration(environment)
 
     // Then
@@ -97,12 +121,42 @@ describe("runtime configuration", () => {
     })
   })
 
-  it("accepts a legacy public anon key through its explicit public variable", () => {
+  it.each([{ role: "anon" }, { role: "authenticated" }])(
+    "accepts a legacy public JWT with the $role role through its explicit public variable",
+    ({ role }) => {
+      // Given
+      const publicKey = legacyJwt({ role })
+      const environment = {
+        VITE_APP_RUNTIME: "pilot",
+        VITE_SUPABASE_ANON_KEY: publicKey,
+        VITE_SUPABASE_URL: VALID_URL,
+      }
+
+      // When
+      const result = resolveRuntimeConfiguration(environment)
+
+      // Then
+      expect(result).toEqual({
+        config: { publicKey, url: VALID_URL },
+        kind: "ready",
+        mode: "pilot",
+      })
+    },
+  )
+
+  it.each([
+    { role: "service_role" },
+    { role: "postgres" },
+    { role: "supabase_admin" },
+    { role: "supabase_auth_admin" },
+    { role: "supabase_storage_admin" },
+    { role: "supabase_etl_admin" },
+    { role: "dashboard_user" },
+  ])("rejects a legacy JWT with the privileged $role role", ({ role }) => {
     // Given
-    const anonKey = `eyJ${"a".repeat(48)}`
     const environment = {
       VITE_APP_RUNTIME: "pilot",
-      VITE_SUPABASE_ANON_KEY: anonKey,
+      VITE_SUPABASE_ANON_KEY: legacyJwt({ role }),
       VITE_SUPABASE_URL: VALID_URL,
     }
 
@@ -110,18 +164,56 @@ describe("runtime configuration", () => {
     const result = resolveRuntimeConfiguration(environment)
 
     // Then
-    expect(result).toMatchObject({
-      config: { publicKey: anonKey, url: VALID_URL },
-      kind: "ready",
-      mode: "pilot",
+    expect(result).toEqual({ kind: "blocked", mode: "pilot", reason: "invalid_public_config" })
+  })
+
+  it.each([
+    { key: `eyJ${"a".repeat(48)}`, label: "incomplete compact JWT" },
+    { key: legacyJwt({}), label: "missing role claim" },
+    { key: legacyJwt({ role: 42 }), label: "non-string role claim" },
+  ])("rejects a malformed legacy JWT: $label", ({ key }) => {
+    // Given
+    const environment = {
+      VITE_APP_RUNTIME: "pilot",
+      VITE_SUPABASE_ANON_KEY: key,
+      VITE_SUPABASE_URL: VALID_URL,
+    }
+
+    // When
+    const result = resolveRuntimeConfiguration(environment)
+
+    // Then
+    expect(result).toEqual({ kind: "blocked", mode: "pilot", reason: "invalid_public_config" })
+  })
+
+  it("blocks a legacy JWT when base64 decoding fails at the browser boundary", () => {
+    // Given
+    const environment = {
+      VITE_APP_RUNTIME: "pilot",
+      VITE_SUPABASE_ANON_KEY: legacyJwt({ role: "anon" }),
+      VITE_SUPABASE_URL: VALID_URL,
+    }
+    const originalAtob = globalThis.atob
+    vi.stubGlobal("atob", () => {
+      throw new DOMException("invalid base64", "InvalidCharacterError")
     })
+
+    try {
+      // When
+      const result = resolveRuntimeConfiguration(environment)
+
+      // Then
+      expect(result).toEqual({ kind: "blocked", mode: "pilot", reason: "invalid_public_config" })
+    } finally {
+      vi.stubGlobal("atob", originalAtob)
+    }
   })
 
   it("blocks ambiguous public keys instead of choosing one silently", () => {
     // Given
     const environment = {
       VITE_APP_RUNTIME: "pilot",
-      VITE_SUPABASE_ANON_KEY: `eyJ${"a".repeat(48)}`,
+      VITE_SUPABASE_ANON_KEY: legacyJwt({ role: "anon" }),
       VITE_SUPABASE_PUBLISHABLE_KEY: VALID_PUBLIC_KEY,
       VITE_SUPABASE_URL: VALID_URL,
     }

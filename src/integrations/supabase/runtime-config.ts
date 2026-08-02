@@ -30,12 +30,52 @@ export type RuntimeConfiguration =
 
 const ALLOWED_BROWSER_ENV_KEYS = [
   "VITE_APP_RUNTIME",
+  "VITE_DISABLE_REACT_DEVTOOLS",
   "VITE_SUPABASE_ANON_KEY",
   "VITE_SUPABASE_PUBLISHABLE_KEY",
   "VITE_SUPABASE_URL",
 ] as const
 
 const LOCAL_SUPABASE_HOSTS = ["127.0.0.1", "[::1]", "localhost"] as const
+const PUBLIC_LEGACY_JWT_ROLES = ["anon", "authenticated"] as const
+const JWT_SEGMENT_PATTERN = /^[A-Za-z0-9_-]+$/
+
+function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function parseJwtObject(segment: string): Readonly<Record<string, unknown>> | undefined {
+  if (!JWT_SEGMENT_PATTERN.test(segment) || segment.length % 4 === 1) return undefined
+
+  try {
+    const base64 = segment.replaceAll("-", "+").replaceAll("_", "/")
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=")
+    const bytes = Uint8Array.from(atob(padded), (character) => character.charCodeAt(0))
+    const value: unknown = JSON.parse(new TextDecoder().decode(bytes))
+    return isRecord(value) ? value : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function hasPublicLegacyJwtRole(value: string): boolean {
+  if (!value.startsWith("eyJ")) return true
+
+  const segments = value.split(".")
+  if (segments.length !== 3 || segments.some((segment) => !JWT_SEGMENT_PATTERN.test(segment))) {
+    return false
+  }
+
+  const encodedHeader = segments[0]
+  const encodedPayload = segments[1]
+  if (encodedHeader === undefined || encodedPayload === undefined) return false
+
+  const header = parseJwtObject(encodedHeader)
+  const payload = parseJwtObject(encodedPayload)
+  if (typeof header?.["alg"] !== "string" || payload === undefined) return false
+
+  return PUBLIC_LEGACY_JWT_ROLES.some((role) => role === payload["role"])
+}
 
 const SupabaseUrlSchema = z
   .url()
@@ -62,6 +102,7 @@ const SupabasePublicKeySchema = z
   .max(4096)
   .regex(/^[A-Za-z0-9._-]+$/)
   .refine((value) => !value.startsWith("sb_secret_"))
+  .refine(hasPublicLegacyJwtRole)
 
 function configuredString(environment: RuntimeEnvironment, key: string): string | undefined {
   const value = environment[key]
