@@ -131,7 +131,7 @@ describe("runtime configuration", () => {
     })
   })
 
-  it.each([{ role: "anon" }, { role: "authenticated" }])(
+  it.each([{ role: "anon" }])(
     "accepts a legacy public JWT with the $role role through its explicit public variable",
     ({ role }) => {
       // Given

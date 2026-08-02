@@ -37,7 +37,7 @@ const ALLOWED_BROWSER_ENV_KEYS = [
 ] as const
 
 const LOCAL_SUPABASE_HOSTS = ["127.0.0.1", "[::1]", "localhost"] as const
-const PUBLIC_LEGACY_JWT_ROLES = ["anon", "authenticated"] as const
+const PUBLIC_LEGACY_JWT_ROLES = ["anon"] as const
 const PUBLIC_PUBLISHABLE_KEY_PREFIX = "sb_publishable_"
 const JWT_SEGMENT_PATTERN = /^[A-Za-z0-9_-]+$/
 
