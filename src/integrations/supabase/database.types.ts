@@ -3,33 +3,274 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
-      account_deletion_requests: {
+      accepted_structured_imports: {
         Row: {
-          completed_at: string | null
+          accepted_at: string
+          accepted_by: string | null
+          consent_grant_id: string
+          delete_after: string
+          format: string
           id: string
-          profile_id: string
-          requested_at: string
-          status: string
+          metrics: Json
+          observed_at: string
+          parser_name: string
+          parser_version: string
+          participant_profile_id: string
+          program_id: string
+          quality_flags: string[]
+          server_duplicate_hmac: string
+          source_family: string
+          source_model: string | null
+          timezone: string
         }
         Insert: {
-          completed_at?: string | null
+          accepted_at?: string
+          accepted_by?: string | null
+          consent_grant_id: string
+          delete_after: string
+          format: string
           id?: string
-          profile_id: string
-          requested_at?: string
-          status?: string
+          metrics: Json
+          observed_at: string
+          parser_name: string
+          parser_version: string
+          participant_profile_id: string
+          program_id: string
+          quality_flags?: string[]
+          server_duplicate_hmac: string
+          source_family: string
+          source_model?: string | null
+          timezone: string
         }
         Update: {
-          completed_at?: string | null
+          accepted_at?: string
+          accepted_by?: string | null
+          consent_grant_id?: string
+          delete_after?: string
+          format?: string
           id?: string
-          profile_id?: string
+          metrics?: Json
+          observed_at?: string
+          parser_name?: string
+          parser_version?: string
+          participant_profile_id?: string
+          program_id?: string
+          quality_flags?: string[]
+          server_duplicate_hmac?: string
+          source_family?: string
+          source_model?: string | null
+          timezone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accepted_structured_imports_accepted_by_fkey"
+            columns: ["accepted_by"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accepted_structured_imports_consent_grant_id_fkey"
+            columns: ["consent_grant_id"]
+            referencedRelation: "consent_grants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accepted_structured_imports_participant_profile_id_fkey"
+            columns: ["participant_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accepted_structured_imports_program_id_fkey"
+            columns: ["program_id"]
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      account_deletion_requests: {
+        Row: {
+          alert_state: string
+          auth_deleted_at: string | null
+          backup_vendor_tombstone_due_at: string
+          backup_vendor_tombstone_recorded_at: string | null
+          completed_at: string | null
+          database_deleted_at: string | null
+          id: string
+          last_error_code: string | null
+          next_retry_at: string | null
+          phase: string
+          profile_id: string | null
+          requested_at: string
+          retry_count: number
+          status: string
+          storage_deleted_at: string | null
+          subject_tombstone_hmac: string | null
+        }
+        Insert: {
+          alert_state?: string
+          auth_deleted_at?: string | null
+          backup_vendor_tombstone_due_at: string
+          backup_vendor_tombstone_recorded_at?: string | null
+          completed_at?: string | null
+          database_deleted_at?: string | null
+          id?: string
+          last_error_code?: string | null
+          next_retry_at?: string | null
+          phase?: string
+          profile_id?: string | null
           requested_at?: string
+          retry_count?: number
           status?: string
+          storage_deleted_at?: string | null
+          subject_tombstone_hmac?: string | null
+        }
+        Update: {
+          alert_state?: string
+          auth_deleted_at?: string | null
+          backup_vendor_tombstone_due_at?: string
+          backup_vendor_tombstone_recorded_at?: string | null
+          completed_at?: string | null
+          database_deleted_at?: string | null
+          id?: string
+          last_error_code?: string | null
+          next_retry_at?: string | null
+          phase?: string
+          profile_id?: string | null
+          requested_at?: string
+          retry_count?: number
+          status?: string
+          storage_deleted_at?: string | null
+          subject_tombstone_hmac?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "account_deletion_requests_profile_id_fkey"
             columns: ["profile_id"]
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      account_deletion_tombstones: {
+        Row: {
+          auth_deleted_at: string
+          backup_vendor_tombstone_recorded_at: string
+          created_at: string
+          database_deleted_at: string
+          purge_after: string
+          request_id: string
+          storage_deleted_at: string
+          subject_tombstone_hmac: string
+        }
+        Insert: {
+          auth_deleted_at: string
+          backup_vendor_tombstone_recorded_at: string
+          created_at?: string
+          database_deleted_at: string
+          purge_after: string
+          request_id: string
+          storage_deleted_at: string
+          subject_tombstone_hmac: string
+        }
+        Update: {
+          auth_deleted_at?: string
+          backup_vendor_tombstone_recorded_at?: string
+          created_at?: string
+          database_deleted_at?: string
+          purge_after?: string
+          request_id?: string
+          storage_deleted_at?: string
+          subject_tombstone_hmac?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_deletion_tombstones_request_id_fkey"
+            columns: ["request_id"]
+            referencedRelation: "account_deletion_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aggregate_retention_deadlines: {
+        Row: {
+          delete_after: string
+          generated_at: string
+          snapshot_id: string
+        }
+        Insert: {
+          delete_after: string
+          generated_at: string
+          snapshot_id: string
+        }
+        Update: {
+          delete_after?: string
+          generated_at?: string
+          snapshot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aggregate_retention_deadlines_snapshot_id_fkey"
+            columns: ["snapshot_id"]
+            referencedRelation: "measurement_report_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_control_attestations: {
+        Row: {
+          approval_reference_hash: string
+          approved_at: string
+          created_at: string
+          data_classes: string[]
+          endpoint: string
+          expires_at: string
+          id: string
+          organization_id: string
+          provider: string
+          provider_project_id: string
+          purposes: string[]
+          revoked_at: string | null
+          store_false_required: boolean
+          zero_data_retention_control: string
+        }
+        Insert: {
+          approval_reference_hash: string
+          approved_at: string
+          created_at?: string
+          data_classes: string[]
+          endpoint: string
+          expires_at: string
+          id?: string
+          organization_id: string
+          provider: string
+          provider_project_id: string
+          purposes: string[]
+          revoked_at?: string | null
+          store_false_required?: boolean
+          zero_data_retention_control: string
+        }
+        Update: {
+          approval_reference_hash?: string
+          approved_at?: string
+          created_at?: string
+          data_classes?: string[]
+          endpoint?: string
+          expires_at?: string
+          id?: string
+          organization_id?: string
+          provider?: string
+          provider_project_id?: string
+          purposes?: string[]
+          revoked_at?: string | null
+          store_false_required?: boolean
+          zero_data_retention_control?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_control_attestations_organization_id_fkey"
+            columns: ["organization_id"]
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -131,6 +372,97 @@ export type Database = {
             foreignKeyName: "announcements_program_id_fkey"
             columns: ["program_id"]
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anonymous_faq_copies: {
+        Row: {
+          answer_copy: string
+          audience: string
+          created_at: string
+          id: string
+          participant_opt_in_id: string
+          program_id: string
+          publication_status: string
+          published_at: string
+          published_by_profile_id: string
+          purge_after: string | null
+          question_copy: string
+          source_proposal_id: string
+          source_thread_id: string
+          unpublished_at: string | null
+          unpublished_by_profile_id: string | null
+        }
+        Insert: {
+          answer_copy: string
+          audience?: string
+          created_at?: string
+          id?: string
+          participant_opt_in_id: string
+          program_id: string
+          publication_status?: string
+          published_at?: string
+          published_by_profile_id: string
+          purge_after?: string | null
+          question_copy: string
+          source_proposal_id: string
+          source_thread_id: string
+          unpublished_at?: string | null
+          unpublished_by_profile_id?: string | null
+        }
+        Update: {
+          answer_copy?: string
+          audience?: string
+          created_at?: string
+          id?: string
+          participant_opt_in_id?: string
+          program_id?: string
+          publication_status?: string
+          published_at?: string
+          published_by_profile_id?: string
+          purge_after?: string | null
+          question_copy?: string
+          source_proposal_id?: string
+          source_thread_id?: string
+          unpublished_at?: string | null
+          unpublished_by_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anonymous_faq_copies_participant_opt_in_id_fkey"
+            columns: ["participant_opt_in_id"]
+            referencedRelation: "faq_participant_opt_ins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anonymous_faq_copies_program_id_fkey"
+            columns: ["program_id"]
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anonymous_faq_copies_published_by_profile_id_fkey"
+            columns: ["published_by_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anonymous_faq_copies_source_proposal_id_fkey"
+            columns: ["source_proposal_id"]
+            referencedRelation: "faq_redaction_proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anonymous_faq_copies_source_thread_id_program_id_fkey"
+            columns: ["source_thread_id", "program_id"]
+            referencedRelation: "private_question_threads"
+            referencedColumns: ["id", "program_id"]
+          },
+          {
+            foreignKeyName: "anonymous_faq_copies_unpublished_by_profile_id_fkey"
+            columns: ["unpublished_by_profile_id"]
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -423,6 +755,7 @@ export type Database = {
           entity_id: string | null
           entity_type: string
           event_type: string
+          expires_at: string
           id: number
           occurred_at: string
           organization_id: string | null
@@ -434,6 +767,7 @@ export type Database = {
           entity_id?: string | null
           entity_type: string
           event_type: string
+          expires_at?: string
           id?: never
           occurred_at?: string
           organization_id?: string | null
@@ -445,6 +779,7 @@ export type Database = {
           entity_id?: string | null
           entity_type?: string
           event_type?: string
+          expires_at?: string
           id?: never
           occurred_at?: string
           organization_id?: string | null
@@ -466,6 +801,106 @@ export type Database = {
           {
             foreignKeyName: "audit_events_subject_profile_id_fkey"
             columns: ["subject_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consent_grants: {
+        Row: {
+          audience: string
+          control: string
+          created_at: string
+          data_classes: string[]
+          endpoint: string
+          expires_at: string
+          granted_at: string
+          id: string
+          participant_profile_id: string
+          processor_disclosure: string | null
+          program_id: string
+          provider: string
+          provider_project_id: string | null
+          purpose: string
+          recipient: string
+          recipient_profile_id: string | null
+          stated_purpose: string
+          status: string
+          withdrawal_reason_code: string | null
+          withdrawn_at: string | null
+          withdrawn_by_profile_id: string | null
+          zero_data_retention_control: string | null
+        }
+        Insert: {
+          audience: string
+          control: string
+          created_at?: string
+          data_classes: string[]
+          endpoint: string
+          expires_at: string
+          granted_at: string
+          id?: string
+          participant_profile_id: string
+          processor_disclosure?: string | null
+          program_id: string
+          provider: string
+          provider_project_id?: string | null
+          purpose: string
+          recipient: string
+          recipient_profile_id?: string | null
+          stated_purpose: string
+          status?: string
+          withdrawal_reason_code?: string | null
+          withdrawn_at?: string | null
+          withdrawn_by_profile_id?: string | null
+          zero_data_retention_control?: string | null
+        }
+        Update: {
+          audience?: string
+          control?: string
+          created_at?: string
+          data_classes?: string[]
+          endpoint?: string
+          expires_at?: string
+          granted_at?: string
+          id?: string
+          participant_profile_id?: string
+          processor_disclosure?: string | null
+          program_id?: string
+          provider?: string
+          provider_project_id?: string | null
+          purpose?: string
+          recipient?: string
+          recipient_profile_id?: string | null
+          stated_purpose?: string
+          status?: string
+          withdrawal_reason_code?: string | null
+          withdrawn_at?: string | null
+          withdrawn_by_profile_id?: string | null
+          zero_data_retention_control?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_grants_participant_profile_id_fkey"
+            columns: ["participant_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consent_grants_program_id_fkey"
+            columns: ["program_id"]
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consent_grants_recipient_profile_id_fkey"
+            columns: ["recipient_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consent_grants_withdrawn_by_profile_id_fkey"
+            columns: ["withdrawn_by_profile_id"]
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -526,35 +961,242 @@ export type Database = {
           },
         ]
       }
+      deletion_job_alerts: {
+        Row: {
+          alert_code: string
+          id: number
+          opened_at: string
+          request_id: string
+          resolved_at: string | null
+          severity: string
+        }
+        Insert: {
+          alert_code: string
+          id?: never
+          opened_at?: string
+          request_id: string
+          resolved_at?: string | null
+          severity: string
+        }
+        Update: {
+          alert_code?: string
+          id?: never
+          opened_at?: string
+          request_id?: string
+          resolved_at?: string | null
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deletion_job_alerts_request_id_fkey"
+            columns: ["request_id"]
+            referencedRelation: "account_deletion_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faq_participant_opt_ins: {
+        Row: {
+          copy_sha256: string
+          created_at: string
+          id: string
+          opted_in_at: string
+          participant_profile_id: string
+          program_id: string
+          proposal_id: string
+          status: string
+          thread_id: string
+          withdrawal_reason_code: string | null
+          withdrawn_at: string | null
+          withdrawn_by_profile_id: string | null
+        }
+        Insert: {
+          copy_sha256: string
+          created_at?: string
+          id?: string
+          opted_in_at: string
+          participant_profile_id: string
+          program_id: string
+          proposal_id: string
+          status?: string
+          thread_id: string
+          withdrawal_reason_code?: string | null
+          withdrawn_at?: string | null
+          withdrawn_by_profile_id?: string | null
+        }
+        Update: {
+          copy_sha256?: string
+          created_at?: string
+          id?: string
+          opted_in_at?: string
+          participant_profile_id?: string
+          program_id?: string
+          proposal_id?: string
+          status?: string
+          thread_id?: string
+          withdrawal_reason_code?: string | null
+          withdrawn_at?: string | null
+          withdrawn_by_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faq_participant_opt_ins_participant_profile_id_fkey"
+            columns: ["participant_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faq_participant_opt_ins_proposal_id_fkey"
+            columns: ["proposal_id"]
+            referencedRelation: "faq_redaction_proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faq_participant_opt_ins_thread_id_program_id_fkey"
+            columns: ["thread_id", "program_id"]
+            referencedRelation: "private_question_threads"
+            referencedColumns: ["id", "program_id"]
+          },
+          {
+            foreignKeyName: "faq_participant_opt_ins_withdrawn_by_profile_id_fkey"
+            columns: ["withdrawn_by_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faq_redaction_proposals: {
+        Row: {
+          created_at: string
+          id: string
+          program_id: string
+          proposed_by_profile_id: string
+          redacted_answer: string
+          redacted_copy_sha256: string | null
+          redacted_question: string
+          review_control: string | null
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by_profile_id: string | null
+          thread_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          program_id: string
+          proposed_by_profile_id: string
+          redacted_answer: string
+          redacted_copy_sha256?: string | null
+          redacted_question: string
+          review_control?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by_profile_id?: string | null
+          thread_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          program_id?: string
+          proposed_by_profile_id?: string
+          redacted_answer?: string
+          redacted_copy_sha256?: string | null
+          redacted_question?: string
+          review_control?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by_profile_id?: string | null
+          thread_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faq_redaction_proposals_proposed_by_profile_id_fkey"
+            columns: ["proposed_by_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faq_redaction_proposals_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "faq_redaction_proposals_thread_id_program_id_fkey"
+            columns: ["thread_id", "program_id"]
+            referencedRelation: "private_question_threads"
+            referencedColumns: ["id", "program_id"]
+          },
+        ]
+      }
       feed_comments: {
         Row: {
           author_profile_id: string
           body: string
+          content_origin: string
+          content_sensitivity: string | null
           created_at: string
+          delete_state: string
           deleted_at: string | null
+          edited_at: string | null
           id: string
+          moderated_at: string | null
+          moderated_by_profile_id: string | null
+          moderation_reason_code: string | null
+          moderation_state: string
           post_id: string
+          purge_after: string | null
+          purged_at: string | null
         }
         Insert: {
           author_profile_id: string
           body: string
+          content_origin?: string
+          content_sensitivity?: string | null
           created_at?: string
+          delete_state?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
+          moderated_at?: string | null
+          moderated_by_profile_id?: string | null
+          moderation_reason_code?: string | null
+          moderation_state?: string
           post_id: string
+          purge_after?: string | null
+          purged_at?: string | null
         }
         Update: {
           author_profile_id?: string
           body?: string
+          content_origin?: string
+          content_sensitivity?: string | null
           created_at?: string
+          delete_state?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
+          moderated_at?: string | null
+          moderated_by_profile_id?: string | null
+          moderation_reason_code?: string | null
+          moderation_state?: string
           post_id?: string
+          purge_after?: string | null
+          purged_at?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "feed_comments_author_profile_id_fkey"
             columns: ["author_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_comments_moderated_by_profile_id_fkey"
+            columns: ["moderated_by_profile_id"]
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -568,32 +1210,68 @@ export type Database = {
       }
       feed_posts: {
         Row: {
+          audience_preview: string
           author_profile_id: string
           body: string
+          content_origin: string
+          content_sensitivity: string | null
           created_at: string
+          delete_state: string
           deleted_at: string | null
+          edited_at: string | null
           id: string
+          moderated_at: string | null
+          moderated_by_profile_id: string | null
+          moderation_reason_code: string | null
+          moderation_state: string
           program_id: string
+          publication_source: string
+          purge_after: string | null
+          purged_at: string | null
           submission_id: string | null
           visibility: string
         }
         Insert: {
+          audience_preview?: string
           author_profile_id: string
           body: string
+          content_origin?: string
+          content_sensitivity?: string | null
           created_at?: string
+          delete_state?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
+          moderated_at?: string | null
+          moderated_by_profile_id?: string | null
+          moderation_reason_code?: string | null
+          moderation_state?: string
           program_id: string
+          publication_source?: string
+          purge_after?: string | null
+          purged_at?: string | null
           submission_id?: string | null
           visibility?: string
         }
         Update: {
+          audience_preview?: string
           author_profile_id?: string
           body?: string
+          content_origin?: string
+          content_sensitivity?: string | null
           created_at?: string
+          delete_state?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
+          moderated_at?: string | null
+          moderated_by_profile_id?: string | null
+          moderation_reason_code?: string | null
+          moderation_state?: string
           program_id?: string
+          publication_source?: string
+          purge_after?: string | null
+          purged_at?: string | null
           submission_id?: string | null
           visibility?: string
         }
@@ -601,6 +1279,12 @@ export type Database = {
           {
             foreignKeyName: "feed_posts_author_profile_id_fkey"
             columns: ["author_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_posts_moderated_by_profile_id_fkey"
+            columns: ["moderated_by_profile_id"]
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -652,13 +1336,55 @@ export type Database = {
           },
         ]
       }
+      feed_share_events: {
+        Row: {
+          actor_profile_id: string
+          audience_preview: string
+          created_at: string
+          id: number
+          post_id: string
+          share_method: string
+        }
+        Insert: {
+          actor_profile_id: string
+          audience_preview: string
+          created_at?: string
+          id?: never
+          post_id: string
+          share_method: string
+        }
+        Update: {
+          actor_profile_id?: string
+          audience_preview?: string
+          created_at?: string
+          id?: never
+          post_id?: string
+          share_method?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_share_events_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feed_share_events_post_id_fkey"
+            columns: ["post_id"]
+            referencedRelation: "feed_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback_items: {
         Row: {
+          ai_control_attestation_id: string | null
           ai_request_id: string | null
           approved_at: string | null
           approved_by: string | null
           body: string
           classification: string
+          consent_grant_id: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -670,11 +1396,13 @@ export type Database = {
           submission_id: string | null
         }
         Insert: {
+          ai_control_attestation_id?: string | null
           ai_request_id?: string | null
           approved_at?: string | null
           approved_by?: string | null
           body: string
           classification: string
+          consent_grant_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -686,11 +1414,13 @@ export type Database = {
           submission_id?: string | null
         }
         Update: {
+          ai_control_attestation_id?: string | null
           ai_request_id?: string | null
           approved_at?: string | null
           approved_by?: string | null
           body?: string
           classification?: string
+          consent_grant_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -703,6 +1433,12 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "feedback_items_ai_control_attestation_id_fkey"
+            columns: ["ai_control_attestation_id"]
+            referencedRelation: "ai_control_attestations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "feedback_items_ai_request_id_fkey"
             columns: ["ai_request_id"]
             referencedRelation: "ai_requests"
@@ -712,6 +1448,12 @@ export type Database = {
             foreignKeyName: "feedback_items_approved_by_fkey"
             columns: ["approved_by"]
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_items_consent_grant_id_fkey"
+            columns: ["consent_grant_id"]
+            referencedRelation: "consent_grants"
             referencedColumns: ["id"]
           },
           {
@@ -742,6 +1484,7 @@ export type Database = {
       }
       feedback_review_events: {
         Row: {
+          consent_grant_id: string | null
           created_at: string
           decision: string
           feedback_id: string
@@ -750,6 +1493,7 @@ export type Database = {
           reviewer_profile_id: string
         }
         Insert: {
+          consent_grant_id?: string | null
           created_at?: string
           decision: string
           feedback_id: string
@@ -758,6 +1502,7 @@ export type Database = {
           reviewer_profile_id: string
         }
         Update: {
+          consent_grant_id?: string | null
           created_at?: string
           decision?: string
           feedback_id?: string
@@ -766,6 +1511,12 @@ export type Database = {
           reviewer_profile_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "feedback_review_events_consent_grant_id_fkey"
+            columns: ["consent_grant_id"]
+            referencedRelation: "consent_grants"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "feedback_review_events_feedback_id_fkey"
             columns: ["feedback_id"]
@@ -1016,42 +1767,54 @@ export type Database = {
       }
       metric_consents: {
         Row: {
+          consent_grant_id: string | null
           expires_at: string
           granted_at: string
           grantee_profile_id: string
           grantee_role: string
           id: string
           metric_record_id: string
+          named_coach_grant_id: string | null
           owner_profile_id: string
           purpose: string
           revocation_reason: string | null
           revoked_at: string | null
         }
         Insert: {
+          consent_grant_id?: string | null
           expires_at: string
           granted_at?: string
           grantee_profile_id: string
           grantee_role: string
           id?: string
           metric_record_id: string
+          named_coach_grant_id?: string | null
           owner_profile_id: string
           purpose: string
           revocation_reason?: string | null
           revoked_at?: string | null
         }
         Update: {
+          consent_grant_id?: string | null
           expires_at?: string
           granted_at?: string
           grantee_profile_id?: string
           grantee_role?: string
           id?: string
           metric_record_id?: string
+          named_coach_grant_id?: string | null
           owner_profile_id?: string
           purpose?: string
           revocation_reason?: string | null
           revoked_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "metric_consents_consent_grant_id_fkey"
+            columns: ["consent_grant_id"]
+            referencedRelation: "consent_grants"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "metric_consents_grantee_profile_id_fkey"
             columns: ["grantee_profile_id"]
@@ -1062,6 +1825,12 @@ export type Database = {
             foreignKeyName: "metric_consents_metric_record_id_fkey"
             columns: ["metric_record_id"]
             referencedRelation: "metric_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "metric_consents_named_coach_grant_id_fkey"
+            columns: ["named_coach_grant_id"]
+            referencedRelation: "named_coach_grants"
             referencedColumns: ["id"]
           },
           {
@@ -1163,6 +1932,137 @@ export type Database = {
           },
         ]
       }
+      named_coach_grants: {
+        Row: {
+          coach_profile_id: string
+          consent_grant_id: string
+          created_at: string
+          expires_at: string
+          granted_at: string
+          id: string
+          participant_profile_id: string
+          program_id: string
+          status: string
+          withdrawal_reason_code: string | null
+          withdrawn_at: string | null
+          withdrawn_by_profile_id: string | null
+        }
+        Insert: {
+          coach_profile_id: string
+          consent_grant_id: string
+          created_at?: string
+          expires_at: string
+          granted_at: string
+          id?: string
+          participant_profile_id: string
+          program_id: string
+          status?: string
+          withdrawal_reason_code?: string | null
+          withdrawn_at?: string | null
+          withdrawn_by_profile_id?: string | null
+        }
+        Update: {
+          coach_profile_id?: string
+          consent_grant_id?: string
+          created_at?: string
+          expires_at?: string
+          granted_at?: string
+          id?: string
+          participant_profile_id?: string
+          program_id?: string
+          status?: string
+          withdrawal_reason_code?: string | null
+          withdrawn_at?: string | null
+          withdrawn_by_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "named_coach_grants_coach_profile_id_fkey"
+            columns: ["coach_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "named_coach_grants_consent_grant_id_fkey"
+            columns: ["consent_grant_id"]
+            referencedRelation: "consent_grants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "named_coach_grants_participant_profile_id_fkey"
+            columns: ["participant_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "named_coach_grants_program_id_fkey"
+            columns: ["program_id"]
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "named_coach_grants_withdrawn_by_profile_id_fkey"
+            columns: ["withdrawn_by_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_digest_queue: {
+        Row: {
+          category: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          local_day: string
+          logical_event_key: string
+          program_id: string | null
+          recipient_profile_id: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          local_day: string
+          logical_event_key: string
+          program_id?: string | null
+          recipient_profile_id: string
+          sent_at?: string | null
+          status: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          local_day?: string
+          logical_event_key?: string
+          program_id?: string | null
+          recipient_profile_id?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_digest_queue_program_id_fkey"
+            columns: ["program_id"]
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_digest_queue_recipient_profile_id_fkey"
+            columns: ["recipient_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_outbox: {
         Row: {
           attempt_count: number
@@ -1212,45 +2112,112 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          channels: string[]
+          digest: string
+          nonurgent_daily_cap: number
+          participant_profile_id: string
+          quiet_ends_at: string
+          quiet_starts_at: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          channels?: string[]
+          digest?: string
+          nonurgent_daily_cap?: number
+          participant_profile_id: string
+          quiet_ends_at?: string
+          quiet_starts_at?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          channels?: string[]
+          digest?: string
+          nonurgent_daily_cap?: number
+          participant_profile_id?: string
+          quiet_ends_at?: string
+          quiet_starts_at?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_participant_profile_id_fkey"
+            columns: ["participant_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_records: {
         Row: {
+          audience: string
           body: string
           category: string
           contains_sensitive_data: boolean
+          content_sensitivity: string | null
           created_at: string
           entity_id: string | null
           entity_type: string | null
           id: string
+          local_day: string
+          logical_event_key: string
+          preview_kind: string
           program_id: string | null
           read_at: string | null
           recipient_profile_id: string
+          scheduled_at: string
+          template_key: string
+          timezone: string
           title: string
+          urgency: string
         }
         Insert: {
+          audience?: string
           body: string
           category: string
           contains_sensitive_data?: boolean
+          content_sensitivity?: string | null
           created_at?: string
           entity_id?: string | null
           entity_type?: string | null
           id?: string
+          local_day: string
+          logical_event_key: string
+          preview_kind?: string
           program_id?: string | null
           read_at?: string | null
           recipient_profile_id: string
+          scheduled_at: string
+          template_key?: string
+          timezone: string
           title: string
+          urgency: string
         }
         Update: {
+          audience?: string
           body?: string
           category?: string
           contains_sensitive_data?: boolean
+          content_sensitivity?: string | null
           created_at?: string
           entity_id?: string | null
           entity_type?: string | null
           id?: string
+          local_day?: string
+          logical_event_key?: string
+          preview_kind?: string
           program_id?: string | null
           read_at?: string | null
           recipient_profile_id?: string
+          scheduled_at?: string
+          template_key?: string
+          timezone?: string
           title?: string
+          urgency?: string
         }
         Relationships: [
           {
@@ -1330,6 +2297,164 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      private_question_answers: {
+        Row: {
+          answer_body: string
+          author_profile_id: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by_profile_id: string | null
+          id: string
+          program_id: string
+          purge_after: string | null
+          status: string
+          thread_id: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          answer_body: string
+          author_profile_id: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by_profile_id?: string | null
+          id?: string
+          program_id: string
+          purge_after?: string | null
+          status?: string
+          thread_id: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          answer_body?: string
+          author_profile_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by_profile_id?: string | null
+          id?: string
+          program_id?: string
+          purge_after?: string | null
+          status?: string
+          thread_id?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_question_answers_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_question_answers_deleted_by_profile_id_fkey"
+            columns: ["deleted_by_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_question_answers_thread_id_program_id_fkey"
+            columns: ["thread_id", "program_id"]
+            referencedRelation: "private_question_threads"
+            referencedColumns: ["id", "program_id"]
+          },
+        ]
+      }
+      private_question_threads: {
+        Row: {
+          archived_at: string | null
+          archived_by_profile_id: string | null
+          closed_at: string | null
+          closed_by_profile_id: string | null
+          content_origin: string
+          content_sensitivity: string | null
+          created_at: string
+          deleted_at: string | null
+          deleted_by_profile_id: string | null
+          id: string
+          participant_profile_id: string
+          program_id: string
+          purge_after: string | null
+          question_body: string
+          routing_status: string
+          status: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          archived_at?: string | null
+          archived_by_profile_id?: string | null
+          closed_at?: string | null
+          closed_by_profile_id?: string | null
+          content_origin?: string
+          content_sensitivity?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by_profile_id?: string | null
+          id?: string
+          participant_profile_id: string
+          program_id: string
+          purge_after?: string | null
+          question_body: string
+          routing_status?: string
+          status?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          archived_at?: string | null
+          archived_by_profile_id?: string | null
+          closed_at?: string | null
+          closed_by_profile_id?: string | null
+          content_origin?: string
+          content_sensitivity?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by_profile_id?: string | null
+          id?: string
+          participant_profile_id?: string
+          program_id?: string
+          purge_after?: string | null
+          question_body?: string
+          routing_status?: string
+          status?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_question_threads_archived_by_profile_id_fkey"
+            columns: ["archived_by_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_question_threads_closed_by_profile_id_fkey"
+            columns: ["closed_by_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_question_threads_deleted_by_profile_id_fkey"
+            columns: ["deleted_by_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_question_threads_participant_profile_id_fkey"
+            columns: ["participant_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_question_threads_program_id_fkey"
+            columns: ["program_id"]
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1600,6 +2725,7 @@ export type Database = {
           created_by: string
           ends_on: string
           id: string
+          identified_data_delete_after: string
           organization_id: string
           starts_on: string
           status: string
@@ -1611,6 +2737,7 @@ export type Database = {
           created_by: string
           ends_on: string
           id?: string
+          identified_data_delete_after: string
           organization_id: string
           starts_on: string
           status?: string
@@ -1622,6 +2749,7 @@ export type Database = {
           created_by?: string
           ends_on?: string
           id?: string
+          identified_data_delete_after?: string
           organization_id?: string
           starts_on?: string
           status?: string
@@ -1790,6 +2918,100 @@ export type Database = {
             columns: ["protocol_version_id", "program_id"]
             referencedRelation: "assessment_protocol_versions"
             referencedColumns: ["id", "program_id"]
+          },
+        ]
+      }
+      retention_rules: {
+        Row: {
+          created_at: string
+          maximum_amount: number
+          rule_key: string
+          unit: string
+        }
+        Insert: {
+          created_at?: string
+          maximum_amount: number
+          rule_key: string
+          unit: string
+        }
+        Update: {
+          created_at?: string
+          maximum_amount?: number
+          rule_key?: string
+          unit?: string
+        }
+        Relationships: []
+      }
+      screenshot_draft_jobs: {
+        Row: {
+          ai_control_attestation_id: string
+          byte_length: number
+          completed_at: string | null
+          consent_grant_id: string
+          created_at: string
+          error_code: string | null
+          id: string
+          idempotency_key: string
+          metadata_expires_at: string
+          mime_type: string
+          participant_profile_id: string
+          program_id: string
+          status: string
+        }
+        Insert: {
+          ai_control_attestation_id: string
+          byte_length: number
+          completed_at?: string | null
+          consent_grant_id: string
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          idempotency_key: string
+          metadata_expires_at: string
+          mime_type: string
+          participant_profile_id: string
+          program_id: string
+          status?: string
+        }
+        Update: {
+          ai_control_attestation_id?: string
+          byte_length?: number
+          completed_at?: string | null
+          consent_grant_id?: string
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          idempotency_key?: string
+          metadata_expires_at?: string
+          mime_type?: string
+          participant_profile_id?: string
+          program_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screenshot_draft_jobs_ai_control_attestation_id_fkey"
+            columns: ["ai_control_attestation_id"]
+            referencedRelation: "ai_control_attestations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "screenshot_draft_jobs_consent_grant_id_fkey"
+            columns: ["consent_grant_id"]
+            referencedRelation: "consent_grants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "screenshot_draft_jobs_participant_profile_id_fkey"
+            columns: ["participant_profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "screenshot_draft_jobs_program_id_fkey"
+            columns: ["program_id"]
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1964,9 +3186,161 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      anonymous_faq_projection: {
+        Row: {
+          answer_copy: string | null
+          audience: string | null
+          id: string | null
+          program_id: string | null
+          published_at: string | null
+          question_copy: string | null
+        }
+        Insert: {
+          answer_copy?: string | null
+          audience?: string | null
+          id?: string | null
+          program_id?: string | null
+          published_at?: string | null
+          question_copy?: string | null
+        }
+        Update: {
+          answer_copy?: string | null
+          audience?: string | null
+          id?: string | null
+          program_id?: string | null
+          published_at?: string | null
+          question_copy?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anonymous_faq_copies_program_id_fkey"
+            columns: ["program_id"]
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      cancel_account_deletion: {
+        Args: { target_request: string }
+        Returns: undefined
+      }
+      delete_named_coach_private_answer: {
+        Args: { target_answer: string }
+        Returns: undefined
+      }
+      edit_named_coach_private_answer: {
+        Args: { target_answer: string; target_answer_body: string }
+        Returns: undefined
+      }
+      edit_participant_private_question: {
+        Args: { target_question_body: string; target_thread: string }
+        Returns: undefined
+      }
+      moderate_feed_comment: {
+        Args: {
+          target_comment_id: string
+          target_moderation_state: string
+          target_reason_code: string
+        }
+        Returns: undefined
+      }
+      moderate_feed_post: {
+        Args: {
+          target_moderation_state: string
+          target_post_id: string
+          target_reason_code: string
+        }
+        Returns: undefined
+      }
+      publish_anonymous_faq: {
+        Args: { target_opt_in: string; target_proposal: string }
+        Returns: string
+      }
+      read_named_coach_private_question: {
+        Args: { target_thread: string }
+        Returns: {
+          author_profile_id: string
+          body: string
+          created_at: string
+          item_id: string
+          item_kind: string
+          routing_status: string
+          thread_status: string
+        }[]
+      }
+      read_named_coach_private_question_metadata: {
+        Args: { target_thread: string }
+        Returns: {
+          active_answer_count: number
+          content_origin: string
+          content_sensitivity: string
+          created_at: string
+          latest_answer_at: string
+          participant_profile_id: string
+          program_id: string
+          routing_status: string
+          thread_id: string
+          thread_status: string
+          updated_at: string
+        }[]
+      }
+      read_named_coach_sensitive_metrics: {
+        Args: { target_participant: string; target_program: string }
+        Returns: {
+          metric_record_id: string
+          metric_type: string
+          numeric_value: number
+          observed_at: string
+          sensitivity: string
+          source: string
+          unit: string
+          verification_status: string
+        }[]
+      }
+      read_participant_private_question: {
+        Args: { target_thread: string }
+        Returns: {
+          author_profile_id: string
+          body: string
+          created_at: string
+          item_id: string
+          item_kind: string
+          routing_status: string
+          thread_status: string
+        }[]
+      }
+      read_participant_private_question_metadata: {
+        Args: { target_thread: string }
+        Returns: {
+          active_answer_count: number
+          content_origin: string
+          content_sensitivity: string
+          created_at: string
+          latest_answer_at: string
+          participant_profile_id: string
+          program_id: string
+          routing_status: string
+          thread_id: string
+          thread_status: string
+          updated_at: string
+        }[]
+      }
+      read_participant_sensitive_metrics: {
+        Args: { target_program: string }
+        Returns: {
+          metric_record_id: string
+          metric_type: string
+          numeric_value: number
+          observed_at: string
+          sensitivity: string
+          source: string
+          unit: string
+          verification_status: string
+        }[]
+      }
+      request_account_deletion: { Args: never; Returns: string }
       review_feedback: {
         Args: {
           review_note?: string
@@ -1974,6 +3348,26 @@ export type Database = {
           target_feedback: string
         }
         Returns: string
+      }
+      route_named_coach_private_question: {
+        Args: { target_routing_status: string; target_thread: string }
+        Returns: undefined
+      }
+      soft_delete_feed_comment: {
+        Args: { target_comment_id: string }
+        Returns: undefined
+      }
+      soft_delete_feed_post: {
+        Args: { target_post_id: string }
+        Returns: undefined
+      }
+      transition_participant_private_question: {
+        Args: { target_status: string; target_thread: string }
+        Returns: undefined
+      }
+      unpublish_anonymous_faq: {
+        Args: { target_faq: string }
+        Returns: boolean
       }
     }
     Enums: {
