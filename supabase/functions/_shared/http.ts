@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
+import { AiConsentError } from "./ai-consent.ts"
 
 export type RequestContext = {
   readonly userId: string
@@ -45,7 +46,9 @@ export function jsonResponse(status: number, body: unknown): Response {
 }
 
 export function handleBoundaryError(error: unknown): Response {
-  if (error instanceof RequestError) return jsonResponse(error.status, { error: error.code })
+  if (error instanceof RequestError || error instanceof AiConsentError) {
+    return jsonResponse(error.status, { error: error.code })
+  }
   console.error("edge_function_failed", {
     errorName: error instanceof Error ? error.name : "unknown",
   })

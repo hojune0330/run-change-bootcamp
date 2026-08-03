@@ -57,3 +57,17 @@ export const HealthMetricSchema = z.discriminatedUnion("metric", [
   PainScoreSchema,
 ])
 export type HealthMetric = z.infer<typeof HealthMetricSchema>
+
+export const HealthPublicationSchema = z.never()
+export type HealthPublicationResult = {
+  readonly ok: false
+  readonly reason: "health_content_cannot_be_published"
+}
+
+export function publishHealthMetric(_input: unknown): HealthPublicationResult {
+  return { ok: false, reason: "health_content_cannot_be_published" }
+}
+
+export function autoPostHealthMetric(_input: unknown): HealthPublicationResult {
+  return publishHealthMetric(_input)
+}

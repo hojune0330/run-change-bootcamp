@@ -127,4 +127,11 @@ describe("training and health boundaries", () => {
       false,
     )
   })
+
+  it("Given a health or pain metric, When a publication action is requested, Then the health module exposes a rejection boundary", async () => {
+    const healthModule = await import("./health")
+
+    expect(Object.hasOwn(healthModule, "HealthPublicationSchema")).toBe(true)
+    expect(Object.hasOwn(healthModule, "publishHealthMetric")).toBe(true)
+  })
 })

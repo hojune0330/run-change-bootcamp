@@ -3,6 +3,7 @@ import { createSafetyIdentifier, validateScreenshot } from "../../../src/integra
 import { parseScreenshotDraftRequest } from "../../../src/integrations/contracts.ts"
 import { buildMetricExtractionRequest } from "../../../src/integrations/openai-contracts.ts"
 import { parseMetricDraftOutput } from "../../../src/integrations/provider-response.ts"
+import { assertActiveAiConsent, withActiveAiConsent } from "../_shared/ai-consent.ts"
 import {
   aiFailureCode,
   claimAiRequest,
@@ -42,6 +43,14 @@ Deno.serve(async (request) => {
       throw new RequestError(404, "upload_not_found")
     }
 
+    const config = providerConfig()
+    const consentSpec = {
+      programId: upload.data.program_id,
+      participantId: upload.data.owner_profile_id,
+      purpose: "screenshot_ai",
+      projectId: config.projectId,
+    } as const
+    await assertActiveAiConsent(context.serviceClient, consentSpec)
     const claim = await claimAiRequest(context.serviceClient, {
       requestedBy: context.userId,
       programId: upload.data.program_id,
@@ -73,7 +82,6 @@ Deno.serve(async (request) => {
         })
       }
 
-      const config = providerConfig()
       const { data: blob, error: downloadError } = await context.userClient.storage
         .from(upload.data.bucket_id)
         .download(upload.data.object_path)
@@ -81,10 +89,9 @@ Deno.serve(async (request) => {
       const image = validateScreenshot(new Uint8Array(await blob.arrayBuffer()))
       if (!image.ok) throw new RequestError(422, image.error)
       const safetyId = await createSafetyIdentifier(context.userId, config.safetySalt)
-      const provider = await requestStructuredOutput(
-        config,
-        parsedRequest.value.idempotencyKey,
-        buildMetricExtractionRequest(config, safetyId, image.value),
+      const providerRequest = buildMetricExtractionRequest(config, safetyId, image.value)
+      const provider = await withActiveAiConsent(context.serviceClient, consentSpec, () =>
+        requestStructuredOutput(config, parsedRequest.value.idempotencyKey, providerRequest),
       )
       const drafts = parseMetricDraftOutput(provider.value)
       if (!drafts.ok) throw new RequestError(502, drafts.error)

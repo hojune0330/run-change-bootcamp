@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { z } from "zod"
+import { AiConsentError } from "./ai-consent.ts"
 import { RequestError } from "./http.ts"
 
 const STALE_AFTER_MS = 5 * 60 * 1_000
@@ -190,5 +191,7 @@ export async function failAiRequest(
 }
 
 export function aiFailureCode(error: unknown): string {
-  return error instanceof RequestError ? error.code : "internal_error"
+  return error instanceof RequestError || error instanceof AiConsentError
+    ? error.code
+    : "internal_error"
 }

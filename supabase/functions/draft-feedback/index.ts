@@ -4,6 +4,7 @@ import { createSafetyIdentifier } from "../../../src/integrations/ai-safety.ts"
 import { parseFeedbackDraftRequest } from "../../../src/integrations/contracts.ts"
 import { buildFeedbackRequest } from "../../../src/integrations/openai-contracts.ts"
 import { parseFeedbackDraftOutput } from "../../../src/integrations/provider-response.ts"
+import { assertActiveAiConsent, withActiveAiConsent } from "../_shared/ai-consent.ts"
 import {
   aiFailureCode,
   claimAiRequest,
@@ -58,6 +59,14 @@ Deno.serve(async (request) => {
     ) {
       throw new RequestError(403, "feedback_draft_forbidden")
     }
+    const config = providerConfig()
+    const consentSpec = {
+      programId: submission.data.program_id,
+      participantId: submission.data.participant_id,
+      purpose: "generative_feedback_ai",
+      projectId: config.projectId,
+    } as const
+    await assertActiveAiConsent(context.serviceClient, consentSpec)
     const claim = await claimAiRequest(context.serviceClient, {
       requestedBy: context.userId,
       programId: submission.data.program_id,
@@ -83,16 +92,14 @@ Deno.serve(async (request) => {
         })
       }
 
-      const config = providerConfig()
       const safetyId = await createSafetyIdentifier(context.userId, config.safetySalt)
-      const provider = await requestStructuredOutput(
+      const providerRequest = buildFeedbackRequest(
         config,
-        parsedRequest.value.idempotencyKey,
-        buildFeedbackRequest(
-          config,
-          safetyId,
-          submission.data.response_text ?? "Submission completed.",
-        ),
+        safetyId,
+        submission.data.response_text ?? "Submission completed.",
+      )
+      const provider = await withActiveAiConsent(context.serviceClient, consentSpec, () =>
+        requestStructuredOutput(config, parsedRequest.value.idempotencyKey, providerRequest),
       )
       const draft = parseFeedbackDraftOutput(provider.value)
       if (!draft.ok) throw new RequestError(502, draft.error)
