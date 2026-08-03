@@ -128,6 +128,90 @@ select private.accept_structured_import(
   'forerunner'
 ) as structured_import_id \gset
 
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000103', false);
+do $$
+begin
+  if not (select count(*) = 3
+      and count(*) filter (
+        where metric_kind = 'distance_m' and numeric_value = 5000 and unit = 'm'
+      ) = 1
+      and count(*) filter (
+        where metric_kind = 'duration_s' and numeric_value = 1800 and unit = 's'
+      ) = 1
+      and count(*) filter (
+        where metric_kind = 'pace_s_per_km' and numeric_value = 360 and unit = 's/km'
+      ) = 1
+    from public.read_participant_structured_metrics(
+      '00000000-0000-4000-8000-000000000010'
+    )) then
+    raise exception 'participant structured projection did not return exact imported values';
+  end if;
+end;
+$$;
+reset role;
+
+do $$
+begin
+  if (select count(*) from public.audit_events
+      where event_type = 'sensitive.structured_metric_projection.participant_read'
+        and actor_profile_id = '00000000-0000-4000-8000-000000000103'
+        and subject_profile_id = '00000000-0000-4000-8000-000000000103'
+        and entity_type = 'structured_metric_projection'
+        and entity_id = '00000000-0000-4000-8000-000000000010'
+        and details = jsonb_build_object(
+          'projection', 'participant_sensitive_metrics',
+          'program_id', '00000000-0000-4000-8000-000000000010'::uuid
+        )
+        and private.audit_details_are_content_free(details)) <> 1 then
+    raise exception 'participant structured projection did not append exactly one value-free audit';
+  end if;
+end;
+$$;
+
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000102', false);
+do $$
+begin
+  if not (select count(*) = 3
+      and count(*) filter (
+        where metric_kind = 'distance_m' and numeric_value = 5000 and unit = 'm'
+      ) = 1
+      and count(*) filter (
+        where metric_kind = 'duration_s' and numeric_value = 1800 and unit = 's'
+      ) = 1
+      and count(*) filter (
+        where metric_kind = 'pace_s_per_km' and numeric_value = 360 and unit = 's/km'
+      ) = 1
+    from public.read_named_coach_structured_metrics(
+      '00000000-0000-4000-8000-000000000010',
+      '00000000-0000-4000-8000-000000000103'
+    )) then
+    raise exception 'named coach structured projection did not return exact imported values';
+  end if;
+end;
+$$;
+reset role;
+
+do $$
+begin
+  if (select count(*) from public.audit_events
+      where event_type = 'sensitive.structured_metric_projection.named_coach_read'
+        and actor_profile_id = '00000000-0000-4000-8000-000000000102'
+        and subject_profile_id = '00000000-0000-4000-8000-000000000103'
+        and entity_type = 'structured_metric_projection'
+        and entity_id = '00000000-0000-4000-8000-000000000010'
+        and details = jsonb_build_object(
+          'projection', 'named_coach_sensitive_metrics',
+          'program_id', '00000000-0000-4000-8000-000000000010'::uuid,
+          'participant_profile_id', '00000000-0000-4000-8000-000000000103'::uuid
+        )
+        and private.audit_details_are_content_free(details)) <> 1 then
+    raise exception 'named coach structured projection did not append exactly one value-free audit';
+  end if;
+end;
+$$;
+
 select private.create_screenshot_draft_job(
   '00000000-0000-4000-8000-000000000010',
   '00000000-0000-4000-8000-000000000103',

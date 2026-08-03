@@ -461,32 +461,69 @@ begin
 end;
 $$;
 
+create temporary table lifecycle_projection_audit_baseline as
+select count(*)::bigint as audit_count
+from public.audit_events
+where event_type in (
+  'sensitive.structured_metric_projection.participant_read',
+  'sensitive.structured_metric_projection.named_coach_read'
+);
+
 set role authenticated;
 
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000105', false);
 do $$
 begin
-  if exists (select 1 from public.accepted_structured_imports) then
-    raise exception 'non-named coach read participant structured metrics';
-  end if;
+  begin
+    perform metrics from public.accepted_structured_imports;
+    raise exception 'expected non-named coach raw structured metric rejection';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform * from public.read_named_coach_structured_metrics(
+      '00000000-0000-4000-8000-000000000010',
+      '00000000-0000-4000-8000-000000000103'
+    );
+    raise exception 'expected non-named coach audited projection rejection';
+  exception when insufficient_privilege then null;
+  end;
 end;
 $$;
 
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000101', false);
 do $$
 begin
-  if exists (select 1 from public.accepted_structured_imports) then
-    raise exception 'admin read participant structured metrics';
-  end if;
+  begin
+    perform metrics from public.accepted_structured_imports;
+    raise exception 'expected admin raw structured metric rejection';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform * from public.read_named_coach_structured_metrics(
+      '00000000-0000-4000-8000-000000000010',
+      '00000000-0000-4000-8000-000000000103'
+    );
+    raise exception 'expected admin audited projection rejection';
+  exception when insufficient_privilege then null;
+  end;
 end;
 $$;
 
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000103', false);
 do $$
 begin
-  if not exists (select 1 from public.accepted_structured_imports) then
-    raise exception 'participant could not read own structured metrics';
-  end if;
+  begin
+    perform metrics from public.accepted_structured_imports;
+    raise exception 'expected deletion-requested participant raw structured metric rejection';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform * from public.read_participant_structured_metrics(
+      '00000000-0000-4000-8000-000000000010'
+    );
+    raise exception 'expected deletion-requested participant audited projection rejection';
+  exception when insufficient_privilege then null;
+  end;
 end;
 $$;
 
@@ -539,6 +576,18 @@ end;
 $$;
 
 reset role;
+
+do $$
+begin
+  if (select count(*) from public.audit_events
+      where event_type in (
+        'sensitive.structured_metric_projection.participant_read',
+        'sensitive.structured_metric_projection.named_coach_read'
+      )) <> (select audit_count from lifecycle_projection_audit_baseline) then
+    raise exception 'denied audited projections appended audit rows';
+  end if;
+end;
+$$;
 
 create temporary table lifecycle_concurrency_results (
   actor text primary key,
