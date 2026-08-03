@@ -37,6 +37,15 @@ export type HealthMetricId = z.infer<typeof HealthMetricIdSchema>
 export const AssessmentSessionIdSchema = entityId.brand<"AssessmentSessionId">()
 export type AssessmentSessionId = z.infer<typeof AssessmentSessionIdSchema>
 
+export const AssessmentProtocolVersionIdSchema = entityId.brand<"AssessmentProtocolVersionId">()
+export type AssessmentProtocolVersionId = z.infer<typeof AssessmentProtocolVersionIdSchema>
+
+export const EnrollmentIdSchema = entityId.brand<"EnrollmentId">()
+export type EnrollmentId = z.infer<typeof EnrollmentIdSchema>
+
+export const AssessmentAttemptIdSchema = entityId.brand<"AssessmentAttemptId">()
+export type AssessmentAttemptId = z.infer<typeof AssessmentAttemptIdSchema>
+
 export const AssessmentResultIdSchema = entityId.brand<"AssessmentResultId">()
 export type AssessmentResultId = z.infer<typeof AssessmentResultIdSchema>
 

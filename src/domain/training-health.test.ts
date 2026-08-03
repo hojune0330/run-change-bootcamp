@@ -66,6 +66,7 @@ describe("training and health boundaries", () => {
       AssessmentSessionSchema.safeParse({
         id: "assessment-session-initial",
         programId: "program-run-change-2026",
+        protocolVersionId: "assessment-protocol-version-plus-run-2026-v1",
         purpose: "initial",
         week: 1,
         session: 2,
