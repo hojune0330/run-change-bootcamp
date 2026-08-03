@@ -1,11 +1,15 @@
 import type { MouseEvent, ReactNode } from "react"
+import { useLayoutEffect, useRef } from "react"
+import { BrandLogo } from "../components/BrandLogo.tsx"
 import { Badge } from "../components/primitives/index.ts"
+import { type BrandConfig, DEFAULT_BRAND } from "../design/brand-config.ts"
 import "./AppShell.css"
 import { toBrowserPath } from "./base-path.ts"
 import { type AppMode, MODE_LABELS, MODE_SWITCH_LINKS, NAVIGATION_BY_MODE } from "./navigation.tsx"
 
 export type AppShellProps = {
   readonly activeHref: string
+  readonly brand?: BrandConfig
   readonly children: ReactNode
   readonly mode: AppMode
   readonly onNavigate?: (href: string) => void
@@ -14,6 +18,7 @@ export type AppShellProps = {
 
 export function AppShell({
   activeHref,
+  brand = DEFAULT_BRAND,
   children,
   mode,
   onNavigate,
@@ -21,6 +26,13 @@ export function AppShell({
 }: AppShellProps) {
   const navigationItems = NAVIGATION_BY_MODE[mode]
   const modeSwitchLink = MODE_SWITCH_LINKS[mode]
+  const mainRef = useRef<HTMLElement>(null)
+  useLayoutEffect(() => {
+    const main = mainRef.current
+    if (main?.getAttribute("data-active-route") !== activeHref) return
+    main.focus({ preventScroll: true })
+  }, [activeHref])
+
   const navigate = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
     if (onNavigate === undefined) return
     event.preventDefault()
@@ -28,19 +40,22 @@ export function AppShell({
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-brand-tenant={brand.tenantId} data-product={brand.productName}>
       <a className="app-shell__skip-link" href="#main-content">
         본문으로 건너뛰기
       </a>
       <header className="app-shell__header">
         <a
-          aria-label="RUN CHANGE 홈"
+          aria-label={`${brand.productName} 홈`}
           className="app-shell__brand"
           href={toBrowserPath("/")}
           onClick={(event) => navigate(event, "/")}
         >
-          <span>RUN</span>
-          <span>CHANGE</span>
+          <BrandLogo brand={brand} className="app-shell__brand-logo" />
+          <span className="app-shell__brand-name">
+            <strong>{brand.tenantName}</strong>
+            <small>{brand.productName}</small>
+          </span>
         </a>
         <div className="app-shell__header-actions">
           <Badge tone="neutral">{sessionLabel}</Badge>
@@ -75,9 +90,12 @@ export function AppShell({
         </ul>
       </nav>
       <main
-        aria-label="RUN CHANGE 콘텐츠"
+        aria-label={brand.labels.shell}
+        data-active-route={activeHref}
+        data-brand-shell-label={brand.labels.shell}
         className="app-shell__main"
         id="main-content"
+        ref={mainRef}
         key={activeHref}
         tabIndex={-1}
       >

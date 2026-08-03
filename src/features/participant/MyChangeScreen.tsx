@@ -1,4 +1,5 @@
 import { Card } from "../../components/primitives/index.ts"
+import { type BrandConfig, DEFAULT_BRAND } from "../../design/brand-config.ts"
 import { ConsentControls } from "./ConsentControls.tsx"
 import { FeedbackPanel } from "./FeedbackPanel.tsx"
 import { LoadableBoundary } from "./LoadableBoundary.tsx"
@@ -6,14 +7,24 @@ import type { Loadable, MyChangeHandlers, MyChangeViewModel } from "./models.ts"
 import "./participant.css"
 
 export type MyChangeScreenProps = {
+  readonly brand?: BrandConfig
   readonly state: Loadable<MyChangeViewModel>
   readonly handlers: MyChangeHandlers
   readonly onRetry: () => void
 }
 
-export function MyChangeScreen({ state, handlers, onRetry }: MyChangeScreenProps) {
+export function MyChangeScreen({
+  brand = DEFAULT_BRAND,
+  state,
+  handlers,
+  onRetry,
+}: MyChangeScreenProps) {
   return (
-    <section aria-labelledby="participant-change-title" className="participant-screen">
+    <section
+      aria-labelledby="participant-change-title"
+      className="participant-screen"
+      data-brand-report-label={brand.labels.report}
+    >
       <header className="participant-screen__header">
         <p className="participant-screen__eyebrow">MY CHANGE</p>
         <h1 id="participant-change-title">내 변화</h1>
@@ -26,7 +37,7 @@ export function MyChangeScreen({ state, handlers, onRetry }: MyChangeScreenProps
               <p>매일보다 주간 변화를 천천히 확인해요.</p>
             </div>
 
-            <Card eyebrow="PROGRESS" title="기록 변화" tone="muted">
+            <Card eyebrow={brand.labels.report} title="기록 변화" tone="muted">
               {model.metrics.length === 0 ? (
                 <p className="participant-empty-copy">아직 비교할 기록이 없어요.</p>
               ) : (

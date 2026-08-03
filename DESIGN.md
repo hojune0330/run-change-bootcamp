@@ -1,4 +1,4 @@
-# RUN CHANGE Design System
+# PLUS Run Design System
 
 ## 0. Research Log
 
@@ -14,7 +14,7 @@
 
 ## 1. Atmosphere & Identity
 
-RUN CHANGE feels like a coach's field journal made operational: warm, calm, and exact.
+PLUS Run feels like a coach's field journal made operational: warm, calm, and exact.
 Information is compact enough for a coach to scan, but each participant screen presents
 one clear next action. The signature is a deep-teal route marker running through an
 off-white paper-like shell; borders and tonal shifts create structure without decoration.
@@ -39,11 +39,12 @@ spacing, radius, and motion.
 | Text primary | `--color-text` | `#18201E` | Headings and body |
 | Text secondary | `--color-text-muted` | `#59615E` | Supporting copy |
 | Text subtle | `--color-text-subtle` | `#747C78` | Metadata |
-| Border | `--color-border` | `#CBC7BC` | Cards and controls |
-| Border strong | `--color-border-strong` | `#979D99` | Emphasis and disabled controls |
+| Border | `--color-border` | `#7F8783` | Cards and controls; 3:1 UI boundary target on canvas |
+| Border strong | `--color-border-strong` | `#69716D` | Emphasis and disabled controls |
 | Accent | `--color-accent` | `#0B5B52` | Primary actions and active routes |
 | Accent hover | `--color-accent-hover` | `#084940` | Hovered primary action |
 | Accent soft | `--color-accent-soft` | `#DCE9E4` | Active navigation background |
+| Brand image field | `--color-brand-image-field` | `#000000` | Contrast field behind the exact PLUS source logo |
 | On accent | `--color-on-accent` | `#FFFFFF` | Text on accent |
 | Success | `--color-success` | `#2F6D52` | Completed state |
 | Success soft | `--color-success-soft` | `#DFEBE4` | Completed badge |
@@ -55,6 +56,9 @@ spacing, radius, and motion.
 Rules:
 
 - Accent is reserved for actions, focus, and current location.
+- The PLUS source logo keeps its original black image field and white pixels. The shell
+  uses `--color-brand-image-field` as a contrast field and never recolors, redraws, or
+  stretches the source asset. Responsive wordmark variants use clipping only.
 - Sensitive-health or risk semantics use text plus an icon or label, never color alone.
 - Raw color values may appear only in `src/design/color-tokens.ts` and this DESIGN.md.
   Runtime application styles consume the injected CSS custom properties; the documented
@@ -72,6 +76,7 @@ Rules:
 | Body | `--font-size-body` | `1rem` | 430 | 1.6 | Primary reading |
 | Body small | `--font-size-small` | `0.875rem` | 450 | 1.5 | Supporting copy |
 | Label | `--font-size-label` | `0.75rem` | 620 | 1.4 | Status and metadata |
+| Compact nav | `--font-size-nav-compact` | `0.6875rem` | 620 | 1.4 | Narrow bottom-navigation labels |
 | Metric | `--font-size-metric` | `1.25rem` | 560 | 1.2 | Numeric values |
 
 Fonts:
@@ -99,10 +104,24 @@ All layout intent derives from a 4px unit.
 | `--space-8` | `2rem` | Section separation |
 | `--space-10` | `2.5rem` | Page rhythm |
 | `--space-12` | `3rem` | Major separation |
+| `--brand-logo-block` | `3rem` | Wide shell logo field height |
+| `--brand-logo-inline` | `11rem` | Wide shell logo field width |
+| `--brand-logo-compact-block` | `2.75rem` | Compact shell logo field height |
+| `--brand-logo-compact-inline` | `3rem` | Compact mark crop width |
+| `--brand-logo-compact-image-inline` | `13rem` | Compact crop source image width |
+| `--brand-logo-compact-shift-x` | `-2.2rem` | Compact mark crop horizontal offset |
+| `--brand-logo-compact-shift-y` | `0rem` | Compact mark optical vertical centering |
+| `--brand-logo-compact-name-max-inline` | `7.25rem` | Compact tenant label bound |
+| `--brand-logo-entry-inline` | `12rem` | Login/chooser logo field width |
+| `--brand-logo-entry-block` | `3rem` | Login/chooser logo field height |
+| `--brand-logo-entry-shift-y` | `0rem` | Entry logo optical centering |
+| `--brand-logo-header-inline` | `9.75rem` | Default header logo field width |
+| `--brand-logo-header-name-max-inline` | `24ch` | Header tenant label bound |
+| `--brand-logo-source-shift-y` | `0rem` | Wide shell logo optical centering |
 
 Layout contract:
 
-- Shell height is bounded by `100dvb`; the main region is the only vertical scroll owner.
+- The shell is fixed to the viewport (`inset: 0`); the main region is the only vertical scroll owner.
 - 375px: single content column, bottom navigation, 16px page inset.
 - 768px: fixed 224px side navigation, 24px page inset.
 - 1280px: the side navigation remains fixed and content caps at 1120px.
@@ -147,6 +166,12 @@ Layout contract:
 - **Accessibility**: landmarks have Korean labels, current route uses
   `aria-current="page"`, all targets are at least 44px, tab order follows reading order.
 - **Motion**: transform-only press feedback; reduced-motion removes it.
+- **Branding**: product metadata is stable `PLUS Run`; tenant labels resolve from the
+  typed allowlist. Participant shells use the 44px target, while coach/admin dense
+  controls remain at least 40px.
+- **Source contract**: all responsive logo geometry comes from `src/design/tokens.css`;
+  the exact JPEG bytes remain the only image payload and are clipped/embedded without
+  recoloring or redraw.
 
 ## 6. Motion & Interaction
 
@@ -184,5 +209,5 @@ Accepted debt:
 | Item | Location | Why accepted | Owner / Exit |
 |---|---|---|---|
 | Private TrainOracle asset comparison | Whole surface | Assets were not provided and corporate/private fidelity cannot be inferred | Product owner review before production |
-| Corporate logo | Header mark | Usage rights are not confirmed | Replace the text mark only after approval |
+| Supplied PLUS source asset | Header and install icons | The source is user-supplied and byte-preserved; production rights still need product-owner confirmation | Product owner review before production |
 | Feature-specific empty/error/loading states | Future routes | Feature screens are explicitly outside T1 | Owning feature task documents and tests them |

@@ -3,12 +3,14 @@ import { HeartIcon } from "@phosphor-icons/react/Heart"
 import { ShareNetworkIcon } from "@phosphor-icons/react/ShareNetwork"
 import { type FormEvent, type MouseEvent, useId, useRef, useState } from "react"
 import { Button, Card } from "../../components/primitives/index.ts"
+import { type BrandConfig, DEFAULT_BRAND } from "../../design/brand-config.ts"
 import { ActionFeedback } from "./ActionFeedback.tsx"
 import { type ActionFeedbackState, rejectedActionFeedback } from "./action-feedback-state.ts"
 import { assertParticipantNever, type FeedHandlers, type FeedPostViewModel } from "./models.ts"
 import { type ShareServices, shareParticipantPost } from "./share.ts"
 
 type FeedPostCardProps = {
+  readonly brand?: BrandConfig
   readonly handlers: FeedHandlers
   readonly post: FeedPostViewModel
   readonly shareServices: ShareServices
@@ -28,7 +30,12 @@ type CommentCountUpdate = {
   readonly count: number
 }
 
-export function FeedPostCard({ handlers, post, shareServices }: FeedPostCardProps) {
+export function FeedPostCard({
+  brand = DEFAULT_BRAND,
+  handlers,
+  post,
+  shareServices,
+}: FeedPostCardProps) {
   const commentId = useId()
   const [heartUpdate, setHeartUpdate] = useState<HeartUpdate>()
   const [commentCountUpdate, setCommentCountUpdate] = useState<CommentCountUpdate>()
@@ -140,7 +147,7 @@ export function FeedPostCard({ handlers, post, shareServices }: FeedPostCardProp
     setShareBusy(true)
     try {
       const result = await shareParticipantPost(
-        { title: "RUN CHANGE 기록", text: `${post.authorName}: ${post.body}`, url: post.shareUrl },
+        { title: brand.labels.share, text: `${post.authorName}: ${post.body}`, url: post.shareUrl },
         shareServices,
       )
       switch (result.kind) {

@@ -1,10 +1,12 @@
 import { useEffect } from "react"
 import { coachBindings, coachModel, type DemoRepository, type DemoState } from "../demo/index.ts"
+import { type BrandConfig, DEFAULT_BRAND } from "../design/brand-config.ts"
 import { CoachDashboard } from "../features/coach/index.ts"
 import { AppShell } from "./AppShell.tsx"
 import type { CoachHref } from "./routes.ts"
 
 type CoachAppProps = {
+  readonly brand?: BrandConfig
   readonly href: CoachHref
   readonly onNavigate: (href: string) => void
   readonly repository: DemoRepository
@@ -27,17 +29,53 @@ function routeControl(href: CoachHref): HTMLElement | null {
   }
 }
 
-export function CoachApp({ href, onNavigate, repository, state }: CoachAppProps) {
+export function CoachApp({
+  brand = DEFAULT_BRAND,
+  href,
+  onNavigate,
+  repository,
+  state,
+}: CoachAppProps) {
+  const model = coachModel(state)
+  const brandedModel = {
+    ...model,
+    programName: `${brand.productName} 2026`,
+    cohortOptions: model.cohortOptions.map((option) => ({
+      ...option,
+      label: option.label.replace("RUN CHANGE", brand.productName),
+    })),
+    participants: model.participants.map((participant) => ({
+      ...participant,
+      cohortLabel: participant.cohortLabel.replace("RUN CHANGE", brand.productName),
+    })),
+    ...(model.selectedParticipant === undefined
+      ? {}
+      : {
+          selectedParticipant: {
+            ...model.selectedParticipant,
+            cohortLabel: model.selectedParticipant.cohortLabel.replace(
+              "RUN CHANGE",
+              brand.productName,
+            ),
+          },
+        }),
+  }
   useEffect(() => {
     const target = routeControl(href)
     if (target === null) return
-    if (typeof target.scrollIntoView === "function") target.scrollIntoView({ block: "center" })
+    if (typeof target.scrollIntoView === "function") target.scrollIntoView({ block: "nearest" })
     target.focus({ preventScroll: true })
   }, [href])
 
   return (
-    <AppShell activeHref={href} mode="coach" onNavigate={onNavigate} sessionLabel="김 코치">
-      <CoachDashboard handlers={coachBindings(repository)} model={coachModel(state)} />
+    <AppShell
+      activeHref={href}
+      brand={brand}
+      mode="coach"
+      onNavigate={onNavigate}
+      sessionLabel={`${brand.productName} 코치`}
+    >
+      <CoachDashboard handlers={coachBindings(repository)} model={brandedModel} />
     </AppShell>
   )
 }

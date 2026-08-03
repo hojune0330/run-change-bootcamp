@@ -3,19 +3,33 @@ import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css"
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { App } from "./app/App.tsx"
+import { PRODUCT_METADATA, resolveBrandConfig } from "./design/brand-config.ts"
 import { COLOR_TOKEN_ENTRIES } from "./design/color-tokens.ts"
 import "./design/tokens.css"
 import "./design/global.css"
 
 class MissingRootElementError extends Error {
   constructor() {
-    super("RUN CHANGE could not find its root element")
+    super("PLUS Run could not find its root element")
     this.name = "MissingRootElementError"
   }
 }
 
 for (const [property, value] of COLOR_TOKEN_ENTRIES) {
   document.documentElement.style.setProperty(property, value)
+}
+
+const activeBrand = resolveBrandConfig(import.meta.env)
+document.title = PRODUCT_METADATA.name
+document.documentElement.setAttribute("data-brand-tenant", activeBrand.tenantId)
+const existingThemeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+if (existingThemeMeta !== null) {
+  existingThemeMeta.content = PRODUCT_METADATA.themeColor
+} else {
+  const themeMeta = document.createElement("meta")
+  themeMeta.name = "theme-color"
+  themeMeta.content = PRODUCT_METADATA.themeColor
+  document.head.appendChild(themeMeta)
 }
 
 const rootElement = document.getElementById("root")

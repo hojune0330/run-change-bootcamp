@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react"
+import { resolveBrandConfig } from "../design/brand-config.ts"
 import type { PilotGatewayFactory } from "../integrations/supabase/pilot-gateway.ts"
 import {
   type RuntimeEnvironment,
@@ -22,13 +23,14 @@ type AppProps = {
 
 export function App({ pilotGatewayFactory, runtimeEnvironment = import.meta.env }: AppProps = {}) {
   const runtime = resolveRuntimeConfiguration(runtimeEnvironment)
+  const brand = resolveBrandConfig(runtimeEnvironment)
   switch (runtime.kind) {
     case "blocked":
-      return <PilotConfigurationBlocked reason={runtime.reason} />
+      return <PilotConfigurationBlocked brand={brand} reason={runtime.reason} />
     case "ready":
       switch (runtime.mode) {
         case "preview":
-          return <PreviewApp />
+          return <PreviewApp brand={brand} />
         case "pilot":
           return pilotGatewayFactory === undefined ? (
             <Suspense
@@ -40,10 +42,14 @@ export function App({ pilotGatewayFactory, runtimeEnvironment = import.meta.env 
                 </main>
               }
             >
-              <BrowserPilotRuntime config={runtime.config} />
+              <BrowserPilotRuntime brand={brand} config={runtime.config} />
             </Suspense>
           ) : (
-            <PilotRuntime config={runtime.config} gatewayFactory={pilotGatewayFactory} />
+            <PilotRuntime
+              brand={brand}
+              config={runtime.config}
+              gatewayFactory={pilotGatewayFactory}
+            />
           )
       }
   }

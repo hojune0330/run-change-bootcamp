@@ -7,8 +7,12 @@
     "main"
     "navigation";
   grid-template-rows: auto minmax(0, 1fr) auto;
-  max-block-size: 100dvb;
-  min-block-size: 100dvb;
+  inset: 0;
+  max-block-size: none;
+  min-block-size: 0;
+  overflow: hidden;
+  position: fixed;
+  block-size: auto;
 }
 
 .app-shell__skip-link {
@@ -43,17 +47,38 @@
 }
 
 .app-shell__brand {
+  align-items: center;
   color: var(--color-text);
-  display: grid;
-  font-family: var(--font-mono);
-  font-size: var(--font-size-label);
-  font-weight: 700;
-  line-height: 1;
+  display: inline-flex;
+  gap: var(--space-2);
+  min-inline-size: 0;
   text-decoration: none;
 }
 
-.app-shell__brand span:last-child {
-  color: var(--color-accent);
+.app-shell__brand-logo {
+  block-size: var(--brand-logo-compact-block);
+  flex: 0 0 auto;
+  inline-size: var(--brand-logo-header-inline);
+}
+
+.app-shell__brand-name {
+  display: grid;
+  gap: var(--space-1);
+  line-height: 1.15;
+  min-inline-size: 0;
+}
+
+.app-shell__brand-name strong {
+  font-size: var(--font-size-small);
+  font-weight: 650;
+  max-inline-size: var(--brand-logo-header-name-max-inline);
+  overflow-wrap: anywhere;
+}
+
+.app-shell__brand-name small {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-label);
+  font-weight: 620;
 }
 
 .app-shell__brand:focus-visible,
@@ -180,6 +205,11 @@
     padding-inline: var(--space-6);
   }
 
+  .app-shell__brand-logo {
+    block-size: var(--brand-logo-block);
+    inline-size: var(--brand-logo-inline);
+  }
+
   .app-shell__navigation {
     border-block-start: 0;
     border-inline-end: var(--border-width) solid var(--color-border);
@@ -203,6 +233,58 @@
 
   .app-shell__content {
     padding: var(--space-8) var(--space-6) var(--space-12);
+  }
+}
+
+@media (max-width: 30rem) {
+  .app-shell__header {
+    flex-wrap: wrap;
+  }
+
+  .app-shell__brand {
+    flex: 1 1 100%;
+  }
+
+  .app-shell__brand-logo {
+    block-size: var(--brand-logo-compact-block);
+    inline-size: var(--brand-logo-compact-inline);
+  }
+
+  .app-shell__brand-logo.brand-logo img {
+    flex: 0 0 auto;
+    inline-size: var(--brand-logo-compact-image-inline);
+    transform: translate(var(--brand-logo-compact-shift-x), var(--brand-logo-compact-shift-y));
+  }
+
+  .app-shell__brand-name {
+    max-inline-size: var(--brand-logo-compact-name-max-inline);
+  }
+
+  .app-shell__brand-name strong {
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-shell__header-actions {
+    flex: 1 1 100%;
+    gap: var(--space-1);
+    justify-content: flex-end;
+  }
+
+  .app-shell__header .badge {
+    display: none;
+  }
+
+  .app-shell__mode-switch,
+  .app-shell__navigation-label {
+    white-space: nowrap;
+  }
+
+  .app-shell__navigation-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

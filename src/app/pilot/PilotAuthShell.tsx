@@ -1,5 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react"
+import { BrandLogo } from "../../components/BrandLogo.tsx"
 import { Badge, Button, Card } from "../../components/primitives/index.ts"
+import { type BrandConfig, DEFAULT_BRAND } from "../../design/brand-config.ts"
 import type {
   PilotGateway,
   PilotOperationError,
@@ -11,6 +13,7 @@ type AuthViewState = PilotSessionState | { readonly kind: "error" } | { readonly
 type RequestStatus = "error" | "idle" | "invalid" | "requesting" | "sent"
 
 type PilotAuthShellProps = {
+  readonly brand?: BrandConfig
   readonly gateway: PilotGateway
 }
 
@@ -18,7 +21,7 @@ function requestErrorStatus(error: PilotOperationError): RequestStatus {
   return error === "invalid_request" ? "invalid" : "error"
 }
 
-export function PilotAuthShell({ gateway }: PilotAuthShellProps) {
+export function PilotAuthShell({ brand = DEFAULT_BRAND, gateway }: PilotAuthShellProps) {
   const [authState, setAuthState] = useState<AuthViewState>({ kind: "loading" })
   const [email, setEmail] = useState("")
   const [requestStatus, setRequestStatus] = useState<RequestStatus>("idle")
@@ -54,12 +57,22 @@ export function PilotAuthShell({ gateway }: PilotAuthShellProps) {
   }
 
   return (
-    <main className="demo-entry" id="main-content">
-      <section aria-labelledby="pilot-auth-title" className="demo-entry__panel">
+    <main
+      className="demo-entry"
+      data-brand-tenant={brand.tenantId}
+      data-product={brand.productName}
+      id="main-content"
+    >
+      <section
+        aria-labelledby="pilot-auth-title"
+        className="demo-entry__panel"
+        data-brand-auth-label={brand.labels.auth}
+      >
         <header className="demo-entry__header">
+          <BrandLogo brand={brand} className="demo-entry__brand-logo" />
           <Badge tone="warning">PILOT AUTH</Badge>
-          <p>Supabase 브라우저 경계</p>
-          <h1 id="pilot-auth-title">파일럿 로그인</h1>
+          <p>{brand.tenantName}</p>
+          <h1 id="pilot-auth-title">{brand.labels.auth}</h1>
           <span>인증만 연결된 첫 단계입니다.</span>
         </header>
 

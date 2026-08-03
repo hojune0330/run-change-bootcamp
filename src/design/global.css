@@ -6,6 +6,7 @@
 
 html {
   background: var(--color-canvas);
+  block-size: 100%;
   color: var(--color-text);
   font-family: var(--font-ui);
   font-synthesis: none;
@@ -13,8 +14,29 @@ html {
 }
 
 body {
+  block-size: 100%;
   margin: 0;
-  min-block-size: 100dvb;
+  min-block-size: 0;
+}
+
+#root {
+  block-size: 100%;
+}
+
+.brand-logo {
+  align-items: center;
+  background: var(--color-brand-image-field);
+  display: inline-flex;
+  overflow: hidden;
+  position: relative;
+}
+
+.brand-logo img {
+  block-size: auto;
+  display: block;
+  inline-size: 100%;
+  max-inline-size: none;
+  transform: translateY(var(--brand-logo-source-shift-y));
 }
 
 button,

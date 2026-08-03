@@ -10,6 +10,7 @@
   --font-size-body: 1rem;
   --font-size-small: 0.875rem;
   --font-size-label: 0.75rem;
+  --font-size-nav-compact: 0.6875rem;
   --font-size-metric: 1.25rem;
 
   --space-1: 0.25rem;
@@ -30,6 +31,20 @@
   --target-min: 2.75rem;
   --nav-wide: 14rem;
   --content-max: 70rem;
+  --brand-logo-block: 3rem;
+  --brand-logo-inline: 11rem;
+  --brand-logo-compact-block: 2.75rem;
+  --brand-logo-compact-inline: 3rem;
+  --brand-logo-compact-image-inline: 13rem;
+  --brand-logo-compact-shift-x: -2.2rem;
+  --brand-logo-compact-shift-y: 0rem;
+  --brand-logo-compact-name-max-inline: 7.25rem;
+  --brand-logo-entry-block: 3rem;
+  --brand-logo-entry-inline: 12rem;
+  --brand-logo-entry-shift-y: 0rem;
+  --brand-logo-header-inline: 9.75rem;
+  --brand-logo-source-shift-y: 0rem;
+  --brand-logo-header-name-max-inline: 24ch;
 
   --motion-fast: 160ms;
   --motion-standard: 240ms;

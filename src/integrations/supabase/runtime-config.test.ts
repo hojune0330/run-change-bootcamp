@@ -33,6 +33,14 @@ describe("runtime configuration", () => {
     expect(result).toEqual({ kind: "ready", mode: "preview" })
   })
 
+  it("allows the public tenant identity selector in preview mode", () => {
+    expect(
+      resolveRuntimeConfiguration({
+        VITE_PLUS_TENANT: "fixture-partner-plus-run",
+      }),
+    ).toEqual({ kind: "ready", mode: "preview" })
+  })
+
   it.each([
     {
       environment: { VITE_DISABLE_REACT_DEVTOOLS: "1" },

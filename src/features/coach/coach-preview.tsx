@@ -64,7 +64,7 @@ createRoot(rootElement).render(
     <CoachDashboard
       handlers={handlers}
       model={{
-        programName: "RUN CHANGE 1기",
+        programName: "PLUS Run 1기",
         dateRangeLabel: "2026.08.24 — 10.24",
         summary: {
           totalParticipants: 20,

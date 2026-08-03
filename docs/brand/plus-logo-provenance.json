@@ -7,5 +7,9 @@
   "height": 672,
   "pixel_format": "RGB",
   "transformed": false,
-  "byte_preservation": "The source bytes were copied without decoding, recompression, resizing, or metadata edits."
+  "byte_preservation": "The source bytes were copied without decoding, recompression, resizing, or metadata edits.",
+  "derived_icons": {
+    "files": ["public/icon-any.svg", "public/icon-maskable.svg"],
+    "method": "SVG image wrappers embed the exact JPEG bytes in a square whitespace viewBox; no redraw, recolor, or remote URL is used."
+  }
 }

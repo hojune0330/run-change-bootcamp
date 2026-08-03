@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { DEMO_STORAGE_KEY } from "../demo/index.ts"
+import { DEFAULT_BRAND } from "../design/brand-config.ts"
 import type {
   PilotGateway,
   PilotGatewayFactory,
@@ -131,7 +132,7 @@ describe("App runtime boundary", () => {
     )
 
     // Then
-    expect(await screen.findByRole("heading", { name: "파일럿 로그인" })).toBeVisible()
+    expect(await screen.findByRole("heading", { name: DEFAULT_BRAND.labels.auth })).toBeVisible()
     expect(screen.getByRole("textbox", { name: "이메일" })).toBeEnabled()
     expect(screen.getByRole("button", { name: "이메일 OTP 요청" })).toBeEnabled()
     expect(screen.queryByRole("button", { name: "참여자로 시작" })).not.toBeInTheDocument()

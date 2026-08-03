@@ -58,4 +58,27 @@ describe("PLUS source asset provenance", () => {
     expect(dimensions).toEqual({ width: 1280, height: 672 })
     expect(bytes.length).toBeGreaterThan(0)
   })
+
+  it("derives install icons from the same source without redraw paths or remote URLs", () => {
+    // Given
+    const iconPaths = ["../../public/icon-any.svg", "../../public/icon-maskable.svg"]
+
+    // When
+    const iconContents = iconPaths.map((iconPath) =>
+      readFileSync(resolve(import.meta.dirname, iconPath), "utf8"),
+    )
+
+    // Then
+    for (const icon of iconContents) {
+      const inlineSource = icon.match(/href="data:image\/jpeg;base64,([^"]+)"/)
+      expect(inlineSource?.[1]).toBeDefined()
+      expect(
+        createHash("sha256")
+          .update(Buffer.from(inlineSource?.[1] ?? "", "base64"))
+          .digest("hex"),
+      ).toBe(EXPECTED_SHA256)
+      expect(icon).not.toMatch(/(?:href|src)="https?:\/\//)
+      expect(icon).not.toContain("<path")
+    }
+  })
 })

@@ -6,7 +6,7 @@ const results = []
 for (const width of [375, 768, 1280]) {
   const page = await browser.newPage({ viewport: { width, height: 900 } })
   await page.goto("http://127.0.0.1:4173/src/features/coach/coach-preview.html")
-  await page.getByRole("heading", { name: "RUN CHANGE 1기" }).waitFor()
+  await page.getByRole("heading", { name: "PLUS Run 1기" }).waitFor()
   const metrics = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
