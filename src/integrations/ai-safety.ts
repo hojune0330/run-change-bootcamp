@@ -1,3 +1,5 @@
+import { z } from "zod"
+
 export type ProviderEnvironment = {
   readonly apiKey?: string
   readonly model?: string
@@ -23,6 +25,103 @@ export type ValidatedImage = {
 }
 
 export const MAX_SCREENSHOT_BYTES = 8 * 1024 * 1024
+
+const AiPurposeSchema = z.enum(["screenshot_ai", "generative_feedback_ai"])
+const AiDataClassSchema = z.enum([
+  "server_sanitized_screenshot_pixels",
+  "reviewable_metric_draft",
+  "approved_nonsensitive_training_context",
+  "feedback_draft",
+])
+type AiDataClass = z.infer<typeof AiDataClassSchema>
+const dataClassesByPurpose = {
+  screenshot_ai: ["server_sanitized_screenshot_pixels", "reviewable_metric_draft"],
+  generative_feedback_ai: ["approved_nonsensitive_training_context", "feedback_draft"],
+} as const
+
+function hasExactMembers<T>(actual: readonly T[], expected: ReadonlySet<T>): boolean {
+  const actualSet = new Set(actual)
+  return (
+    actual.length === expected.size &&
+    actualSet.size === expected.size &&
+    [...expected].every((value) => actualSet.has(value))
+  )
+}
+
+export const AiControlAttestationSchema = z
+  .object({
+    provider: z.literal("openai"),
+    organizationId: z.string().trim().min(3).max(120),
+    projectId: z.string().trim().min(3).max(120),
+    endpoint: z.literal("/v1/responses"),
+    control: z.literal("approved_project_endpoint_zdr"),
+    purposes: z.array(AiPurposeSchema).min(1).max(2).readonly(),
+    dataClasses: z.array(AiDataClassSchema).min(2).max(4).readonly(),
+    approvedAt: z.iso.datetime({ offset: true }),
+    expiresAt: z.iso.datetime({ offset: true }),
+    revokedAt: z.iso.datetime({ offset: true }).nullable(),
+  })
+  .strict()
+  .refine((attestation) => Date.parse(attestation.expiresAt) > Date.parse(attestation.approvedAt), {
+    path: ["expiresAt"],
+  })
+  .refine(
+    (attestation) => {
+      const expectedDataClasses = new Set<AiDataClass>(
+        attestation.purposes.flatMap(
+          (purpose) => dataClassesByPurpose[purpose] as readonly AiDataClass[],
+        ),
+      )
+      return (
+        new Set(attestation.purposes).size === attestation.purposes.length &&
+        hasExactMembers(attestation.dataClasses, expectedDataClasses)
+      )
+    },
+    { path: ["dataClasses"] },
+  )
+  .readonly()
+export type AiControlAttestation = z.infer<typeof AiControlAttestationSchema>
+
+export type AiControlRequirement = {
+  readonly organizationId: string
+  readonly projectId: string
+  readonly endpoint: string
+  readonly purpose: z.infer<typeof AiPurposeSchema>
+  readonly dataClasses: readonly AiDataClass[]
+  readonly now: string
+}
+
+export type AiControlAuthorization =
+  | { readonly ok: true; readonly value: AiControlAttestation }
+  | { readonly ok: false; readonly error: "zdr_attestation_required" }
+
+export function authorizeAiControl(
+  attestation: AiControlAttestation,
+  requirement: AiControlRequirement,
+): AiControlAuthorization {
+  const parsedAttestation = AiControlAttestationSchema.safeParse(attestation)
+  if (!parsedAttestation.success) return { ok: false, error: "zdr_attestation_required" }
+  const verifiedAttestation = parsedAttestation.data
+  const now = Date.parse(requirement.now)
+  const expectedDataClasses = new Set<AiDataClass>(
+    dataClassesByPurpose[requirement.purpose] as readonly AiDataClass[],
+  )
+  const attestationDataClasses = new Set<AiDataClass>(verifiedAttestation.dataClasses)
+  const valid =
+    Number.isFinite(now) &&
+    verifiedAttestation.organizationId === requirement.organizationId &&
+    verifiedAttestation.projectId === requirement.projectId &&
+    verifiedAttestation.endpoint === requirement.endpoint &&
+    verifiedAttestation.purposes.includes(requirement.purpose) &&
+    hasExactMembers(requirement.dataClasses, expectedDataClasses) &&
+    [...expectedDataClasses].every((dataClass) => attestationDataClasses.has(dataClass)) &&
+    Date.parse(verifiedAttestation.approvedAt) <= now &&
+    now < Date.parse(verifiedAttestation.expiresAt) &&
+    verifiedAttestation.revokedAt === null
+  return valid
+    ? { ok: true, value: verifiedAttestation }
+    : { ok: false, error: "zdr_attestation_required" }
+}
 
 export function createProviderConfig(env: ProviderEnvironment): SafetyResult<ProviderConfig> {
   const apiKey = env.apiKey?.trim()
