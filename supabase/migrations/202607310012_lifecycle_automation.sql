@@ -698,8 +698,16 @@ returns trigger language plpgsql security definer set search_path = '' as $$
 declare
   local_time time;
 begin
-  new.timezone := 'Asia/Seoul';
-  new.local_day := (new.scheduled_at at time zone new.timezone)::date;
+  new.urgency := coalesce(new.urgency, 'nonurgent');
+  new.timezone := coalesce(new.timezone, 'Asia/Seoul');
+  if new.scheduled_at is null then
+    new.scheduled_at := private.next_nonurgent_delivery(coalesce(new.created_at, now()));
+  end if;
+  new.logical_event_key := coalesce(new.logical_event_key, 'legacy:' || new.id::text);
+  new.local_day := coalesce(
+    new.local_day,
+    (new.scheduled_at at time zone new.timezone)::date
+  );
   local_time := (new.scheduled_at at time zone new.timezone)::time;
   if new.urgency = 'nonurgent' and (local_time >= time '21:00' or local_time < time '08:00') then
     raise exception 'nonurgent notification is inside quiet hours' using errcode = '23514';

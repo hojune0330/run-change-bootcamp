@@ -2011,30 +2011,28 @@ select pg_temp.assert_true(
   'AI request and share-event operational tables exclude prompt response payload and body columns'
 );
 
-insert into storage.objects (id, bucket_id, name, owner) values
-  (
-    '00000000-0000-0000-0000-000000004201', 'screenshots',
-    '00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000004201/private.png',
-    '00000000-0000-0000-0000-000000000001'
-  ),
-  (
-    '00000000-0000-0000-0000-000000004202', 'health-imports',
-    '00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000004202/private.fit',
-    '00000000-0000-0000-0000-000000000001'
-  );
-
-begin;
-set local role authenticated;
-select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
-select pg_temp.assert_true(
-  (select count(id) from storage.objects
-    where id in (
-      '00000000-0000-0000-0000-000000004201',
-      '00000000-0000-0000-0000-000000004202'
-    )) = 0,
-  'browser owner cannot directly read screenshot or health-import storage objects'
+select pg_temp.expect_sqlstate(
+  $statement$
+    insert into storage.objects (id, bucket_id, name, owner) values (
+      '00000000-0000-0000-0000-000000004201', 'screenshots',
+      '00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000004201/private.png',
+      '00000000-0000-0000-0000-000000000001'
+    )
+  $statement$,
+  '42501',
+  'raw screenshot Storage writes remain disabled after lifecycle automation'
 );
-commit;
+select pg_temp.expect_sqlstate(
+  $statement$
+    insert into storage.objects (id, bucket_id, name, owner) values (
+      '00000000-0000-0000-0000-000000004202', 'health-imports',
+      '00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000004202/private.fit',
+      '00000000-0000-0000-0000-000000000001'
+    )
+  $statement$,
+  '42501',
+  'raw health-import Storage writes remain disabled after lifecycle automation'
+);
 
 select pg_temp.assert_true(
   not exists (

@@ -204,6 +204,41 @@ values (
 
 do $$
 begin
+  begin
+    insert into public.notification_records (
+      recipient_profile_id, program_id, category, template_key, title, body,
+      contains_sensitive_data, urgency, timezone, scheduled_at, local_day, logical_event_key
+    ) values (
+      '00000000-0000-4000-8000-000000000103',
+      '00000000-0000-4000-8000-000000000010',
+      'reminder', 'program_reminder', 'Program reminder',
+      'Open PLUS Run to view this update.', false,
+      'nonurgent', 'UTC', '2026-08-29T17:00:00+09:00', '2026-08-29',
+      'hostile:timezone:001'
+    );
+    raise exception 'expected explicit non-Seoul timezone rejection';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into public.notification_records (
+      recipient_profile_id, program_id, category, template_key, title, body,
+      contains_sensitive_data, urgency, timezone, scheduled_at, local_day, logical_event_key
+    ) values (
+      '00000000-0000-4000-8000-000000000103',
+      '00000000-0000-4000-8000-000000000010',
+      'reminder', 'program_reminder', 'Program reminder',
+      'Open PLUS Run to view this update.', false,
+      'nonurgent', 'Asia/Seoul', '2026-08-29T09:00:00+09:00', '2026-08-30',
+      'hostile:local-day:001'
+    );
+    raise exception 'expected explicit mismatched local day rejection';
+  exception when check_violation then null;
+  end;
+end;
+$$;
+
+do $$
+begin
   if not exists (
     select 1 from public.notification_records
     where id = '00000000-0000-4000-8000-000000000401'
