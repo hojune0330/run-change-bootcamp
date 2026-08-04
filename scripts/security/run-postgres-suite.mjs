@@ -9,10 +9,7 @@ import {
 } from "node:fs"
 import { dirname, relative, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
-import {
-  expectedPostgresVersion,
-  matchesExpectedPostgresVersion,
-} from "./postgres-version.mjs"
+import { expectedPostgresVersion, matchesExpectedPostgresVersion } from "./postgres-version.mjs"
 
 const expectedNodeVersion = "v22.23.2"
 const expectedSupabaseVersion = "2.111.0"
