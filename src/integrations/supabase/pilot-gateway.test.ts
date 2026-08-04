@@ -10,22 +10,32 @@ const AUDIT_ID = 17
 const AUTH_USER_ID = "11111111-1111-4111-8111-111111111111"
 const CONSENT_ID = "33333333-3333-4333-8333-333333333333"
 const GRANTEE_ID = "22222222-2222-4222-8222-222222222222"
+const MEMBERSHIP_ID = "77777777-7777-4777-8777-777777777777"
 const METRIC_ID = "44444444-4444-4444-8444-444444444444"
+const PROGRAM_ID = "66666666-6666-4666-8666-666666666666"
 
 type FakePilotClient = PilotClient & {
   readonly dataRequests: PilotDataRequest[]
   readonly otpRequests: unknown[]
+  readonly rpcRequests: unknown[]
   readonly signOutCalls: number[]
 }
 
 function createFakeClient(session: PilotClientSession | null): FakePilotClient {
   const dataRequests: PilotDataRequest[] = []
   const otpRequests: unknown[] = []
+  const rpcRequests: unknown[] = []
   const signOutCalls: number[] = []
+  let currentSession = session
 
   return {
     auth: {
-      getSession: async () => ({ ok: true, value: session }),
+      clearSession: () => undefined,
+      exchangeCodeForSession: async () => {
+        currentSession = { email: "runner@example.com", userId: AUTH_USER_ID }
+        return { ok: true, value: currentSession }
+      },
+      getSession: async () => ({ ok: true, value: currentSession }),
       signInWithOtp: async (input) => {
         otpRequests.push(input)
         return { ok: true, value: undefined }
@@ -58,8 +68,26 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
           }
       }
     },
+    invokeFunction: async () => ({ ok: true, value: null }),
+    invokeRpc: async (request) => {
+      rpcRequests.push(request)
+      return {
+        ok: true,
+        value: {
+          membership_id: MEMBERSHIP_ID,
+          program_id: PROGRAM_ID,
+          role: "participant",
+          status: "active",
+        },
+      }
+    },
     otpRequests,
+    rpcRequests,
     signOutCalls,
+    subscribe: () => ({
+      ready: Promise.resolve({ ok: true, value: { revision: 1 } }),
+      unsubscribe: () => undefined,
+    }),
   }
 }
 
@@ -76,8 +104,15 @@ describe("Supabase pilot gateway", () => {
     expect(result).toEqual({
       ok: true,
       value: {
-        kind: "signed_in",
-        user: { email: "runner@example.com", id: AUTH_USER_ID },
+        kind: "active",
+        membership: {
+          email: "runner@example.com",
+          membershipId: MEMBERSHIP_ID,
+          programId: PROGRAM_ID,
+          role: "participant",
+          route: "/today",
+          userId: AUTH_USER_ID,
+        },
       },
     })
   })
@@ -88,13 +123,50 @@ describe("Supabase pilot gateway", () => {
     const gateway = createPilotGateway(client)
 
     // When
-    const result = await gateway.requestEmailOtp({ email: "runner@example.com" })
+    const result = await gateway.requestEmailOtp({
+      callbackUrl: "https://pilot.example.com/auth/callback",
+      email: "runner@example.com",
+    })
 
     // Then
     expect(result).toEqual({ ok: true, value: undefined })
     expect(client.otpRequests).toEqual([
-      { email: "runner@example.com", options: { shouldCreateUser: false } },
+      {
+        email: "runner@example.com",
+        options: {
+          emailRedirectTo: "https://pilot.example.com/auth/callback",
+          shouldCreateUser: false,
+        },
+      },
     ])
+    expect(client.rpcRequests).toEqual([])
+  })
+
+  it("exchanges a callback code and atomically resolves the active membership route", async () => {
+    // Given
+    const client = createFakeClient(null)
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.completeAuthCallback({
+      callbackUrl: "https://pilot.example.com/auth/callback?code=single-use-code",
+    })
+
+    // Then
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        kind: "active",
+        membership: {
+          email: "runner@example.com",
+          membershipId: MEMBERSHIP_ID,
+          programId: PROGRAM_ID,
+          role: "participant",
+          route: "/today",
+          userId: AUTH_USER_ID,
+        },
+      },
+    })
   })
 
   it("rejects malformed email and caller identity or service-secret fields", async () => {
@@ -110,7 +182,7 @@ describe("Supabase pilot gateway", () => {
     })
 
     // Then
-    expect(result).toEqual({ ok: false, error: "invalid_request" })
+    expect(result).toEqual({ ok: false, error: { kind: "invalid_request", retryable: false } })
     expect(client.otpRequests).toEqual([])
   })
 
@@ -177,7 +249,7 @@ describe("Supabase pilot gateway", () => {
     })
 
     // Then
-    expect(result).toEqual({ ok: false, error: "invalid_request" })
+    expect(result).toEqual({ ok: false, error: { kind: "invalid_request", retryable: false } })
     expect(client.dataRequests).toEqual([])
   })
 
@@ -196,7 +268,7 @@ describe("Supabase pilot gateway", () => {
     })
 
     // Then
-    expect(result).toEqual({ ok: false, error: "signed_out" })
+    expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
     expect(client.dataRequests).toEqual([])
   })
 
@@ -253,8 +325,8 @@ describe("Supabase pilot gateway", () => {
       {
         columns: "id,event_type,entity_type,entity_id,occurred_at",
         kind: "list_audit_events",
-        limit: 25,
         order: { ascending: false, column: "occurred_at" },
+        page: { limit: 25, offset: 0 },
         table: "audit_events",
       },
     ])

@@ -1,12 +1,18 @@
 import "@fontsource-variable/jetbrains-mono/wght.css"
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css"
-import { StrictMode } from "react"
+import { lazy, StrictMode, Suspense } from "react"
 import { createRoot } from "react-dom/client"
-import { App } from "./app/App.tsx"
 import { PRODUCT_METADATA, resolveBrandConfig } from "./design/brand-config.ts"
 import { COLOR_TOKEN_ENTRIES } from "./design/color-tokens.ts"
 import "./design/tokens.css"
 import "./design/global.css"
+
+const RuntimeApp =
+  import.meta.env.VITE_APP_RUNTIME === "pilot"
+    ? lazy(() =>
+        import("./app/pilot/PilotEntry.tsx").then(({ PilotEntry }) => ({ default: PilotEntry })),
+      )
+    : lazy(() => import("./app/App.tsx").then(({ App }) => ({ default: App })))
 
 class MissingRootElementError extends Error {
   constructor() {
@@ -45,6 +51,8 @@ if (import.meta.env.DEV && import.meta.env.VITE_DISABLE_REACT_DEVTOOLS !== "1") 
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    <Suspense fallback={null}>
+      <RuntimeApp />
+    </Suspense>
   </StrictMode>,
 )

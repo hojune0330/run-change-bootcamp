@@ -18,6 +18,10 @@ const VALID_PILOT_ENVIRONMENT = {
 
 function createGateway(session: PilotSessionState = { kind: "signed_out" }): PilotGateway {
   return {
+    completeAuthCallback: vi.fn<PilotGateway["completeAuthCallback"]>(async () => ({
+      ok: true,
+      value: session,
+    })),
     getSession: vi.fn<PilotGateway["getSession"]>(async () => ({ ok: true, value: session })),
     grantMetricConsent: vi.fn<PilotGateway["grantMetricConsent"]>(async () => ({
       ok: true,
@@ -133,8 +137,8 @@ describe("App runtime boundary", () => {
 
     // Then
     expect(await screen.findByRole("heading", { name: DEFAULT_BRAND.labels.auth })).toBeVisible()
-    expect(screen.getByRole("textbox", { name: "이메일" })).toBeEnabled()
-    expect(screen.getByRole("button", { name: "이메일 OTP 요청" })).toBeEnabled()
+    expect(screen.getByRole("textbox", { name: "초대 이메일" })).toBeEnabled()
+    expect(screen.getByRole("button", { name: "로그인 링크 요청" })).toBeEnabled()
     expect(screen.queryByRole("button", { name: "참여자로 시작" })).not.toBeInTheDocument()
     expect(pilotGatewayFactory).toHaveBeenCalledWith({
       publicKey: VALID_PILOT_ENVIRONMENT.VITE_SUPABASE_PUBLISHABLE_KEY,
@@ -148,25 +152,52 @@ describe("App runtime boundary", () => {
     const gateway = createGateway()
 
     render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
-    const email = await screen.findByRole("textbox", { name: "이메일" })
+    const email = await screen.findByRole("textbox", { name: "초대 이메일" })
 
     // When
     await user.type(email, "runner@example.com")
-    await user.click(screen.getByRole("button", { name: "이메일 OTP 요청" }))
+    await user.click(screen.getByRole("button", { name: "로그인 링크 요청" }))
 
     // Then
     await waitFor(() =>
-      expect(gateway.requestEmailOtp).toHaveBeenCalledWith({ email: "runner@example.com" }),
+      expect(gateway.requestEmailOtp).toHaveBeenCalledWith({
+        callbackUrl: `${window.location.origin}/auth/callback`,
+        email: "runner@example.com",
+      }),
     )
     expect(screen.getByRole("status")).toBeVisible()
+  })
+
+  it("keeps a callback error visible instead of replacing it with initial signed-out state", async () => {
+    // Given
+    window.history.replaceState({}, "", "/auth/callback?error_code=otp_expired")
+    const gateway = createGateway()
+    gateway.completeAuthCallback = vi.fn<PilotGateway["completeAuthCallback"]>(async () => ({
+      error: { kind: "expired_link", retryable: false },
+      ok: false,
+    }))
+
+    // When
+    render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
+
+    // Then
+    expect(await screen.findByRole("alert")).toHaveTextContent("15분 유효 시간이 지났습니다")
+    expect(gateway.subscribeToSession).not.toHaveBeenCalled()
   })
 
   it("shows a signed-in identity and signs out without exposing demo choices", async () => {
     // Given
     const user = userEvent.setup()
     const gateway = createGateway({
-      kind: "signed_in",
-      user: { email: "coach@example.com", id: "11111111-1111-4111-8111-111111111111" },
+      kind: "active",
+      membership: {
+        email: "coach@example.com",
+        membershipId: "77777777-7777-4777-8777-777777777777",
+        programId: "66666666-6666-4666-8666-666666666666",
+        role: "coach",
+        route: "/coach/cohort",
+        userId: "11111111-1111-4111-8111-111111111111",
+      },
     })
     render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
     const signOut = await screen.findByRole("button", { name: "로그아웃" })
@@ -177,7 +208,7 @@ describe("App runtime boundary", () => {
 
     // Then
     expect(gateway.signOut).toHaveBeenCalledOnce()
-    expect(await screen.findByRole("textbox", { name: "이메일" })).toBeEnabled()
+    expect(await screen.findByRole("textbox", { name: "초대 이메일" })).toBeEnabled()
     expect(screen.queryByRole("button", { name: "코치로 시작" })).not.toBeInTheDocument()
   })
 })

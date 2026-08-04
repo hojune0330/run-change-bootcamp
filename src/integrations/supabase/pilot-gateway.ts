@@ -1,25 +1,30 @@
 import { z } from "zod"
+import {
+  createPilotAuthGateway,
+  type PilotOperationError,
+  type PilotOperationResult,
+  type PilotSessionState,
+} from "./pilot-auth.ts"
 import type { PilotClient, PilotClientSession } from "./pilot-client.ts"
 import type { SupabasePublicConfig } from "./runtime-config.ts"
 
-export type { PilotClient, PilotClientSession, PilotDataRequest } from "./pilot-client.ts"
-
-export type PilotOperationError =
-  | "invalid_request"
-  | "invalid_response"
-  | "provider_error"
-  | "signed_out"
-
-export type PilotOperationResult<T> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly error: PilotOperationError; readonly ok: false }
-
-export type PilotSessionState =
-  | { readonly kind: "signed_out" }
-  | {
-      readonly kind: "signed_in"
-      readonly user: { readonly email: string | null; readonly id: string }
-    }
+export type {
+  PilotBlockedReason,
+  PilotMembership,
+  PilotOperationError,
+  PilotOperationResult,
+  PilotRole,
+  PilotSessionState,
+} from "./pilot-auth.ts"
+export type {
+  PilotClient,
+  PilotClientSession,
+  PilotDataRequest,
+  PilotFunctionRequest,
+  PilotPage,
+  PilotPageRequest,
+  PilotRpcRequest,
+} from "./pilot-client.ts"
 
 export type PilotConsentReference = { readonly id: string }
 
@@ -32,6 +37,7 @@ export type PilotAuditEvent = {
 }
 
 export interface PilotGateway {
+  completeAuthCallback(input: unknown): Promise<PilotOperationResult<PilotSessionState>>
   getSession(): Promise<PilotOperationResult<PilotSessionState>>
   grantMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentReference>>
   listAuditEvents(): Promise<PilotOperationResult<readonly PilotAuditEvent[]>>
@@ -43,7 +49,6 @@ export interface PilotGateway {
 
 export type PilotGatewayFactory = (config: SupabasePublicConfig) => PilotGateway
 
-const EmailOtpInputSchema = z.object({ email: z.email() }).strict().readonly()
 const ConsentGrantInputSchema = z
   .object({
     expiresAt: z.iso.datetime({ offset: true }),
@@ -78,43 +83,43 @@ const AuditEventRowsSchema = z
   )
   .readonly()
 
-function publicSession(session: PilotClientSession | null): PilotSessionState {
-  return session === null
-    ? { kind: "signed_out" }
-    : { kind: "signed_in", user: { email: session.email, id: session.userId } }
+function failure(
+  kind: PilotOperationError["kind"],
+  retryable = false,
+): PilotOperationResult<never> {
+  return { error: { kind, retryable }, ok: false }
 }
 
 async function authenticatedSession(
   client: PilotClient,
 ): Promise<PilotOperationResult<PilotClientSession>> {
   const result = await client.auth.getSession()
-  if (!result.ok) return { error: "provider_error", ok: false }
-  return result.value === null
-    ? { error: "signed_out", ok: false }
-    : { ok: true, value: result.value }
+  if (!result.ok)
+    return failure(
+      result.error.kind === "network" ? "network" : "provider_error",
+      result.error.retryable,
+    )
+  return result.value === null ? failure("signed_out") : { ok: true, value: result.value }
 }
 
 function consentResult(
   result: Awaited<ReturnType<PilotClient["execute"]>>,
 ): PilotOperationResult<PilotConsentReference> {
-  if (!result.ok) return { error: "provider_error", ok: false } as const
+  if (!result.ok)
+    return failure(
+      result.error.kind === "network" ? "network" : "provider_error",
+      result.error.retryable,
+    )
   const parsed = ConsentReferenceSchema.safeParse(result.value)
-  return parsed.success
-    ? { ok: true, value: parsed.data }
-    : ({ error: "invalid_response", ok: false } as const)
+  return parsed.success ? { ok: true, value: parsed.data } : failure("invalid_response")
 }
 
 export function createPilotGateway(client: PilotClient): PilotGateway {
   return {
-    getSession: async () => {
-      const result = await client.auth.getSession()
-      return result.ok
-        ? { ok: true, value: publicSession(result.value) }
-        : { error: "provider_error", ok: false }
-    },
+    ...createPilotAuthGateway(client),
     grantMetricConsent: async (input) => {
       const parsed = ConsentGrantInputSchema.safeParse(input)
-      if (!parsed.success) return { error: "invalid_request", ok: false }
+      if (!parsed.success) return failure("invalid_request")
       const session = await authenticatedSession(client)
       if (!session.ok) return session
       return consentResult(
@@ -139,13 +144,17 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
       const result = await client.execute({
         columns: "id,event_type,entity_type,entity_id,occurred_at",
         kind: "list_audit_events",
-        limit: 25,
         order: { ascending: false, column: "occurred_at" },
+        page: { limit: 25, offset: 0 },
         table: "audit_events",
       })
-      if (!result.ok) return { error: "provider_error", ok: false }
+      if (!result.ok)
+        return failure(
+          result.error.kind === "network" ? "network" : "provider_error",
+          result.error.retryable,
+        )
       const parsed = AuditEventRowsSchema.safeParse(result.value)
-      if (!parsed.success) return { error: "invalid_response", ok: false }
+      if (!parsed.success) return failure("invalid_response")
       return {
         ok: true,
         value: parsed.data.map((event) => ({
@@ -157,27 +166,15 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
         })),
       }
     },
-    requestEmailOtp: async (input) => {
-      const parsed = EmailOtpInputSchema.safeParse(input)
-      if (!parsed.success) return { error: "invalid_request", ok: false }
-      const result = await client.auth.signInWithOtp({
-        email: parsed.data.email,
-        options: { shouldCreateUser: false },
-      })
-      return result.ok ? { ok: true, value: undefined } : { error: "provider_error", ok: false }
-    },
     revokeMetricConsent: async (input) => {
       const parsed = ConsentRevocationInputSchema.safeParse(input)
-      if (!parsed.success) return { error: "invalid_request", ok: false }
+      if (!parsed.success) return failure("invalid_request")
       const session = await authenticatedSession(client)
       if (!session.ok) return session
       const values =
         parsed.data.reason === undefined
           ? { revoked_at: parsed.data.revokedAt }
-          : {
-              revocation_reason: parsed.data.reason,
-              revoked_at: parsed.data.revokedAt,
-            }
+          : { revocation_reason: parsed.data.reason, revoked_at: parsed.data.revokedAt }
       return consentResult(
         await client.execute({
           filters: { id: parsed.data.consentId },
@@ -188,11 +185,5 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
         }),
       )
     },
-    signOut: async () => {
-      const result = await client.auth.signOut()
-      return result.ok ? { ok: true, value: undefined } : { error: "provider_error", ok: false }
-    },
-    subscribeToSession: (listener) =>
-      client.auth.subscribeToSession((session) => listener(publicSession(session))),
   }
 }

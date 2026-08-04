@@ -119,6 +119,8 @@
 .pilot-entry__status {
   color: var(--color-text-muted);
   margin: 0;
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 
 .pilot-entry__status--error {
