@@ -9,9 +9,12 @@ import {
 } from "node:fs"
 import { dirname, relative, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import {
+  expectedPostgresVersion,
+  matchesExpectedPostgresVersion,
+} from "./postgres-version.mjs"
 
 const expectedNodeVersion = "v22.23.2"
-const expectedPostgresVersion = "17.10"
 const expectedSupabaseVersion = "2.111.0"
 const supportedModes = new Set(["fresh", "upgrade", "roles", "functions", "static"])
 const mode = process.argv[2]
@@ -138,7 +141,7 @@ function withDatabase(label, logName, scenario) {
       ["--tuples-only", "--no-align", "--command", "select current_setting('server_version')"],
       logName,
     )
-    if (version.output.trim() !== expectedPostgresVersion) {
+    if (!matchesExpectedPostgresVersion(version.output)) {
       throw new Error(
         `security suite requires PostgreSQL ${expectedPostgresVersion}; observed ${version.output.trim()}`,
       )
