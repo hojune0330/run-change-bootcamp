@@ -8,15 +8,19 @@ PLUS Run은 클라이언트에게 방향성과 운영 경계를 설명할 수 �
 공개 시드 데모, PLUS Run 브랜드의 반응형 화면, 고정 3K·RHR 측정 계약,
 초대 전용 로그인, 개인정보·동의·역할별 접근 통제의 기반을 확인했습니다.
 
-다만 현재 공개 URL은 정상 접속되는 이전 시드 데모입니다. 이번 POC 후보와 번들 해시가
-다르고 최신 PLUS 로고도 아직 반영되지 않았습니다. 이번 작업에서는 배포하지 않았으므로,
-현재 후보를 공개 버전이라고 보고하면 안 됩니다.
+현재 공개 URL에는 이번 POC의 Pages 배포 산출물이 반영되어 있습니다. 배포 source SHA는
+[`d8d3d24c`](https://github.com/hojune0330/run-change-bootcamp/commit/d8d3d24c08d758011f127271c4d7bc419f84dd4a)이며,
+승인된 POC 후보([`35496bfd`](https://github.com/hojune0330/run-change-bootcamp/commit/35496bfd48d47bac948a7d8f6767b5300da4beb9))에
+공개 배포를 위한 CI 호환성·검증 수정만 더한 결과입니다. [Pages 배포 run 30888076982](https://github.com/hojune0330/run-change-bootcamp/actions/runs/30888076982)는
+2026-08-04에 성공했고, 공개 URL에서 PLUS Run·로고·브랜드 식별자와 데스크톱/모바일 표시를
+확인했습니다. 이 공개 프리뷰는 여전히 운영 서비스와 연결된 파일럿이 아닙니다.
 
 ## 바로 확인할 주소
 
-- 현재 공개 시드 데모: <https://hojune0330.github.io/run-change-bootcamp/>
+- 현재 공개 POC 프리뷰: <https://hojune0330.github.io/run-change-bootcamp/>
+- 배포 source: [`d8d3d24c`](https://github.com/hojune0330/run-change-bootcamp/commit/d8d3d24c08d758011f127271c4d7bc419f84dd4a) · [Pages run 30888076982](https://github.com/hojune0330/run-change-bootcamp/actions/runs/30888076982)
 - 저장소: <https://github.com/hojune0330/run-change-bootcamp>
-- 현재 POC 후보 상태: 로컬 검증 완료, 공개 배포 전
+- 현재 POC 후보 상태: 공개 배포 및 브라우저 확인 완료
 
 공개 데모에는 실제 개인정보·건강정보·회사 이메일·실제 운동 파일을 입력하지 않습니다.
 
@@ -65,11 +69,10 @@ PLUS Run은 클라이언트에게 방향성과 운영 경계를 설명할 수 �
 - 인증 브라우저 시나리오 18개 중 14개 통과, 화면 조합상 의도된 4개 스킵
 - 로그인·로그아웃·네트워크 복구 화면 13장과 실행 트레이스 18개 확보
 - Pages 후보 산출물의 실제 브라우저 배포 시나리오 6개 통과
-- 공개 URL은 200 응답과 모바일·데스크톱 표시를 확인했지만 현재 후보와 해시가 달라 배포 대기
+- 공개 URL은 200 응답, PLUS Run 브랜드 식별, 모바일·데스크톱 표시와 수평 overflow 없음, 콘솔 오류 없음을 확인했으며 공개 번들은 로컬 빌드와 SHA-256이 일치
 
 ## 아직 하지 않은 것
 
-- 현재 POC 후보를 공개 URL에 배포하지 않았습니다.
 - 호스팅 Supabase, 운영 도메인, 운영 시크릿, 실제 이메일 전달, 실제 계정은 연결하지 않았습니다.
 - 실제 직원 초대는 활성화하면 안 됩니다. 개인정보 책임자 승인, 대상자 명단, 동의문,
   보존 기간, 지원 연락처가 확정된 뒤 별도 운영 승인을 받아야 합니다.
