@@ -75,7 +75,7 @@ select pg_temp.assert_true(
   'upgrade retains measurement Q&A and lifecycle values exactly'
 );
 select pg_temp.assert_true(
-  current_setting('server_version') = '17.10'
+  split_part(current_setting('server_version'), ' ', 1) = '17.10'
     and to_regprocedure(
       'public.read_suppressed_report_snapshot(uuid)'
     ) is not null,

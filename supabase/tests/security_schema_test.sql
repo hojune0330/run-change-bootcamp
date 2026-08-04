@@ -13,7 +13,7 @@ end;
 $$;
 
 select pg_temp.assert_true(
-  current_setting('server_version') = '17.10',
+  split_part(current_setting('server_version'), ' ', 1) = '17.10',
   'database server is exactly PostgreSQL 17.10'
 );
 
