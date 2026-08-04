@@ -58,6 +58,11 @@
   overflow-wrap: anywhere;
 }
 
+.participant-screen__eyebrow,
+.participant-greeting__name {
+  word-break: keep-all;
+}
+
 .participant-greeting {
   border-inline-start: var(--space-1) solid var(--color-accent);
   padding-inline-start: var(--space-4);

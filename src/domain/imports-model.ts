@@ -6,6 +6,74 @@ export const IMPORT_FORMATS = ["csv", "fit", "gpx", "tcx", "apple-xml", "samsung
 export const ImportFormatSchema = z.enum(IMPORT_FORMATS)
 export type ImportFormat = z.infer<typeof ImportFormatSchema>
 
+export const IMPORT_QUALITY_FLAGS = [
+  "device_reported",
+  "estimated",
+  "corrected",
+  "partial",
+  "timezone_inferred",
+  "duplicate_suspected",
+] as const
+const ImportQualityFlagSchema = z.enum(IMPORT_QUALITY_FLAGS)
+
+export function canonicalizeImportQualityFlags(
+  flags: readonly z.infer<typeof ImportQualityFlagSchema>[],
+) {
+  return IMPORT_QUALITY_FLAGS.filter((flag) => flags.includes(flag))
+}
+
+const ImportQualityFlagsSchema = z
+  .array(ImportQualityFlagSchema)
+  .max(12)
+  .transform(canonicalizeImportQualityFlags)
+  .readonly()
+
+const AcceptedMetricsSchema = z
+  .object({
+    distanceM: z.number().finite().positive().optional(),
+    durationS: z.number().finite().positive().optional(),
+    paceSecondsPerKm: z.number().finite().positive().optional(),
+    averageHeartRateBpm: z.number().finite().min(20).max(250).optional(),
+    maxHeartRateBpm: z.number().finite().min(20).max(250).optional(),
+    steps: z.number().int().nonnegative().optional(),
+    elevationGainM: z.number().finite().nonnegative().optional(),
+  })
+  .strict()
+  .refine((metrics) => Object.keys(metrics).length > 0)
+  .readonly()
+
+const acceptedStructuredImportDraftShape = {
+  programId: z.string().trim().min(3).max(120),
+  participantId: MembershipIdSchema,
+  format: ImportFormatSchema,
+  observedAt: IsoDateTimeSchema,
+  sourceFamily: z.string().trim().min(1).max(80),
+  sourceModel: z.string().trim().min(1).max(120).optional(),
+  timezone: z.literal("Asia/Seoul"),
+  qualityFlags: ImportQualityFlagsSchema,
+  metrics: AcceptedMetricsSchema,
+} as const
+
+export const AcceptedStructuredImportDraftSchema = z
+  .object(acceptedStructuredImportDraftShape)
+  .strict()
+  .readonly()
+export type AcceptedStructuredImportDraft = z.infer<typeof AcceptedStructuredImportDraftSchema>
+
+export const AcceptedStructuredImportRecordSchema = z
+  .object({
+    ...acceptedStructuredImportDraftShape,
+    id: ImportArtifactIdSchema,
+    parserName: z.string().trim().min(1).max(120),
+    parserVersion: z.string().trim().min(1).max(80),
+    acceptedBy: MembershipIdSchema,
+    acceptedAt: IsoDateTimeSchema,
+    serverDuplicateHmac: z.string().regex(/^[a-f0-9]{64}$/),
+  })
+  .strict()
+  .readonly()
+export type AcceptedStructuredImportRecord = z.infer<typeof AcceptedStructuredImportRecordSchema>
+
 export const ImportArtifactSchema = z
   .object({
     id: ImportArtifactIdSchema,

@@ -183,7 +183,7 @@ export const DEMO_PARTICIPANTS = [
 
 export const DEMO_PROGRAM = {
   id: "program-run-change-2026",
-  name: "RUN CHANGE 8주 러닝 부트캠프",
+  name: "PLUS Run 8주 러닝 부트캠프",
   sponsor: "한화생명",
   startsOn: "2026-08-24",
   endsOn: "2026-10-24",

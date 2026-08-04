@@ -1,4 +1,5 @@
 import { Card } from "../../components/primitives/index.ts"
+import { type BrandConfig, DEFAULT_BRAND } from "../../design/brand-config.ts"
 import { FeedPostCard } from "./FeedPostCard.tsx"
 import { LoadableBoundary } from "./LoadableBoundary.tsx"
 import type { FeedHandlers, FeedViewModel, Loadable } from "./models.ts"
@@ -6,17 +7,24 @@ import type { ShareServices } from "./share.ts"
 import "./participant.css"
 
 export type FeedScreenProps = {
+  readonly brand?: BrandConfig
   readonly state: Loadable<FeedViewModel>
   readonly handlers: FeedHandlers
   readonly shareServices: ShareServices
   readonly onRetry: () => void
 }
 
-export function FeedScreen({ state, handlers, shareServices, onRetry }: FeedScreenProps) {
+export function FeedScreen({
+  brand = DEFAULT_BRAND,
+  state,
+  handlers,
+  shareServices,
+  onRetry,
+}: FeedScreenProps) {
   return (
     <section aria-labelledby="participant-feed-title" className="participant-screen">
       <header className="participant-screen__header">
-        <p className="participant-screen__eyebrow">20명의 런 체인지</p>
+        <p className="participant-screen__eyebrow">{brand.productName} · 함께 달리는 기록</p>
         <h1 id="participant-feed-title">함께</h1>
         <p>서로의 완료 기록만 보고 가벼운 응원을 남겨요.</p>
       </header>
@@ -30,6 +38,7 @@ export function FeedScreen({ state, handlers, shareServices, onRetry }: FeedScre
             <div className="participant-feed-list">
               {model.posts.map((post) => (
                 <FeedPostCard
+                  brand={brand}
                   handlers={handlers}
                   key={post.id}
                   post={post}

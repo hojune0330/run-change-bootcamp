@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
+import { DEFAULT_BRAND } from "../design/brand-config.ts"
 import { AppShell } from "./AppShell"
 
 describe("AppShell", () => {
@@ -20,7 +21,7 @@ describe("AppShell", () => {
       "#main-content",
     )
     expect(screen.getByRole("navigation", { name: "참여자 주요 메뉴" })).toBeInTheDocument()
-    expect(screen.getByRole("main", { name: "RUN CHANGE 콘텐츠" })).toBeInTheDocument()
+    expect(screen.getByRole("main", { name: DEFAULT_BRAND.labels.shell })).toBeInTheDocument()
     expect(currentRoute).toHaveAttribute("aria-current", "page")
   })
 

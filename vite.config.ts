@@ -1,6 +1,7 @@
 import react from "@vitejs/plugin-react"
 import { VitePWA } from "vite-plugin-pwa"
 import { configDefaults, defineConfig } from "vitest/config"
+import { PRODUCT_METADATA } from "./src/design/brand-config.ts"
 import { COLOR_TOKENS } from "./src/design/color-tokens.ts"
 
 const LOCAL_BASE_PATH = "/"
@@ -24,11 +25,11 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: "autoUpdate",
-        includeAssets: ["icon-any.svg", "icon-maskable.svg"],
+        includeAssets: ["icon-any.svg", "icon-maskable.svg", "brand/plus-logo.jpg"],
         manifest: {
-          name: "RUN CHANGE Bootcamp",
-          short_name: "RUN CHANGE",
-          description: "한화생명 러닝 부트캠프의 오늘 할 일과 변화를 기록하는 앱",
+          name: PRODUCT_METADATA.name,
+          short_name: PRODUCT_METADATA.shortName,
+          description: PRODUCT_METADATA.description,
           lang: "ko-KR",
           start_url: basePath,
           scope: basePath,
@@ -38,13 +39,13 @@ export default defineConfig(({ mode }) => {
           theme_color: COLOR_TOKENS.accent,
           icons: [
             {
-              src: `${basePath}icon-any.svg`,
+              src: `${basePath}${PRODUCT_METADATA.iconAny.slice(1)}`,
               sizes: "any",
               type: "image/svg+xml",
               purpose: "any",
             },
             {
-              src: `${basePath}icon-maskable.svg`,
+              src: `${basePath}${PRODUCT_METADATA.iconMaskable.slice(1)}`,
               sizes: "any",
               type: "image/svg+xml",
               purpose: "maskable",

@@ -44,4 +44,16 @@ describe("GitHub Pages subpath routing", () => {
       href: "/record",
     })
   })
+
+  it("resolves the branded about surface and administrative shell routes", () => {
+    expect(resolveRoute("/about")).toEqual({ kind: "about" })
+    expect(resolveRoute("/admin/overview")).toEqual({
+      kind: "admin",
+      href: "/admin/overview",
+    })
+    expect(resolveRoute("/admin/settings")).toEqual({
+      kind: "admin",
+      href: "/admin/settings",
+    })
+  })
 })

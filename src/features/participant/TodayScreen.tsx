@@ -2,6 +2,7 @@ import { CheckCircleIcon } from "@phosphor-icons/react/CheckCircle"
 import { MegaphoneIcon } from "@phosphor-icons/react/Megaphone"
 import { useRef, useState } from "react"
 import { Badge, Button, Card } from "../../components/primitives/index.ts"
+import { type BrandConfig, DEFAULT_BRAND } from "../../design/brand-config.ts"
 import { ActionFeedback } from "./ActionFeedback.tsx"
 import { type ActionFeedbackState, rejectedActionFeedback } from "./action-feedback-state.ts"
 import { LoadableBoundary } from "./LoadableBoundary.tsx"
@@ -15,6 +16,7 @@ import {
 import "./participant.css"
 
 export type TodayScreenProps = {
+  readonly brand?: BrandConfig
   readonly state: Loadable<TodayViewModel>
   readonly handlers: TodayHandlers
   readonly onRetry: () => void
@@ -93,12 +95,13 @@ function AssignmentCard({ assignment, handlers }: AssignmentCardProps) {
           </div>
         </dl>
         <Button
+          aria-label={completed ? "완료됨" : "과제 완료"}
           busy={busy}
           disabled={completed}
           icon={<CheckCircleIcon aria-hidden size={20} weight="bold" />}
           onClick={completeAssignment}
         >
-          {completed ? "완료됨" : "과제 완료"}
+          {completed ? "완료됨" : "과제 완료"}
         </Button>
         <ActionFeedback feedback={feedback} />
       </div>
@@ -106,11 +109,11 @@ function AssignmentCard({ assignment, handlers }: AssignmentCardProps) {
   )
 }
 
-export function TodayScreen({ state, handlers, onRetry }: TodayScreenProps) {
+export function TodayScreen({ brand = DEFAULT_BRAND, state, handlers, onRetry }: TodayScreenProps) {
   return (
     <section aria-labelledby="participant-today-title" className="participant-screen">
       <header className="participant-screen__header">
-        <p className="participant-screen__eyebrow">오늘의 런 체인지</p>
+        <p className="participant-screen__eyebrow">{brand.productName} · 오늘의 러닝</p>
         <h1 id="participant-today-title">오늘</h1>
       </header>
       <LoadableBoundary onRetry={onRetry} state={state}>
@@ -118,7 +121,7 @@ export function TodayScreen({ state, handlers, onRetry }: TodayScreenProps) {
           <div className="participant-screen__content">
             <div className="participant-greeting">
               <p className="participant-greeting__date">{model.dateLabel}</p>
-              <p className="participant-greeting__name">{model.displayName}, 하나만 완료해요.</p>
+              <p className="participant-greeting__name">{model.displayName}, 하나만 완료해요.</p>
             </div>
 
             {model.assignment === undefined ? (

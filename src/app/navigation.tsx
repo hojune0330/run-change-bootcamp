@@ -1,10 +1,13 @@
+import { CalendarBlankIcon } from "@phosphor-icons/react/CalendarBlank"
 import { ChartLineUpIcon } from "@phosphor-icons/react/ChartLineUp"
 import { ChatCircleIcon } from "@phosphor-icons/react/ChatCircle"
 import { CheckSquareIcon } from "@phosphor-icons/react/CheckSquare"
 import { ClipboardTextIcon } from "@phosphor-icons/react/ClipboardText"
+import { GearSixIcon } from "@phosphor-icons/react/GearSix"
 import { HouseIcon } from "@phosphor-icons/react/House"
 import { MegaphoneIcon } from "@phosphor-icons/react/Megaphone"
 import { NotePencilIcon } from "@phosphor-icons/react/NotePencil"
+import { PresentationChartIcon } from "@phosphor-icons/react/PresentationChart"
 import { UsersThreeIcon } from "@phosphor-icons/react/UsersThree"
 import type { ReactNode } from "react"
 
@@ -60,7 +63,31 @@ export const COACH_NAVIGATION = [
   },
 ] as const satisfies readonly NavigationItem[]
 
+export const ADMIN_NAVIGATION = [
+  {
+    href: "/admin/overview",
+    label: "운영 개요",
+    icon: <PresentationChartIcon aria-hidden size={20} weight="bold" />,
+  },
+  {
+    href: "/admin/members",
+    label: "멤버",
+    icon: <UsersThreeIcon aria-hidden size={20} weight="bold" />,
+  },
+  {
+    href: "/admin/schedule",
+    label: "일정",
+    icon: <CalendarBlankIcon aria-hidden size={20} weight="bold" />,
+  },
+  {
+    href: "/admin/settings",
+    label: "설정",
+    icon: <GearSixIcon aria-hidden size={20} weight="bold" />,
+  },
+] as const satisfies readonly NavigationItem[]
+
 export const NAVIGATION_BY_MODE = {
+  admin: ADMIN_NAVIGATION,
   participant: PARTICIPANT_NAVIGATION,
   coach: COACH_NAVIGATION,
 } as const satisfies Record<string, readonly NavigationItem[]>
@@ -68,11 +95,13 @@ export const NAVIGATION_BY_MODE = {
 export type AppMode = keyof typeof NAVIGATION_BY_MODE
 
 export const MODE_LABELS = {
+  admin: "운영 관리자 주요 메뉴",
   participant: "참여자 주요 메뉴",
   coach: "코치 주요 메뉴",
 } as const satisfies Record<AppMode, string>
 
 export const MODE_SWITCH_LINKS = {
+  admin: { href: "/", label: "세션 바꾸기" },
   participant: { href: "/", label: "세션 바꾸기" },
   coach: { href: "/", label: "세션 바꾸기" },
 } as const satisfies Record<AppMode, { readonly href: string; readonly label: string }>

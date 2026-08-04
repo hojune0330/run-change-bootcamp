@@ -1,0 +1,15 @@
+{
+  "asset": "public/brand/plus-logo.jpg",
+  "source": "C:/Users/admin/.codex/codex-remote-attachments/019fb757-fd05-7d11-92c3-46424564e41f/6757BD38-9807-4539-B343-F138F4806EF1/1-사진-1.jpg",
+  "source_authorization": "User-supplied attachment authorized by the pilot task prompt.",
+  "sha256": "6af2205a161815774f4fd8dd39794cbd620968ca8b02762e3195ef903de9a85d",
+  "width": 1280,
+  "height": 672,
+  "pixel_format": "RGB",
+  "transformed": false,
+  "byte_preservation": "The source bytes were copied without decoding, recompression, resizing, or metadata edits.",
+  "derived_icons": {
+    "files": ["public/icon-any.svg", "public/icon-maskable.svg"],
+    "method": "SVG image wrappers embed the exact JPEG bytes in a square whitespace viewBox; no redraw, recolor, or remote URL is used."
+  }
+}

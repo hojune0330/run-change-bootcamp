@@ -67,7 +67,7 @@ format before writing metrics. Never render uploaded SVG/HTML or trust an origin
 ## AI functions
 
 Required server secrets are `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
-`SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `OPENAI_MODEL`, and
+`SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_PROJECT_ID`, and
 `OPENAI_SAFETY_SALT`. Leave any OpenAI value absent to disable the provider safely with a
 503 response and no accepted metric or published feedback.
 
@@ -81,7 +81,9 @@ Required server secrets are `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
   provider-neutral notification/outbox row.
 
 OpenAI calls use the Responses API, `store: false`, strict JSON Schema, a server-HMAC safety
-identifier, no filename/profile/name, and segregated untrusted user content. Email, Korean
+identifier, the server-configured `OpenAI-Project` header, no filename/profile/name, and
+segregated untrusted user content. Both AI functions require an exact active purpose-specific
+consent before creating job metadata and recheck it immediately before the provider call. Email, Korean
 phone, UUID, URL, and control-character patterns are removed from text. Screenshot pixels
 cannot be proven deidentified server-side without a trusted image-redaction pipeline, so the
 contract requires a cropped/deidentified attestation and sends no transport metadata. A

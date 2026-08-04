@@ -1,5 +1,15 @@
 project_id = "run-change-bootcamp"
 
+[auth.email]
+enable_signup = false
+otp_expiry = 900
+max_frequency = "60s"
+
+[auth.hook.send_email]
+enabled = true
+uri = "http://host.docker.internal:54321/functions/v1/send-pilot-magic-link"
+secrets = "env(SEND_EMAIL_HOOK_SECRET)"
+
 [functions.screenshot-to-metric-draft]
 verify_jwt = true
 
@@ -8,3 +18,9 @@ verify_jwt = true
 
 [functions.review-feedback]
 verify_jwt = true
+
+[functions.send-pilot-magic-link]
+verify_jwt = false
+
+[functions.request-pilot-magic-link]
+verify_jwt = false

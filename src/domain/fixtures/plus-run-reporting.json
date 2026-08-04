@@ -1,0 +1,234 @@
+{
+  "cohort": [
+    {
+      "enrollmentId": "enrollment-01",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 1020,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 8 }
+    },
+    {
+      "enrollmentId": "enrollment-02",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 1000,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 8 }
+    },
+    {
+      "enrollmentId": "enrollment-03",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 990,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 8 }
+    },
+    {
+      "enrollmentId": "enrollment-04",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 980,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 8 }
+    },
+    {
+      "enrollmentId": "enrollment-05",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 970,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 8 }
+    },
+    {
+      "enrollmentId": "enrollment-06",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 970,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 8 }
+    },
+    {
+      "enrollmentId": "enrollment-07",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 960,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 8 }
+    },
+    {
+      "enrollmentId": "enrollment-08",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 960,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 8 }
+    },
+    {
+      "enrollmentId": "enrollment-09",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 960,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 8 }
+    },
+    {
+      "enrollmentId": "enrollment-10",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 950,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 8 }
+    },
+    {
+      "enrollmentId": "enrollment-11",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 950,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 8 }
+    },
+    {
+      "enrollmentId": "enrollment-12",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 940,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 8 }
+    },
+    {
+      "enrollmentId": "enrollment-13",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 930,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 7 }
+    },
+    {
+      "enrollmentId": "enrollment-14",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 920,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 7 }
+    },
+    {
+      "enrollmentId": "enrollment-15",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": 900,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 7 }
+    },
+    {
+      "enrollmentId": "enrollment-16",
+      "lifecycleStatus": "active",
+      "baselineSeconds": 1000,
+      "retestSeconds": null,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 10 }
+    },
+    {
+      "enrollmentId": "enrollment-17",
+      "lifecycleStatus": "active",
+      "baselineSeconds": null,
+      "retestSeconds": 950,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 10 }
+    },
+    {
+      "enrollmentId": "enrollment-18",
+      "lifecycleStatus": "withdrawn",
+      "baselineSeconds": null,
+      "retestSeconds": null,
+      "adherence": { "assignedWhileActiveCount": 2, "acceptedLinkedSessionCount": 2 }
+    },
+    {
+      "enrollmentId": "enrollment-19",
+      "lifecycleStatus": "ended",
+      "baselineSeconds": null,
+      "retestSeconds": null,
+      "adherence": { "assignedWhileActiveCount": 0, "acceptedLinkedSessionCount": 0 }
+    },
+    {
+      "enrollmentId": "enrollment-20",
+      "lifecycleStatus": "completed",
+      "baselineSeconds": null,
+      "retestSeconds": null,
+      "adherence": { "assignedWhileActiveCount": 10, "acceptedLinkedSessionCount": 10 }
+    }
+  ],
+  "restingHeartRate": [
+    {
+      "localDate": "2026-08-17",
+      "localTime": "06:00:00",
+      "bpm": 60,
+      "sourceFamily": "garmin",
+      "deviceFamily": "forerunner",
+      "status": "accepted"
+    },
+    {
+      "localDate": "2026-08-17",
+      "localTime": "06:05:00",
+      "bpm": 64,
+      "sourceFamily": "garmin",
+      "deviceFamily": "forerunner",
+      "status": "accepted"
+    },
+    {
+      "localDate": "2026-08-18",
+      "localTime": "07:00:00",
+      "bpm": 58,
+      "sourceFamily": "garmin",
+      "deviceFamily": "forerunner",
+      "status": "accepted"
+    },
+    {
+      "localDate": "2026-08-19",
+      "localTime": "05:30:00",
+      "bpm": 61,
+      "sourceFamily": "garmin",
+      "deviceFamily": "forerunner",
+      "status": "accepted"
+    },
+    {
+      "localDate": "2026-10-08",
+      "localTime": "06:00:00",
+      "bpm": 56,
+      "sourceFamily": "garmin",
+      "deviceFamily": "forerunner",
+      "status": "accepted"
+    },
+    {
+      "localDate": "2026-10-08",
+      "localTime": "06:10:00",
+      "bpm": 58,
+      "sourceFamily": "garmin",
+      "deviceFamily": "forerunner",
+      "status": "accepted"
+    },
+    {
+      "localDate": "2026-10-09",
+      "localTime": "07:00:00",
+      "bpm": 55,
+      "sourceFamily": "garmin",
+      "deviceFamily": "forerunner",
+      "status": "accepted"
+    },
+    {
+      "localDate": "2026-10-10",
+      "localTime": "05:00:00",
+      "bpm": 56,
+      "sourceFamily": "garmin",
+      "deviceFamily": "forerunner",
+      "status": "accepted"
+    },
+    {
+      "localDate": "2026-10-11",
+      "localTime": "03:59:59",
+      "bpm": 20,
+      "sourceFamily": "garmin",
+      "deviceFamily": "forerunner",
+      "status": "accepted"
+    },
+    {
+      "localDate": "2026-10-12",
+      "localTime": "06:00:00",
+      "bpm": 200,
+      "sourceFamily": "garmin",
+      "deviceFamily": "forerunner",
+      "status": "rejected"
+    }
+  ],
+  "suppressionCells": [
+    { "rowKey": "group_a", "columnKey": "stage_a", "participantCount": 3, "numericValue": 1 },
+    { "rowKey": "group_a", "columnKey": "stage_b", "participantCount": 5, "numericValue": 2 },
+    { "rowKey": "group_a", "columnKey": "stage_c", "participantCount": 9, "numericValue": 3 },
+    { "rowKey": "group_b", "columnKey": "stage_a", "participantCount": 8, "numericValue": 4 },
+    { "rowKey": "group_b", "columnKey": "stage_b", "participantCount": 10, "numericValue": 5 },
+    { "rowKey": "group_b", "columnKey": "stage_c", "participantCount": 11, "numericValue": 6 }
+  ]
+}

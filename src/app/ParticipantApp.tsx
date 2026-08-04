@@ -8,6 +8,7 @@ import {
   recordModel,
   todayModel,
 } from "../demo/index.ts"
+import { type BrandConfig, DEFAULT_BRAND } from "../design/brand-config.ts"
 import {
   FeedScreen,
   MyChangeScreen,
@@ -19,6 +20,7 @@ import { AppShell } from "./AppShell.tsx"
 import type { ParticipantHref } from "./routes.ts"
 
 type ParticipantAppProps = {
+  readonly brand?: BrandConfig
   readonly href: ParticipantHref
   readonly onNavigate: (href: string) => void
   readonly participantId: DemoParticipantId
@@ -27,6 +29,7 @@ type ParticipantAppProps = {
 }
 
 export function ParticipantApp({
+  brand = DEFAULT_BRAND,
   href,
   onNavigate,
   participantId,
@@ -43,12 +46,14 @@ export function ParticipantApp({
   return (
     <AppShell
       activeHref={href}
+      brand={brand}
       mode="participant"
       onNavigate={onNavigate}
       sessionLabel={sessionName}
     >
       {href === "/today" ? (
         <TodayScreen
+          brand={brand}
           handlers={bindings.today}
           onRetry={retry}
           state={ready(todayModel(state, participantId))}
@@ -56,6 +61,7 @@ export function ParticipantApp({
       ) : null}
       {href === "/feed" ? (
         <FeedScreen
+          brand={brand}
           handlers={bindings.feed}
           onRetry={retry}
           shareServices={bindings.share}
@@ -67,6 +73,7 @@ export function ParticipantApp({
       ) : null}
       {href === "/change" ? (
         <MyChangeScreen
+          brand={brand}
           handlers={bindings.change}
           onRetry={retry}
           state={ready(myChangeModel(state, participantId))}

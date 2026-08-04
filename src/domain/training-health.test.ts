@@ -66,6 +66,7 @@ describe("training and health boundaries", () => {
       AssessmentSessionSchema.safeParse({
         id: "assessment-session-initial",
         programId: "program-run-change-2026",
+        protocolVersionId: "assessment-protocol-version-plus-run-2026-v1",
         purpose: "initial",
         week: 1,
         session: 2,
@@ -125,5 +126,12 @@ describe("training and health boundaries", () => {
     expect(ImportArtifactSchema.safeParse({ ...artifact, importedAt: "yesterday" }).success).toBe(
       false,
     )
+  })
+
+  it("Given a health or pain metric, When a publication action is requested, Then the health module exposes a rejection boundary", async () => {
+    const healthModule = await import("./health")
+
+    expect(Object.hasOwn(healthModule, "HealthPublicationSchema")).toBe(true)
+    expect(Object.hasOwn(healthModule, "publishHealthMetric")).toBe(true)
   })
 })
