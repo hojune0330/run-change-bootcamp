@@ -50,6 +50,19 @@ insert into public.program_memberships (
   ('00000000-0000-4000-8000-000000000123', '00000000-0000-4000-8000-000000000010',
     '00000000-0000-4000-8000-000000000103', 'participant', 'active', '2026-01-01T00:00:00Z');
 
+select exists (
+  select 1
+  from information_schema.columns
+  where table_schema = 'public'
+    and table_name = 'program_memberships'
+    and column_name = 'auth_activated_at'
+) as has_auth_activation_column \gset
+\if :has_auth_activation_column
+update public.program_memberships
+set auth_activated_at = joined_at
+where auth_activated_at is null;
+\endif
+
 insert into public.consent_grants (
   id, program_id, participant_profile_id, purpose,
   provider, provider_project_id, endpoint, data_classes, stated_purpose,

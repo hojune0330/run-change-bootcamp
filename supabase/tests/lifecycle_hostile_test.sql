@@ -24,6 +24,19 @@ insert into public.program_memberships (
   'coach', 'active', '2026-01-01T00:00:00Z'
 );
 
+select exists (
+  select 1
+  from information_schema.columns
+  where table_schema = 'public'
+    and table_name = 'program_memberships'
+    and column_name = 'auth_activated_at'
+) as has_auth_activation_column \gset
+\if :has_auth_activation_column
+update public.program_memberships
+set auth_activated_at = joined_at
+where id = '00000000-0000-4000-8000-000000000125';
+\endif
+
 insert into public.organizations (id, name) values (
   '00000000-0000-4000-8000-000000000002', 'Other Organization'
 );

@@ -87,6 +87,19 @@ insert into public.program_memberships (
   ('00000000-0000-0000-0000-000000000101', '00000000-0000-0000-0000-000000000031', 'stakeholder', 'active', now() - interval '1 day'),
   ('00000000-0000-0000-0000-000000000201', '00000000-0000-0000-0000-000000000003', 'participant', 'active', now() - interval '1 day');
 
+select exists (
+  select 1
+  from information_schema.columns
+  where table_schema = 'public'
+    and table_name = 'program_memberships'
+    and column_name = 'auth_activated_at'
+) as has_auth_activation_column \gset
+\if :has_auth_activation_column
+update public.program_memberships
+set auth_activated_at = joined_at
+where auth_activated_at is null;
+\endif
+
 update public.organization_memberships
 set status = 'suspended'
 where organization_id = '00000000-0000-0000-0000-000000000100'

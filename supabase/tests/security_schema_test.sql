@@ -58,6 +58,7 @@ select pg_temp.assert_true(
     join pg_namespace namespace on namespace.oid = relation.relnamespace
     where namespace.nspname = 'public'
       and relation.relkind in ('r', 'p')
+      and relation.relname <> 'pilot_auth_lifecycle_signals'
       and not exists (
         select 1
         from pg_policy policy
@@ -66,7 +67,34 @@ select pg_temp.assert_true(
           and not policy.polpermissive
       )
   ),
-  'every public base table has the restrictive active-authenticated policy'
+  'every public base table except the retained-JWT lifecycle signal has the restrictive active-authenticated policy'
+);
+
+select pg_temp.assert_true(
+  exists (
+    select 1
+    from pg_policy policy
+    where policy.polrelid = 'public.pilot_auth_lifecycle_signals'::regclass
+      and policy.polname = 'pilot_auth_lifecycle_signal_self'
+      and policy.polpermissive
+      and policy.polcmd = 'r'
+  )
+  and not exists (
+    select 1
+    from pg_policy policy
+    where policy.polrelid = 'public.pilot_auth_lifecycle_signals'::regclass
+      and policy.polname = 'active_authenticated_only'
+  )
+  and not has_table_privilege(
+    'authenticated', 'public.pilot_auth_lifecycle_signals', 'INSERT'
+  )
+  and not has_table_privilege(
+    'authenticated', 'public.pilot_auth_lifecycle_signals', 'UPDATE'
+  )
+  and not has_table_privilege(
+    'authenticated', 'public.pilot_auth_lifecycle_signals', 'DELETE'
+  ),
+  'retained-JWT lifecycle signal remains self-readable but non-writable after actor deactivation'
 );
 
 select pg_temp.assert_true(

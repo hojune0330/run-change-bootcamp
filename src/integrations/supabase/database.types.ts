@@ -2298,6 +2298,30 @@ export type Database = {
         }
         Relationships: []
       }
+      pilot_auth_lifecycle_signals: {
+        Row: {
+          changed_at: string
+          change_kind: string
+          profile_id: string
+          program_id: string
+          revision: number
+        }
+        Insert: {
+          changed_at?: string
+          change_kind: string
+          profile_id: string
+          program_id: string
+          revision?: number
+        }
+        Update: {
+          changed_at?: string
+          change_kind?: string
+          profile_id?: string
+          program_id?: string
+          revision?: number
+        }
+        Relationships: []
+      }
       private_question_answers: {
         Row: {
           answer_body: string
@@ -2601,6 +2625,9 @@ export type Database = {
           invited_at: string
           invitee_email_hash: string
           invitee_profile_id: string | null
+          last_magic_link_requested_at: string | null
+          magic_link_expires_at: string | null
+          magic_link_request_count: number
           program_id: string
           role: string
           status: string
@@ -2612,6 +2639,9 @@ export type Database = {
           invited_at?: string
           invitee_email_hash: string
           invitee_profile_id?: string | null
+          last_magic_link_requested_at?: string | null
+          magic_link_expires_at?: string | null
+          magic_link_request_count?: number
           program_id: string
           role: string
           status?: string
@@ -2623,6 +2653,9 @@ export type Database = {
           invited_at?: string
           invitee_email_hash?: string
           invitee_profile_id?: string | null
+          last_magic_link_requested_at?: string | null
+          magic_link_expires_at?: string | null
+          magic_link_request_count?: number
           program_id?: string
           role?: string
           status?: string
@@ -2644,6 +2677,7 @@ export type Database = {
       }
       program_memberships: {
         Row: {
+          auth_activated_at: string | null
           ended_at: string | null
           id: string
           joined_at: string
@@ -2653,6 +2687,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          auth_activated_at?: string | null
           ended_at?: string | null
           id?: string
           joined_at?: string
@@ -2662,6 +2697,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          auth_activated_at?: string | null
           ended_at?: string | null
           id?: string
           joined_at?: string
@@ -3222,9 +3258,18 @@ export type Database = {
       }
     }
     Functions: {
+      bootstrap_pilot_membership: { Args: never; Returns: Json }
       cancel_account_deletion: {
         Args: { target_request: string }
         Returns: undefined
+      }
+      claim_pilot_magic_link_delivery: {
+        Args: {
+          hook_event_id: string
+          hook_user_id: string
+          invitee_email: string
+        }
+        Returns: Json
       }
       delete_named_coach_private_answer: {
         Args: { target_answer: string }
