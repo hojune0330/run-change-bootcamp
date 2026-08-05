@@ -16,11 +16,44 @@ const VALID_PILOT_ENVIRONMENT = {
   VITE_SUPABASE_URL: "https://boundary-test.supabase.co",
 } as const
 
+const AUTH_USER_ID = "11111111-1111-4111-8111-111111111111"
+const PROGRAM_ID = "66666666-6666-4666-8666-666666666666"
+
 function createGateway(session: PilotSessionState = { kind: "signed_out" }): PilotGateway {
   return {
     completeAuthCallback: vi.fn<PilotGateway["completeAuthCallback"]>(async () => ({
       ok: true,
       value: session,
+    })),
+    decideFeedback: vi.fn<PilotGateway["decideFeedback"]>(async () => ({
+      ok: true,
+      value: { id: "55555555-5555-4555-8555-555555555555" },
+    })),
+    getCoachDashboard: vi.fn<PilotGateway["getCoachDashboard"]>(async () => ({
+      ok: true,
+      value: {
+        feedbackQueue: [],
+        participants: [],
+        program: { endsOn: "2026-10-24", startsOn: "2026-08-24", title: "PLUS Run" },
+        summary: {
+          missingHomeworkCount: 0,
+          painRiskCount: 0,
+          pendingFeedbackCount: 0,
+          staleDataCount: 0,
+          totalParticipants: 0,
+        },
+        timeTrial: null,
+      },
+    })),
+    getCoachParticipantDetail: vi.fn<PilotGateway["getCoachParticipantDetail"]>(async () => ({
+      ok: true,
+      value: {
+        auditEvents: [],
+        consentedMetricTypes: [],
+        healthMetricTypes: [],
+        profile: { displayName: "Runner", email: null, profileId: AUTH_USER_ID },
+        sharedMetrics: [],
+      },
     })),
     getSession: vi.fn<PilotGateway["getSession"]>(async () => ({ ok: true, value: session })),
     grantMetricConsent: vi.fn<PilotGateway["grantMetricConsent"]>(async () => ({
@@ -31,6 +64,14 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
       ok: true,
       value: [],
     })),
+    publishAnnouncement: vi.fn<PilotGateway["publishAnnouncement"]>(async () => ({
+      ok: true,
+      value: { id: "88888888-8888-4888-8888-888888888888" },
+    })),
+    publishAssignment: vi.fn<PilotGateway["publishAssignment"]>(async () => ({
+      ok: true,
+      value: { id: "99999999-9999-4999-8999-999999999999" },
+    })),
     requestEmailOtp: vi.fn<PilotGateway["requestEmailOtp"]>(async () => ({
       ok: true,
       value: undefined,
@@ -38,6 +79,10 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
     revokeMetricConsent: vi.fn<PilotGateway["revokeMetricConsent"]>(async () => ({
       ok: true,
       value: { id: "33333333-3333-4333-8333-333333333333" },
+    })),
+    saveTimeTrial: vi.fn<PilotGateway["saveTimeTrial"]>(async () => ({
+      ok: true,
+      value: { programId: PROGRAM_ID },
     })),
     signOut: vi.fn<PilotGateway["signOut"]>(async () => ({ ok: true, value: undefined })),
     subscribeToSession: vi.fn<PilotGateway["subscribeToSession"]>(() => () => undefined),

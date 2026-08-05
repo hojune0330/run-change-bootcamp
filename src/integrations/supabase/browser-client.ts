@@ -185,6 +185,33 @@ export function createBrowserSupabaseClient(config: SupabasePublicConfig): Pilot
             ? { ok: true, value: result.data }
             : providerFailure(result.error)
         }
+        case "publish_assignment": {
+          let query = supabase.from(request.table).insert(request.values).select(request.returning)
+          if (request.signal !== undefined) query = query.abortSignal(request.signal)
+          const result = await query.single()
+          return result.error === null
+            ? { ok: true, value: result.data }
+            : providerFailure(result.error)
+        }
+        case "publish_announcement": {
+          let query = supabase.from(request.table).insert(request.values).select(request.returning)
+          if (request.signal !== undefined) query = query.abortSignal(request.signal)
+          const result = await query.single()
+          return result.error === null
+            ? { ok: true, value: result.data }
+            : providerFailure(result.error)
+        }
+        case "save_time_trial": {
+          let query = supabase
+            .from(request.table)
+            .upsert(request.values, { onConflict: request.onConflict })
+            .select(request.returning)
+          if (request.signal !== undefined) query = query.abortSignal(request.signal)
+          const result = await query.single()
+          return result.error === null
+            ? { ok: true, value: result.data }
+            : providerFailure(result.error)
+        }
       }
     })
 

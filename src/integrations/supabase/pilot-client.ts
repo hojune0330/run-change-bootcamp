@@ -29,11 +29,34 @@ export type PilotOtpRequest = {
   }
 }
 
-export type PilotRpcRequest = {
-  readonly args: Readonly<Record<string, never>>
-  readonly function: "bootstrap_pilot_membership"
-  readonly signal?: AbortSignal
-}
+export type PilotRpcRequest =
+  | {
+      readonly args: Readonly<Record<string, never>>
+      readonly function: "bootstrap_pilot_membership"
+      readonly signal?: AbortSignal
+    }
+  | {
+      readonly args: { readonly target_program: string }
+      readonly function: "coach_dashboard_snapshot"
+      readonly signal?: AbortSignal
+    }
+  | {
+      readonly args: {
+        readonly target_participant: string
+        readonly target_program: string
+      }
+      readonly function: "coach_participant_detail_snapshot"
+      readonly signal?: AbortSignal
+    }
+  | {
+      readonly args: {
+        readonly review_note?: string
+        readonly target_decision: "approved" | "rejected"
+        readonly target_feedback: string
+      }
+      readonly function: "review_feedback"
+      readonly signal?: AbortSignal
+    }
 
 export type PilotFunctionRequest = {
   readonly body: Readonly<Record<string, unknown>>
@@ -85,6 +108,50 @@ export type PilotDataRequest =
       readonly page: PilotPageRequest
       readonly signal?: AbortSignal
       readonly table: "audit_events"
+    }
+  | {
+      readonly kind: "publish_assignment"
+      readonly returning: "id"
+      readonly signal?: AbortSignal
+      readonly table: "assignments"
+      readonly values: {
+        readonly assignment_kind: "health" | "reflection" | "running"
+        readonly created_by: string
+        readonly due_at: string
+        readonly instructions: string
+        readonly program_id: string
+        readonly published_at: string
+        readonly title: string
+      }
+    }
+  | {
+      readonly kind: "publish_announcement"
+      readonly returning: "id"
+      readonly signal?: AbortSignal
+      readonly table: "announcements"
+      readonly values: {
+        readonly body: string
+        readonly created_by: string
+        readonly pinned: boolean
+        readonly program_id: string
+        readonly published_at: string
+        readonly title: string
+      }
+    }
+  | {
+      readonly filters: { readonly program_id: string }
+      readonly kind: "save_time_trial"
+      readonly onConflict: "program_id"
+      readonly returning: "program_id"
+      readonly signal?: AbortSignal
+      readonly table: "time_trial_decisions"
+      readonly values: {
+        readonly decided_at: string
+        readonly decided_by: string
+        readonly initial_session_number: 1 | 2
+        readonly program_id: string
+        readonly protocol: "12_minute" | "3k" | "5k"
+      }
     }
 
 export type PilotSubscriptionRequest = {

@@ -7,6 +7,7 @@ import type {
   PilotOperationError,
   PilotSessionState,
 } from "../../integrations/supabase/pilot-gateway.ts"
+import { PilotCoachWorkspace } from "./PilotCoachWorkspace.tsx"
 
 type AuthViewState =
   | PilotSessionState
@@ -138,6 +139,18 @@ export function PilotAuthShell({ brand = DEFAULT_BRAND, gateway }: PilotAuthShel
     const result = await gateway.signOut()
     setSignOutBusy(false)
     setAuthState(result.ok ? { kind: "signed_out" } : { error: result.error, kind: "error" })
+  }
+
+  if (authState.kind === "active" && authState.membership.role === "coach") {
+    return (
+      <PilotCoachWorkspace
+        brand={brand}
+        gateway={gateway}
+        membership={authState.membership}
+        onSignOut={() => void signOut()}
+        signOutBusy={signOutBusy}
+      />
+    )
   }
 
   return (
