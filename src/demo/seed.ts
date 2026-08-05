@@ -46,6 +46,7 @@ export function createInitialDemoState() {
     consentedParticipants: [],
     revokedParticipants: [],
     consentEvents: [],
+    activityLog: [],
     deliveredFeedback: [
       {
         id: "feedback-weekly-summary",

@@ -10,6 +10,7 @@ const SessionSchema = z
   .discriminatedUnion("role", [
     z.object({ role: z.literal("participant"), participantId: DemoParticipantIdSchema }).strict(),
     z.object({ role: z.literal("coach") }).strict(),
+    z.object({ role: z.literal("admin") }).strict(),
   ])
   .nullable()
 
@@ -109,6 +110,25 @@ const DeliveredFeedbackSchema = z
   .strict()
   .readonly()
 
+const ActivityActorSchema = z.enum(["coach", "admin"])
+const ActivityActionSchema = z.enum([
+  "assignment_publish",
+  "notice_publish",
+  "feedback_approve",
+  "feedback_reject",
+  "time_trial_save",
+])
+const ActivityLogEntrySchema = z
+  .object({
+    id: z.templateLiteral(["activity-", z.string().min(1)]),
+    actor: ActivityActorSchema,
+    action: ActivityActionSchema,
+    summary: z.string().trim().min(1),
+    createdAtLabel: z.string().trim().min(1),
+  })
+  .strict()
+  .readonly()
+
 const FeedbackQueueSchema = z
   .object({
     id: z.templateLiteral(["feedback:", z.string().min(1)]),
@@ -173,6 +193,7 @@ export const DemoStateSchema = z
     consentedParticipants: z.array(DemoParticipantIdSchema).readonly(),
     revokedParticipants: z.array(DemoParticipantIdSchema).readonly(),
     consentEvents: z.array(ConsentEventSchema).readonly(),
+    activityLog: z.array(ActivityLogEntrySchema).readonly(),
     deliveredFeedback: z.array(DeliveredFeedbackSchema).readonly(),
     feedbackQueue: z.array(FeedbackQueueSchema).readonly(),
     coachQuery: z.string(),
@@ -197,6 +218,9 @@ export const DemoStateSchema = z
 export type DemoState = z.infer<typeof DemoStateSchema>
 export type DemoSession = DemoState["session"]
 export type DemoDraft = DemoState["drafts"][number]
+export type ActivityActor = z.infer<typeof ActivityActorSchema>
+export type ActivityAction = z.infer<typeof ActivityActionSchema>
+export type ActivityLogEntry = z.infer<typeof ActivityLogEntrySchema>
 
 export const DemoEnvelopeSchema = z
   .object({ version: z.literal(1), state: DemoStateSchema })
