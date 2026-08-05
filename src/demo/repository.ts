@@ -39,6 +39,7 @@ import {
   storeDraft,
 } from "./participant-actions.ts"
 import {
+  type ActivityActor,
   type DemoParticipantId,
   DemoParticipantIdSchema,
   type DemoState,
@@ -81,6 +82,10 @@ export class DemoRepository {
 
   chooseCoach(): void {
     this.commit({ ...this.state, session: { role: "coach" } })
+  }
+
+  chooseAdmin(): void {
+    this.commit({ ...this.state, session: { role: "admin" } })
   }
 
   clearSession(): void {
@@ -164,7 +169,7 @@ export class DemoRepository {
   }
 
   publishAssignment(): void {
-    this.commit(publishAssignment(this.state))
+    this.commit(publishAssignment(this.state, this.actor()))
   }
 
   setNoticeDraft(draft: NoticeDraft): void {
@@ -172,11 +177,11 @@ export class DemoRepository {
   }
 
   publishNotice(): void {
-    this.commit(publishNotice(this.state))
+    this.commit(publishNotice(this.state, this.actor()))
   }
 
   decideFeedback(feedbackId: FeedbackId, decision: "approved" | "rejected"): void {
-    this.commit(resolveFeedback(this.state, feedbackId, decision))
+    this.commit(resolveFeedback(this.state, feedbackId, decision, this.actor()))
   }
 
   setTimeTrialSession(session: TimeTrialSession): void {
@@ -188,7 +193,7 @@ export class DemoRepository {
   }
 
   requestTimeTrialChange(decision: TimeTrialDecision): void {
-    const next = saveTimeTrial(this.state, decision)
+    const next = saveTimeTrial(this.state, decision, this.actor())
     this.commit({
       ...next,
       timeTrialDecision: this.state.timeTrialDecision,
@@ -201,7 +206,7 @@ export class DemoRepository {
   }
 
   saveTimeTrial(decision: TimeTrialDecision): void {
-    this.commit(saveTimeTrial(this.state, decision))
+    this.commit(saveTimeTrial(this.state, decision, this.actor()))
   }
 
   schedule() {
@@ -219,6 +224,12 @@ export class DemoRepository {
               decidedBy: "membership-coach",
             },
     })
+  }
+
+  private actor(): ActivityActor | null {
+    return this.state.session?.role === "coach" || this.state.session?.role === "admin"
+      ? this.state.session.role
+      : null
   }
 
   private commit(next: DemoState): void {

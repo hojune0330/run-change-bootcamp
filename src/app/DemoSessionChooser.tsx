@@ -1,4 +1,5 @@
 import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/ArrowCounterClockwise"
+import { ShieldIcon } from "@phosphor-icons/react/Shield"
 import { SignInIcon } from "@phosphor-icons/react/SignIn"
 import { UsersThreeIcon } from "@phosphor-icons/react/UsersThree"
 import { useState } from "react"
@@ -90,6 +91,16 @@ export function DemoSessionChooser({
                 variant="secondary"
               >
                 코치로 시작
+              </Button>
+              <Button
+                icon={<ShieldIcon aria-hidden size={20} weight="bold" />}
+                onClick={() => {
+                  repository.chooseAdmin()
+                  onNavigate("/admin/overview")
+                }}
+                variant="secondary"
+              >
+                관리자로 시작
               </Button>
             </div>
           </div>

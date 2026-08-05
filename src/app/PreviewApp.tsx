@@ -61,6 +61,16 @@ export function PreviewApp({ brand = DEFAULT_BRAND }: PreviewAppProps = {}) {
         <DemoSessionChooser brand={brand} onNavigate={navigate} repository={repository} />
       )
     case "admin":
-      return <AdminApp brand={brand} href={route.href} onNavigate={navigate} />
+      return state.session?.role === "admin" ? (
+        <AdminApp
+          brand={brand}
+          href={route.href}
+          onNavigate={navigate}
+          repository={repository}
+          state={state}
+        />
+      ) : (
+        <DemoSessionChooser brand={brand} onNavigate={navigate} repository={repository} />
+      )
   }
 }

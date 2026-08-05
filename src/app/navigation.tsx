@@ -4,6 +4,7 @@ import { ChatCircleIcon } from "@phosphor-icons/react/ChatCircle"
 import { CheckSquareIcon } from "@phosphor-icons/react/CheckSquare"
 import { ClipboardTextIcon } from "@phosphor-icons/react/ClipboardText"
 import { GearSixIcon } from "@phosphor-icons/react/GearSix"
+import { ClockCounterClockwiseIcon } from "@phosphor-icons/react/ClockCounterClockwise"
 import { HouseIcon } from "@phosphor-icons/react/House"
 import { MegaphoneIcon } from "@phosphor-icons/react/Megaphone"
 import { NotePencilIcon } from "@phosphor-icons/react/NotePencil"
@@ -78,6 +79,11 @@ export const ADMIN_NAVIGATION = [
     href: "/admin/schedule",
     label: "일정",
     icon: <CalendarBlankIcon aria-hidden size={20} weight="bold" />,
+  },
+  {
+    href: "/admin/activity",
+    label: "활동 로그",
+    icon: <ClockCounterClockwiseIcon aria-hidden size={20} weight="bold" />,
   },
   {
     href: "/admin/settings",
