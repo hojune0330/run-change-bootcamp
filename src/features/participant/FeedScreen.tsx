@@ -31,7 +31,7 @@ export function FeedScreen({
       <LoadableBoundary onRetry={onRetry} state={state}>
         {(model) =>
           model.posts.length === 0 ? (
-            <Card eyebrow="COHORT FEED" title="첫 기록을 기다려요" tone="muted">
+            <Card eyebrow="코호트 피드" title="첫 기록을 기다려요" tone="muted">
               <p className="participant-empty-copy">아직 공유된 기록이 없어요.</p>
             </Card>
           ) : (

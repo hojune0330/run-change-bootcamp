@@ -26,7 +26,7 @@ export function MyChangeScreen({
       data-brand-report-label={brand.labels.report}
     >
       <header className="participant-screen__header">
-        <p className="participant-screen__eyebrow">MY CHANGE</p>
+        <p className="participant-screen__eyebrow">내 변화</p>
         <h1 id="participant-change-title">내 변화</h1>
       </header>
       <LoadableBoundary onRetry={onRetry} state={state}>

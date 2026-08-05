@@ -43,9 +43,7 @@ export function AdminDashboard({ model }: AdminDashboardProps) {
             <ul className="admin-recent">
               {model.recentActivity.map((entry) => (
                 <li key={entry.id}>
-                  <Badge tone={badgeTone(entry.tone)}>
-                    {entry.actionLabel}
-                  </Badge>
+                  <Badge tone={badgeTone(entry.tone)}>{entry.actionLabel}</Badge>
                   <span>{entry.summary}</span>
                   <small>
                     {entry.actorLabel} · {entry.createdAtLabel}

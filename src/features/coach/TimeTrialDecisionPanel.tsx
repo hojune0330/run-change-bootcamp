@@ -104,7 +104,7 @@ export function TimeTrialDecisionPanel({
           {isExistingDecision ? "결정 완료" : "미정"}
         </Badge>
       }
-      eyebrow="TIME TRIAL"
+      eyebrow="기록 측정"
       title="첫 기록 측정 결정"
       tone="muted"
     >

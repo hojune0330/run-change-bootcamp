@@ -158,7 +158,7 @@ export function PilotAuthShell({ brand = DEFAULT_BRAND, gateway }: PilotAuthShel
           <span>사전 초대된 멤버만 이메일 로그인 링크로 입장할&nbsp;수&nbsp;있습니다.</span>
         </header>
 
-        <Card eyebrow="SECURE ACCESS" title="이메일 로그인">
+        <Card eyebrow="보안 접속" title="이메일 로그인">
           {authState.kind === "loading" ? (
             <p aria-live="polite" className="pilot-entry__status">
               로그인 상태와 파일럿 멤버십을 확인하고 있습니다.
@@ -229,7 +229,7 @@ export function PilotAuthShell({ brand = DEFAULT_BRAND, gateway }: PilotAuthShel
           ) : null}
         </Card>
 
-        <Card eyebrow="FOUNDATION READY" title="운영 데이터 연결 상태" tone="muted">
+        <Card eyebrow="연결 상태" title="운영 데이터 연결 상태" tone="muted">
           <p className="demo-entry__note">
             인증·멤버십 경계만 활성화되어 있습니다. 이&nbsp;화면은 미리보기 데이터 저장소를
             읽지&nbsp;않습니다.

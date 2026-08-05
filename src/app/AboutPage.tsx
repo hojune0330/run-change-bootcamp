@@ -34,7 +34,7 @@ export function AboutPage({ brand = DEFAULT_BRAND, onNavigate }: AboutPageProps)
           <h1 id="about-title">{brand.productName} 소개</h1>
           <span>오늘의 달리기와 변화를 기록하는 {brand.tenantName} 프로그램입니다.</span>
         </header>
-        <Card eyebrow="BRAND CONTRACT" title="운영 표면 안내">
+        <Card eyebrow="운영 표면 안내" title="운영 표면 안내">
           <p className="about-page__copy">
             이 표면은 프로그램 이름, tenant 표시명, 로고와 접근성 레이블을 같은 브랜드 설정으로
             연결해 보여줍니다.

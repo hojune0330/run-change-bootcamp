@@ -25,7 +25,7 @@ export function RecordScreen({ state, handlers, onRetry }: RecordScreenProps) {
   return (
     <section aria-labelledby="participant-record-title" className="participant-screen">
       <header className="participant-screen__header">
-        <p className="participant-screen__eyebrow">PRIVATE BY DEFAULT</p>
+        <p className="participant-screen__eyebrow">기본 비공개</p>
         <h1 id="participant-record-title">기록</h1>
         <p>직접 입력하거나 파일과 스크린샷을 검토할 초안으로 만들어요.</p>
       </header>
@@ -57,12 +57,12 @@ export function RecordScreen({ state, handlers, onRetry }: RecordScreenProps) {
             </fieldset>
 
             {mode === "manual" ? (
-              <Card eyebrow="MANUAL" title="숫자를 직접 기록해요">
+              <Card eyebrow="직접 입력" title="숫자를 직접 기록해요">
                 <ManualMetricForm handlers={handlers} recordedOn={model.recordedOn} />
               </Card>
             ) : null}
             {mode === "file" ? (
-              <Card eyebrow="IMPORT" title="활동 파일을 가져와요">
+              <Card eyebrow="파일 가져오기" title="활동 파일을 가져와요">
                 <FileImportForm
                   handlers={handlers}
                   supportedExtensions={model.supportedExtensions}
@@ -70,7 +70,7 @@ export function RecordScreen({ state, handlers, onRetry }: RecordScreenProps) {
               </Card>
             ) : null}
             {mode === "screenshot" ? (
-              <Card eyebrow="SCREENSHOT" title="운동 화면을 올려요">
+              <Card eyebrow="스크린샷" title="운동 화면을 올려요">
                 <ScreenshotDraftForm handlers={handlers} />
               </Card>
             ) : null}

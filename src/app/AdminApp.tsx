@@ -1,5 +1,5 @@
+import { adminModel, type DemoRepository, type DemoState } from "../demo/index.ts"
 import { type BrandConfig, DEFAULT_BRAND } from "../design/brand-config.ts"
-import { type DemoRepository, type DemoState, adminModel } from "../demo/index.ts"
 import { AdminDashboard } from "../features/admin/index.ts"
 import { AppShell } from "./AppShell.tsx"
 import type { AdminHref } from "./routes.ts"
@@ -12,12 +12,7 @@ type AdminAppProps = {
   readonly state: DemoState
 }
 
-export function AdminApp({
-  brand = DEFAULT_BRAND,
-  href,
-  onNavigate,
-  state,
-}: AdminAppProps) {
+export function AdminApp({ brand = DEFAULT_BRAND, href, onNavigate, state }: AdminAppProps) {
   const model = adminModel(state)
   const brandedModel = {
     ...model,

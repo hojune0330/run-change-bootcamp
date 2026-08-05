@@ -77,10 +77,20 @@ export function adminModel(state: DemoState) {
     consentedCount,
     assignmentsCount,
     kpis: [
-      { id: "members", label: "등록 멤버", value: `${DEMO_PARTICIPANTS.length}명`, hint: "전체 코호트" },
+      {
+        id: "members",
+        label: "등록 멤버",
+        value: `${DEMO_PARTICIPANTS.length}명`,
+        hint: "전체 코호트",
+      },
       { id: "consent", label: "건강 공유", value: `${consentedCount}명`, hint: "항목별 동의" },
       { id: "assignments", label: "발행 과제", value: `${assignmentsCount}건`, hint: "누적 발행" },
-      { id: "feedback", label: "피드백 대기", value: `${pendingFeedbackCount}건`, hint: "승인 필요" },
+      {
+        id: "feedback",
+        label: "피드백 대기",
+        value: `${pendingFeedbackCount}건`,
+        hint: "승인 필요",
+      },
       { id: "risk", label: "통증·위험", value: `${riskCount}건`, hint: "코치 확인" },
     ],
     activity,

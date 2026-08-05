@@ -18,7 +18,7 @@ export function AssignmentPublisher({
   publishing = false,
 }: AssignmentPublisherProps) {
   return (
-    <Card eyebrow="ASSIGNMENT" title="과제 발행">
+    <Card eyebrow="과제" title="과제 발행">
       <form
         className="coach-form"
         onSubmit={(event) => {
@@ -117,7 +117,7 @@ export function NoticePublisher({
   publishing = false,
 }: NoticePublisherProps) {
   return (
-    <Card eyebrow="NOTICE" title="공지 발행" tone="muted">
+    <Card eyebrow="공지" title="공지 발행" tone="muted">
       <form
         className="coach-form"
         onSubmit={(event) => {

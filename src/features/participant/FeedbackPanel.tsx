@@ -27,7 +27,7 @@ function feedbackSource(source: FeedbackViewModel["source"]) {
 export function FeedbackPanel({ feedback }: FeedbackPanelProps) {
   if (feedback.length === 0) {
     return (
-      <Card eyebrow="FEEDBACK" title="피드백" tone="muted">
+      <Card eyebrow="피드백" title="피드백" tone="muted">
         <p className="participant-empty-copy">아직 받은 피드백이 없어요.</p>
       </Card>
     )
@@ -36,7 +36,7 @@ export function FeedbackPanel({ feedback }: FeedbackPanelProps) {
   return (
     <section aria-labelledby="participant-feedback-title" className="participant-section-stack">
       <div className="participant-section-heading">
-        <p>FEEDBACK</p>
+        <p>피드백</p>
         <h2 id="participant-feedback-title">피드백</h2>
       </div>
       {feedback.map((item) => {

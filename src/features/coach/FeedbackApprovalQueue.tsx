@@ -35,7 +35,7 @@ export function FeedbackApprovalQueue({
   return (
     <Card
       action={<Badge tone={items.length === 0 ? "success" : "warning"}>{items.length}건</Badge>}
-      eyebrow="APPROVAL QUEUE"
+      eyebrow="승인 대기"
       title="피드백 승인"
     >
       {items.length === 0 ? (

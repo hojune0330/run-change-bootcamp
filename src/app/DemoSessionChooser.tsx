@@ -34,7 +34,7 @@ export function DemoSessionChooser({
       <section aria-labelledby="demo-session-title" className="demo-entry__panel">
         <header className="demo-entry__header">
           <BrandLogo brand={brand} className="demo-entry__brand-logo" />
-          <Badge tone="success">SEEDED DEMO · 20명</Badge>
+          <Badge tone="success">시드 데모 · 20명</Badge>
           <p>{brand.tenantName}</p>
           <h1 id="demo-session-title">데모 세션 선택</h1>
           <span>참여자와 코치가 같은 저장소에서 변화를 확인합니다.</span>
@@ -50,7 +50,7 @@ export function DemoSessionChooser({
           </a>
         </header>
 
-        <Card eyebrow="DEMO ACCESS" title="바로 시작하기">
+        <Card eyebrow="데모 접속" title="바로 시작하기">
           <div className="demo-entry__choices">
             <label className="demo-entry__field">
               <span>참여자 선택</span>
@@ -106,7 +106,7 @@ export function DemoSessionChooser({
           </div>
         </Card>
 
-        <Card eyebrow="PRODUCTION SETUP" title="로그인 연결 안내" tone="muted">
+        <Card eyebrow="운영 연결" title="로그인 연결 안내" tone="muted">
           <p className="demo-entry__note">
             <span>이 화면은 로컬 데모입니다.</span>
             <span>이메일 매직 링크를 연결하세요.</span>

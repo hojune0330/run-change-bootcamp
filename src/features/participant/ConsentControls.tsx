@@ -110,7 +110,7 @@ export function ConsentControls({ consents, handlers, history }: ConsentControls
   return (
     <Card
       action={<Badge tone="neutral">기본 비공개</Badge>}
-      eyebrow="PRIVACY"
+      eyebrow="공유 설정"
       title="건강 정보 공유"
     >
       <div className="participant-stack">

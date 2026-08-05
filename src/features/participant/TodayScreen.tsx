@@ -79,7 +79,7 @@ function AssignmentCard({ assignment, handlers }: AssignmentCardProps) {
   return (
     <Card
       action={<Badge tone={completed ? "success" : "warning"}>{completed ? "완료" : "오늘"}</Badge>}
-      eyebrow="NEXT ACTION"
+      eyebrow="오늘의 과제"
       title={assignment.title}
     >
       <div className="participant-stack">
@@ -125,7 +125,7 @@ export function TodayScreen({ brand = DEFAULT_BRAND, state, handlers, onRetry }:
             </div>
 
             {model.assignment === undefined ? (
-              <Card eyebrow="NEXT ACTION" title="쉬어가는 날" tone="muted">
+              <Card eyebrow="오늘의 과제" title="쉬어가는 날" tone="muted">
                 <p className="participant-empty-copy">오늘 할 과제가 없어요.</p>
               </Card>
             ) : (
@@ -137,7 +137,7 @@ export function TodayScreen({ brand = DEFAULT_BRAND, state, handlers, onRetry }:
             )}
 
             {model.announcement === undefined ? (
-              <Card eyebrow="NOTICE" title="새 공지가 없어요" tone="muted">
+              <Card eyebrow="공지" title="새 공지가 없어요" tone="muted">
                 <p className="participant-empty-copy">새로 확인할 내용이 없어요.</p>
               </Card>
             ) : (

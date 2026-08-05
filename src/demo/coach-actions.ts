@@ -16,7 +16,9 @@ import type {
 } from "./state.ts"
 
 function participantName(participantId: DemoParticipantId): string {
-  return DEMO_PARTICIPANTS.find((member) => member.id === participantId)?.displayName ?? participantId
+  return (
+    DEMO_PARTICIPANTS.find((member) => member.id === participantId)?.displayName ?? participantId
+  )
 }
 
 function sessionLabel(session: "session_1" | "session_2"): string {
@@ -66,7 +68,12 @@ export function publishAssignment(state: DemoState, actor: ActivityActor | null)
   return {
     ...state,
     assignments: [...state.assignments, assignment],
-    activityLog: appendActivity(state, actor, "assignment_publish", `과제 발행 · ${draft.title.trim()}`),
+    activityLog: appendActivity(
+      state,
+      actor,
+      "assignment_publish",
+      `과제 발행 · ${draft.title.trim()}`,
+    ),
     assignmentDraft: { ...draft, title: "", instructions: "" },
     sequence: state.sequence + 1,
   }
@@ -84,7 +91,12 @@ export function publishNotice(state: DemoState, actor: ActivityActor | null): De
   return {
     ...state,
     notices: [...state.notices, notice],
-    activityLog: appendActivity(state, actor, "notice_publish", `공지 발행 · ${draft.title.trim()}`),
+    activityLog: appendActivity(
+      state,
+      actor,
+      "notice_publish",
+      `공지 발행 · ${draft.title.trim()}`,
+    ),
     noticeDraft: { ...draft, title: "", body: "", pinned: false },
     sequence: state.sequence + 1,
   }

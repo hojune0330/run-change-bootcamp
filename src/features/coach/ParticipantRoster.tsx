@@ -85,7 +85,7 @@ export function ParticipantRoster({
     <section aria-labelledby="coach-roster-title" className="coach-roster">
       <div className="coach-section-heading">
         <div>
-          <p className="coach-eyebrow">COHORT SCAN</p>
+          <p className="coach-eyebrow">코호트 점검</p>
           <h2 id="coach-roster-title">참가자 상태</h2>
         </div>
         <span>{participants.length}명</span>
