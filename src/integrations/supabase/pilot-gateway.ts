@@ -252,6 +252,7 @@ export interface PilotGateway {
   getParticipantFeed(programId: string): Promise<PilotOperationResult<PilotParticipantFeed>>
   getParticipantToday(programId: string): Promise<PilotOperationResult<PilotParticipantToday>>
   getAdminOverview(programId: string): Promise<PilotOperationResult<PilotAdminOverview>>
+  getAdminActivity(programId: string): Promise<PilotOperationResult<readonly PilotAdminActivity[]>>
   getSession(): Promise<PilotOperationResult<PilotSessionState>>
   grantMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentReference>>
   listAuditEvents(): Promise<PilotOperationResult<readonly PilotAuditEvent[]>>
@@ -647,6 +648,20 @@ const AdminOverviewSnapshotSchema = z
   })
   .strict()
   .readonly()
+const AdminActivitySnapshotSchema = z
+  .array(
+    z
+      .object({
+        actor_role: z.enum(["coach", "admin"]),
+        audit_event_id: z.number().int().positive(),
+        event_type: z.string().min(3).max(100),
+        occurred_at: z.iso.datetime({ offset: true }),
+        summary: z.string().min(1).max(2000),
+      })
+      .strict()
+      .readonly(),
+  )
+  .readonly()
 const CompleteAssignmentInputSchema = z
   .object({ assignmentId: z.uuid(), programId: z.uuid() })
   .strict()
@@ -680,6 +695,7 @@ type ParticipantFeedSnapshot = z.infer<typeof ParticipantFeedSnapshotSchema>
 type ParticipantChangeSnapshot = z.infer<typeof ParticipantChangeSnapshotSchema>
 type ConsentToggleResult = z.infer<typeof ConsentToggleResultSchema>
 type AdminOverviewSnapshot = z.infer<typeof AdminOverviewSnapshotSchema>
+type AdminActivitySnapshot = z.infer<typeof AdminActivitySnapshotSchema>
 
 function failure(
   kind: PilotOperationError["kind"],
@@ -980,6 +996,16 @@ function adminOverviewFromSnapshot(snapshot: AdminOverviewSnapshot): PilotAdminO
   }
 }
 
+function adminActivityFromSnapshot(snapshot: AdminActivitySnapshot): readonly PilotAdminActivity[] {
+  return snapshot.map((entry) => ({
+    actorRole: entry.actor_role,
+    auditEventId: entry.audit_event_id,
+    eventType: entry.event_type,
+    occurredAt: entry.occurred_at,
+    summary: entry.summary,
+  }))
+}
+
 function coachParticipantDetailFromSnapshot(
   snapshot: CoachParticipantDetailSnapshot,
 ): PilotCoachParticipantDetail {
@@ -1216,6 +1242,19 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
       const parsed = AdminOverviewSnapshotSchema.safeParse(result.value)
       return parsed.success
         ? { ok: true, value: adminOverviewFromSnapshot(parsed.data) }
+        : failure("invalid_response", false)
+    },
+    getAdminActivity: async (programId) => {
+      const session = await authenticatedSession(client)
+      if (!session.ok) return session
+      const result = await client.invokeRpc({
+        args: { target_program: programId },
+        function: "admin_activity_snapshot",
+      })
+      if (!result.ok) return rpcFailure(result)
+      const parsed = AdminActivitySnapshotSchema.safeParse(result.value)
+      return parsed.success
+        ? { ok: true, value: adminActivityFromSnapshot(parsed.data) }
         : failure("invalid_response", false)
     },
     getParticipantFeed: async (programId) => {

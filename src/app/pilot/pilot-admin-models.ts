@@ -4,7 +4,10 @@ import type {
   AdminDashboardViewModel,
   AdminMemberRow,
 } from "../../features/admin/index.ts"
-import type { PilotAdminOverview } from "../../integrations/supabase/pilot-gateway.ts"
+import type {
+  PilotAdminActivity,
+  PilotAdminOverview,
+} from "../../integrations/supabase/pilot-gateway.ts"
 import { timeAgoLabel } from "./pilot-coach-models.ts"
 
 function formatDateRange(startsOn: string, endsOn: string): string {
@@ -35,9 +38,7 @@ function progressLabel(percent: number): string {
   return "시작 단계"
 }
 
-export function adminActivityEntry(
-  entry: PilotAdminOverview["activity"][number],
-): AdminActivityEntry {
+export function adminActivityEntry(entry: PilotAdminActivity): AdminActivityEntry {
   const action: ActivityAction =
     entry.eventType === "feedback.approved"
       ? "feedback_approve"
@@ -76,7 +77,7 @@ function adminMemberRow(member: PilotAdminOverview["members"][number]): AdminMem
   }
 }
 
-const ACTION_OPTIONS = [
+export const ACTION_OPTIONS = [
   { value: "feedback_approve", label: "피드백 승인" },
   { value: "feedback_reject", label: "피드백 반려" },
 ] as const

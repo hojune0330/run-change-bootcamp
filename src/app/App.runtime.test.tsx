@@ -129,6 +129,18 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
         timeTrial: null,
       },
     })),
+    getAdminActivity: vi.fn<PilotGateway["getAdminActivity"]>(async () => ({
+      ok: true,
+      value: [
+        {
+          actorRole: "coach",
+          auditEventId: 17,
+          eventType: "feedback.approved",
+          occurredAt: "2026-08-25T09:00:00.000Z",
+          summary: "김러너 이지런 피드백 승인",
+        },
+      ],
+    })),
     getSession: vi.fn<PilotGateway["getSession"]>(async () => ({ ok: true, value: session })),
     grantMetricConsent: vi.fn<PilotGateway["grantMetricConsent"]>(async () => ({
       ok: true,
@@ -385,5 +397,34 @@ describe("App runtime boundary", () => {
     // Then
     expect(await screen.findByText("/admin/members 화면")).toBeVisible()
     expect(screen.getByText(/파일럿 준비 중/)).toBeVisible()
+  })
+
+  it("routes an admin session to the activity log and renders snapshot entries", async () => {
+    // Given
+    const user = userEvent.setup()
+    const gateway = createGateway({
+      kind: "active",
+      membership: {
+        email: "admin@example.com",
+        membershipId: "77777777-7777-4777-8777-777777777777",
+        programId: PROGRAM_ID,
+        role: "admin",
+        route: "/admin/overview",
+        userId: AUTH_USER_ID,
+      },
+    })
+    render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
+    await screen.findByRole("heading", { name: "PLUS Run" })
+
+    // When
+    await user.click(screen.getByRole("link", { name: "활동 로그" }))
+
+    // Then
+    expect(await screen.findByRole("heading", { name: "활동 로그" })).toBeVisible()
+    expect(gateway.getAdminActivity).toHaveBeenCalledWith(PROGRAM_ID)
+    expect(await screen.findByText("김러너 이지런 피드백 승인")).toBeVisible()
+    expect(screen.getByRole("table", { name: "활동 로그" })).toBeVisible()
+    expect(screen.getByRole("cell", { name: "코치" })).toBeVisible()
+    expect(screen.getByText("1건")).toBeVisible()
   })
 })

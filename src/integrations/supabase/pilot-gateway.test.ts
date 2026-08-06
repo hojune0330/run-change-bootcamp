@@ -148,6 +148,23 @@ const FEED_SNAPSHOT = {
   ],
 } as const
 
+const ADMIN_ACTIVITY_SNAPSHOT = [
+  {
+    actor_role: "coach",
+    audit_event_id: AUDIT_ID,
+    event_type: "feedback.approved",
+    occurred_at: "2026-08-25T09:00:00.000Z",
+    summary: "김러너 이지런 피드백 승인",
+  },
+  {
+    actor_role: "admin",
+    audit_event_id: AUDIT_ID + 1,
+    event_type: "feedback.rejected",
+    occurred_at: "2026-08-25T09:10:00.000Z",
+    summary: "박러너 통증 자가 보고 반려",
+  },
+] as const
+
 const ADMIN_OVERVIEW_SNAPSHOT = {
   activity: [
     {
@@ -331,6 +348,8 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
           return { ok: true, value: consentToggleResult.value }
         case "admin_overview_snapshot":
           return { ok: true, value: ADMIN_OVERVIEW_SNAPSHOT }
+        case "admin_activity_snapshot":
+          return { ok: true, value: ADMIN_ACTIVITY_SNAPSHOT }
       }
     },
     consentToggleResult,
@@ -1257,6 +1276,51 @@ describe("Supabase pilot gateway", () => {
 
     // When
     const result = await gateway.getAdminOverview(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
+    expect(client.rpcRequests).toEqual([])
+  })
+
+  it("maps the admin activity snapshot into the public activity model", async () => {
+    // Given
+    const client = createFakeClient({ email: "admin@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getAdminActivity(PROGRAM_ID)
+
+    // Then
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.value).toEqual([
+      {
+        actorRole: "coach",
+        auditEventId: AUDIT_ID,
+        eventType: "feedback.approved",
+        occurredAt: "2026-08-25T09:00:00.000Z",
+        summary: "김러너 이지런 피드백 승인",
+      },
+      {
+        actorRole: "admin",
+        auditEventId: AUDIT_ID + 1,
+        eventType: "feedback.rejected",
+        occurredAt: "2026-08-25T09:10:00.000Z",
+        summary: "박러너 통증 자가 보고 반려",
+      },
+    ])
+    expect(client.rpcRequests).toEqual([
+      { args: { target_program: PROGRAM_ID }, function: "admin_activity_snapshot" },
+    ])
+  })
+
+  it("rejects admin activity reads when the caller has no authenticated identity", async () => {
+    // Given
+    const client = createFakeClient(null)
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getAdminActivity(PROGRAM_ID)
 
     // Then
     expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
