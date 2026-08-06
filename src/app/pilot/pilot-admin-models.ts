@@ -2,16 +2,20 @@ import type { ActivityAction } from "../../demo/state.ts"
 import type {
   AdminActivityEntry,
   AdminDashboardViewModel,
+  AdminFailedNotificationRow,
   AdminMemberRosterRow,
   AdminMemberRow,
   AdminMembersViewModel,
   AdminScheduleViewModel,
+  AdminSettingsRow,
+  AdminSettingsViewModel,
 } from "../../features/admin/index.ts"
 import type {
   PilotAdminActivity,
   PilotAdminMembers,
   PilotAdminOverview,
   PilotAdminSchedule,
+  PilotAdminSettings,
 } from "../../integrations/supabase/pilot-gateway.ts"
 import { timeAgoLabel } from "./pilot-coach-models.ts"
 
@@ -171,6 +175,76 @@ export function buildAdminScheduleModel(schedule: PilotAdminSchedule): AdminSche
       pastCount: schedule.summary.pastCount,
     },
     sessions: schedule.sessions.map(adminScheduleSessionRow),
+  }
+}
+
+function adminSettingsDeletionRequestRow(
+  request: PilotAdminSettings["deletionRequests"][number],
+): AdminSettingsRow {
+  const statusLabel =
+    request.status === "requested"
+      ? "요청됨"
+      : request.status === "processing"
+        ? "처리 중"
+        : request.status === "completed"
+          ? "완료"
+          : "취소됨"
+  const statusTone: AdminSettingsRow["statusTone"] =
+    request.status === "requested" ? "warning" : "neutral"
+  return {
+    id: `deletion:${request.deletionRequestId}`,
+    displayName: request.displayName,
+    statusLabel,
+    statusTone,
+    requestedAtLabel: timeAgoLabel(request.requestedAt),
+  }
+}
+
+function adminSettingsFailedNotificationRow(
+  outbox: PilotAdminSettings["failedNotifications"][number],
+): AdminFailedNotificationRow {
+  const channelLabel = outbox.channel === "in_app" ? "앱" : "푸시"
+  const statusLabel = outbox.status === "failed" ? "실패" : "대기"
+  const statusTone: AdminFailedNotificationRow["statusTone"] =
+    outbox.status === "failed" ? "critical" : "warning"
+  return {
+    id: `outbox:${outbox.outboxId}`,
+    title: outbox.title,
+    channelLabel,
+    statusLabel,
+    statusTone,
+    attemptCount: outbox.attemptCount,
+    errorCodeLabel: outbox.lastErrorCode === null ? "—" : outbox.lastErrorCode,
+    createdAtLabel: timeAgoLabel(outbox.createdAt),
+  }
+}
+
+export function buildAdminSettingsModel(settings: PilotAdminSettings): AdminSettingsViewModel {
+  const timeTrialLabel =
+    settings.timeTrial === null
+      ? "미정"
+      : `${
+          settings.timeTrial.initialSessionNumber === 1 ? "1회차" : "2회차"
+        } · ${timeTrialProtocolLabel(settings.timeTrial.protocol)}`
+  const statusLabel =
+    settings.program.status === "active"
+      ? "정상 운영"
+      : settings.program.status === "completed"
+        ? "운영 종료"
+        : settings.program.status === "archived"
+          ? "보관됨"
+          : "준비 중"
+  return {
+    programName: settings.program.title,
+    dateRangeLabel: formatDateRange(settings.program.startsOn, settings.program.endsOn),
+    timeTrialLabel,
+    statusLabel,
+    summary: {
+      deletionRequestCount: settings.summary.deletionRequestCount,
+      failedNotificationCount: settings.summary.failedNotificationCount,
+    },
+    deletionRequests: settings.deletionRequests.map(adminSettingsDeletionRequestRow),
+    failedNotifications: settings.failedNotifications.map(adminSettingsFailedNotificationRow),
   }
 }
 

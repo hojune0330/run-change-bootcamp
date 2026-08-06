@@ -8,4 +8,8 @@ export {
   type AdminMemberRosterProps,
 } from "./AdminMemberRoster.tsx"
 export { AdminSchedule, type AdminScheduleProps } from "./AdminSchedule.tsx"
+export {
+  AdminSettings,
+  type AdminSettingsProps,
+} from "./AdminSettings.tsx"
 export type * from "./types.ts"

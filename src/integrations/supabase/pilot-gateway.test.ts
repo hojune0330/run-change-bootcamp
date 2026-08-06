@@ -11,11 +11,13 @@ const AUDIT_ID = 17
 const AUTH_USER_ID = "11111111-1111-4111-8111-111111111111"
 const CONSENT_ID = "33333333-3333-4333-8333-333333333333"
 const COMMENT_ID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+const DELETION_ID = "cccccccc-cccc-4ccc-8ccc-cccccccccccc"
 const FEEDBACK_ID = "55555555-5555-4555-8555-555555555555"
 const GRANTEE_ID = "22222222-2222-4222-8222-222222222222"
 const MEMBERSHIP_ID = "77777777-7777-4777-8777-777777777777"
 const METRIC_ID = "44444444-4444-4444-8444-444444444444"
 const NOTICE_ID = "88888888-8888-4888-8888-888888888888"
+const OUTBOX_ID = "12121212-1212-4121-8121-121212121212"
 const POST_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 const PROGRAM_ID = "66666666-6666-4666-8666-666666666666"
 const SESSION_ID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
@@ -229,6 +231,45 @@ const ADMIN_SCHEDULE_SNAPSHOT = {
   },
 } as const
 
+const ADMIN_SETTINGS_SNAPSHOT = {
+  program: {
+    ends_on: "2026-10-24",
+    starts_on: "2026-08-24",
+    status: "active",
+    title: "PLUS Run",
+  },
+  time_trial: {
+    decided_at: "2026-08-25T09:00:00.000Z",
+    initial_session_number: 1,
+    protocol: "12_minute",
+  },
+  summary: {
+    deletion_request_count: 1,
+    failed_notification_count: 1,
+  },
+  deletion_requests: [
+    {
+      deletion_request_id: DELETION_ID,
+      profile_id: GRANTEE_ID,
+      display_name: "김러너",
+      status: "requested",
+      requested_at: "2026-08-26T09:00:00.000Z",
+    },
+  ],
+  failed_notifications: [
+    {
+      outbox_id: OUTBOX_ID,
+      notification_id: NOTICE_ID,
+      channel: "push",
+      title: "일정 변경 안내",
+      status: "failed",
+      last_error_code: "push_provider_error",
+      attempt_count: 3,
+      created_at: "2026-08-25T09:30:00.000Z",
+    },
+  ],
+} as const
+
 const ADMIN_OVERVIEW_SNAPSHOT = {
   activity: [
     {
@@ -418,6 +459,8 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
           return { ok: true, value: ADMIN_MEMBERS_SNAPSHOT }
         case "admin_schedule_snapshot":
           return { ok: true, value: ADMIN_SCHEDULE_SNAPSHOT }
+        case "admin_settings_snapshot":
+          return { ok: true, value: ADMIN_SETTINGS_SNAPSHOT }
       }
     },
     consentToggleResult,
@@ -1510,6 +1553,74 @@ describe("Supabase pilot gateway", () => {
 
     // When
     const result = await gateway.getAdminSchedule(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
+    expect(client.rpcRequests).toEqual([])
+  })
+
+  it("maps the admin settings snapshot into the public configuration model", async () => {
+    // Given
+    const client = createFakeClient({ email: "admin@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getAdminSettings(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        program: {
+          endsOn: "2026-10-24",
+          startsOn: "2026-08-24",
+          status: "active",
+          title: "PLUS Run",
+        },
+        timeTrial: {
+          decidedAt: "2026-08-25T09:00:00.000Z",
+          initialSessionNumber: 1,
+          protocol: "12_minute",
+        },
+        summary: {
+          deletionRequestCount: 1,
+          failedNotificationCount: 1,
+        },
+        deletionRequests: [
+          {
+            deletionRequestId: DELETION_ID,
+            profileId: GRANTEE_ID,
+            displayName: "김러너",
+            status: "requested",
+            requestedAt: "2026-08-26T09:00:00.000Z",
+          },
+        ],
+        failedNotifications: [
+          {
+            outboxId: OUTBOX_ID,
+            notificationId: NOTICE_ID,
+            channel: "push",
+            title: "일정 변경 안내",
+            status: "failed",
+            lastErrorCode: "push_provider_error",
+            attemptCount: 3,
+            createdAt: "2026-08-25T09:30:00.000Z",
+          },
+        ],
+      },
+    })
+    expect(client.rpcRequests).toEqual([
+      { args: { target_program: PROGRAM_ID }, function: "admin_settings_snapshot" },
+    ])
+  })
+
+  it("rejects admin settings reads when the caller has no authenticated identity", async () => {
+    // Given
+    const client = createFakeClient(null)
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getAdminSettings(PROGRAM_ID)
 
     // Then
     expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })

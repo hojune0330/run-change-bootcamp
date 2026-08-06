@@ -208,6 +208,47 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
         },
       },
     })),
+    getAdminSettings: vi.fn<PilotGateway["getAdminSettings"]>(async () => ({
+      ok: true,
+      value: {
+        program: {
+          endsOn: "2026-10-24",
+          startsOn: "2026-08-24",
+          status: "active",
+          title: "PLUS Run",
+        },
+        timeTrial: {
+          decidedAt: "2026-08-25T09:00:00.000Z",
+          initialSessionNumber: 1,
+          protocol: "12_minute",
+        },
+        summary: {
+          deletionRequestCount: 1,
+          failedNotificationCount: 1,
+        },
+        deletionRequests: [
+          {
+            deletionRequestId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+            profileId: AUTH_USER_ID,
+            displayName: "김러너",
+            status: "requested",
+            requestedAt: "2026-08-26T09:00:00.000Z",
+          },
+        ],
+        failedNotifications: [
+          {
+            outboxId: "12121212-1212-4121-8121-121212121212",
+            notificationId: "88888888-8888-4888-8888-888888888888",
+            channel: "push",
+            title: "일정 변경 안내",
+            status: "failed",
+            lastErrorCode: "push_provider_error",
+            attemptCount: 3,
+            createdAt: "2026-08-25T09:30:00.000Z",
+          },
+        ],
+      },
+    })),
     getSession: vi.fn<PilotGateway["getSession"]>(async () => ({ ok: true, value: session })),
     grantMetricConsent: vi.fn<PilotGateway["grantMetricConsent"]>(async () => ({
       ok: true,
@@ -441,7 +482,7 @@ describe("App runtime boundary", () => {
     expect(gateway.getAdminOverview).toHaveBeenCalledWith(PROGRAM_ID)
   })
 
-  it("shows the pilot-prepared boundary for admin routes beyond the overview", async () => {
+  it("routes an admin session to the settings and renders snapshot state", async () => {
     // Given
     const user = userEvent.setup()
     const gateway = createGateway({
@@ -462,8 +503,15 @@ describe("App runtime boundary", () => {
     await user.click(screen.getByRole("link", { name: "설정" }))
 
     // Then
-    expect(await screen.findByText("/admin/settings 화면")).toBeVisible()
-    expect(screen.getByText(/파일럿 준비 중/)).toBeVisible()
+    expect(await screen.findByRole("table", { name: "탈퇴 요청" })).toBeVisible()
+    expect(gateway.getAdminSettings).toHaveBeenCalledWith(PROGRAM_ID)
+    expect(await screen.findByText("김러너")).toBeVisible()
+    expect(screen.getByRole("cell", { name: "요청됨" })).toBeVisible()
+    expect(screen.getByRole("table", { name: "미전달 알림" })).toBeVisible()
+    expect(screen.getByRole("cell", { name: "푸시" })).toBeVisible()
+    expect(screen.getByRole("cell", { name: "실패" })).toBeVisible()
+    expect(screen.getByText("3회")).toBeVisible()
+    expect(screen.getByText("1회차 · 12분")).toBeVisible()
   })
 
   it("routes an admin session to the activity log and renders snapshot entries", async () => {

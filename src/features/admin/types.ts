@@ -90,3 +90,35 @@ export type AdminScheduleViewModel = {
   }
   readonly sessions: readonly AdminSessionRow[]
 }
+
+export type AdminSettingsRow = {
+  readonly id: string
+  readonly displayName: string
+  readonly statusLabel: string
+  readonly statusTone: "critical" | "warning" | "neutral"
+  readonly requestedAtLabel: string
+}
+
+export type AdminFailedNotificationRow = {
+  readonly id: string
+  readonly title: string
+  readonly channelLabel: string
+  readonly statusLabel: string
+  readonly statusTone: "critical" | "warning"
+  readonly attemptCount: number
+  readonly errorCodeLabel: string
+  readonly createdAtLabel: string
+}
+
+export type AdminSettingsViewModel = {
+  readonly programName: string
+  readonly dateRangeLabel: string
+  readonly timeTrialLabel: string
+  readonly statusLabel: string
+  readonly summary: {
+    readonly deletionRequestCount: number
+    readonly failedNotificationCount: number
+  }
+  readonly deletionRequests: readonly AdminSettingsRow[]
+  readonly failedNotifications: readonly AdminFailedNotificationRow[]
+}

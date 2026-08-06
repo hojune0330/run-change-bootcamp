@@ -6,12 +6,14 @@ import {
   AdminDashboard,
   AdminMemberRoster,
   AdminSchedule,
+  AdminSettings,
 } from "../../features/admin/index.ts"
 import type {
   PilotAdminActivity,
   PilotAdminMembers,
   PilotAdminOverview,
   PilotAdminSchedule,
+  PilotAdminSettings,
   PilotGateway,
   PilotMembership,
   PilotOperationError,
@@ -24,6 +26,7 @@ import {
   buildAdminMembersModel,
   buildAdminOverviewModel,
   buildAdminScheduleModel,
+  buildAdminSettingsModel,
 } from "./pilot-admin-models.ts"
 import "./pilot-workspace.css"
 
@@ -68,10 +71,12 @@ export function PilotAdminWorkspace({
   const [activity, setActivity] = useState<readonly PilotAdminActivity[]>([])
   const [members, setMembers] = useState<PilotAdminMembers | null>(null)
   const [schedule, setSchedule] = useState<PilotAdminSchedule | null>(null)
+  const [settings, setSettings] = useState<PilotAdminSettings | null>(null)
   const [loadState, setLoadState] = useState<LoadState>({ kind: "loading" })
   const [activityState, setActivityState] = useState<LoadState>({ kind: "loading" })
   const [membersState, setMembersState] = useState<LoadState>({ kind: "loading" })
   const [scheduleState, setScheduleState] = useState<LoadState>({ kind: "loading" })
+  const [settingsState, setSettingsState] = useState<LoadState>({ kind: "loading" })
   const [activeHref, setActiveHref] = useState<AdminHref>("/admin/overview")
 
   const loadOverview = useCallback(async () => {
@@ -121,11 +126,23 @@ export function PilotAdminWorkspace({
     setScheduleState({ kind: "ready" })
   }, [gateway, membership.programId])
 
+  const loadSettings = useCallback(async () => {
+    setSettingsState({ kind: "loading" })
+    const result = await gateway.getAdminSettings(membership.programId)
+    if (!result.ok) {
+      setSettingsState({ kind: "error", message: operationMessage(result.error.kind) })
+      return
+    }
+    setSettings(result.value)
+    setSettingsState({ kind: "ready" })
+  }, [gateway, membership.programId])
+
   useEffect(() => {
     if (activeHref === "/admin/activity") void loadActivity()
     if (activeHref === "/admin/members") void loadMembers()
     if (activeHref === "/admin/schedule") void loadSchedule()
-  }, [activeHref, loadActivity, loadMembers, loadSchedule])
+    if (activeHref === "/admin/settings") void loadSettings()
+  }, [activeHref, loadActivity, loadMembers, loadSchedule, loadSettings])
 
   const handleNavigate = (href: string) => {
     if (href === "/") {
@@ -239,6 +256,25 @@ export function PilotAdminWorkspace({
               </p>
             ) : schedule !== null ? (
               <AdminSchedule model={buildAdminScheduleModel(schedule)} />
+            ) : null}
+          </Card>
+        ) : activeHref === "/admin/settings" ? (
+          <Card eyebrow="프로그램 설정" title="설정">
+            {settingsState.kind === "error" ? (
+              <>
+                <p className="pilot-workspace__status pilot-workspace__status--error" role="alert">
+                  {settingsState.message}
+                </p>
+                <Button onClick={() => void loadSettings()} variant="secondary">
+                  다시 시도
+                </Button>
+              </>
+            ) : settingsState.kind === "loading" && settings === null ? (
+              <p aria-live="polite" className="pilot-workspace__status">
+                프로그램 설정을 불러오고 있습니다.
+              </p>
+            ) : settings !== null ? (
+              <AdminSettings model={buildAdminSettingsModel(settings)} />
             ) : null}
           </Card>
         ) : (

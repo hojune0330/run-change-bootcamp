@@ -296,6 +296,41 @@ export type PilotAdminSchedule = {
   }
 }
 
+export type PilotAdminSettings = {
+  readonly program: {
+    readonly endsOn: string
+    readonly startsOn: string
+    readonly status: "active" | "archived" | "completed" | "draft"
+    readonly title: string
+  }
+  readonly timeTrial: {
+    readonly decidedAt: string
+    readonly initialSessionNumber: 1 | 2
+    readonly protocol: "12_minute" | "3k" | "5k"
+  } | null
+  readonly summary: {
+    readonly deletionRequestCount: number
+    readonly failedNotificationCount: number
+  }
+  readonly deletionRequests: readonly {
+    readonly deletionRequestId: string
+    readonly profileId: string
+    readonly displayName: string
+    readonly status: "cancelled" | "completed" | "processing" | "requested"
+    readonly requestedAt: string
+  }[]
+  readonly failedNotifications: readonly {
+    readonly outboxId: string
+    readonly notificationId: string
+    readonly channel: "in_app" | "push"
+    readonly title: string
+    readonly status: "cancelled" | "failed" | "pending" | "processing" | "sent"
+    readonly lastErrorCode: string | null
+    readonly attemptCount: number
+    readonly createdAt: string
+  }[]
+}
+
 export interface PilotGateway {
   addPostComment(input: unknown): Promise<PilotOperationResult<PilotSubmitReference>>
   changeMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentToggleResult>>
@@ -314,6 +349,7 @@ export interface PilotGateway {
   getAdminActivity(programId: string): Promise<PilotOperationResult<readonly PilotAdminActivity[]>>
   getAdminMembers(programId: string): Promise<PilotOperationResult<PilotAdminMembers>>
   getAdminSchedule(programId: string): Promise<PilotOperationResult<PilotAdminSchedule>>
+  getAdminSettings(programId: string): Promise<PilotOperationResult<PilotAdminSettings>>
   getSession(): Promise<PilotOperationResult<PilotSessionState>>
   grantMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentReference>>
   listAuditEvents(): Promise<PilotOperationResult<readonly PilotAuditEvent[]>>
@@ -817,6 +853,67 @@ const AdminScheduleSnapshotSchema = z
   })
   .strict()
   .readonly()
+const AdminSettingsSnapshotSchema = z
+  .object({
+    program: z
+      .object({
+        ends_on: z.iso.date(),
+        starts_on: z.iso.date(),
+        status: z.enum(["draft", "active", "completed", "archived"]),
+        title: z.string().min(1).max(160),
+      })
+      .strict()
+      .readonly(),
+    time_trial: z
+      .object({
+        decided_at: z.iso.datetime({ offset: true }),
+        initial_session_number: z.union([z.literal(1), z.literal(2)]),
+        protocol: z.enum(["12_minute", "3k", "5k"]),
+      })
+      .strict()
+      .readonly()
+      .nullable(),
+    summary: z
+      .object({
+        deletion_request_count: z.number().int().nonnegative(),
+        failed_notification_count: z.number().int().nonnegative(),
+      })
+      .strict()
+      .readonly(),
+    deletion_requests: z
+      .array(
+        z
+          .object({
+            deletion_request_id: z.uuid(),
+            profile_id: z.uuid(),
+            display_name: z.string().min(1).max(80),
+            status: z.enum(["cancelled", "completed", "processing", "requested"]),
+            requested_at: z.iso.datetime({ offset: true }),
+          })
+          .strict()
+          .readonly(),
+      )
+      .readonly(),
+    failed_notifications: z
+      .array(
+        z
+          .object({
+            outbox_id: z.uuid(),
+            notification_id: z.uuid(),
+            channel: z.enum(["in_app", "push"]),
+            title: z.string().min(1).max(160),
+            status: z.enum(["cancelled", "failed", "pending", "processing", "sent"]),
+            last_error_code: z.string().nullable(),
+            attempt_count: z.number().int().nonnegative(),
+            created_at: z.iso.datetime({ offset: true }),
+          })
+          .strict()
+          .readonly(),
+      )
+      .readonly(),
+  })
+  .strict()
+  .readonly()
 const CompleteAssignmentInputSchema = z
   .object({ assignmentId: z.uuid(), programId: z.uuid() })
   .strict()
@@ -853,6 +950,7 @@ type AdminOverviewSnapshot = z.infer<typeof AdminOverviewSnapshotSchema>
 type AdminActivitySnapshot = z.infer<typeof AdminActivitySnapshotSchema>
 type AdminMembersSnapshot = z.infer<typeof AdminMembersSnapshotSchema>
 type AdminScheduleSnapshot = z.infer<typeof AdminScheduleSnapshotSchema>
+type AdminSettingsSnapshot = z.infer<typeof AdminSettingsSnapshotSchema>
 
 function failure(
   kind: PilotOperationError["kind"],
@@ -1222,6 +1320,46 @@ function adminScheduleFromSnapshot(snapshot: AdminScheduleSnapshot): PilotAdminS
   }
 }
 
+function adminSettingsFromSnapshot(snapshot: AdminSettingsSnapshot): PilotAdminSettings {
+  return {
+    program: {
+      endsOn: snapshot.program.ends_on,
+      startsOn: snapshot.program.starts_on,
+      status: snapshot.program.status,
+      title: snapshot.program.title,
+    },
+    timeTrial:
+      snapshot.time_trial === null
+        ? null
+        : {
+            decidedAt: snapshot.time_trial.decided_at,
+            initialSessionNumber: snapshot.time_trial.initial_session_number,
+            protocol: snapshot.time_trial.protocol,
+          },
+    summary: {
+      deletionRequestCount: snapshot.summary.deletion_request_count,
+      failedNotificationCount: snapshot.summary.failed_notification_count,
+    },
+    deletionRequests: snapshot.deletion_requests.map((request) => ({
+      deletionRequestId: request.deletion_request_id,
+      profileId: request.profile_id,
+      displayName: request.display_name,
+      status: request.status,
+      requestedAt: request.requested_at,
+    })),
+    failedNotifications: snapshot.failed_notifications.map((outbox) => ({
+      outboxId: outbox.outbox_id,
+      notificationId: outbox.notification_id,
+      channel: outbox.channel,
+      title: outbox.title,
+      status: outbox.status,
+      lastErrorCode: outbox.last_error_code,
+      attemptCount: outbox.attempt_count,
+      createdAt: outbox.created_at,
+    })),
+  }
+}
+
 function coachParticipantDetailFromSnapshot(
   snapshot: CoachParticipantDetailSnapshot,
 ): PilotCoachParticipantDetail {
@@ -1497,6 +1635,19 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
       const parsed = AdminScheduleSnapshotSchema.safeParse(result.value)
       return parsed.success
         ? { ok: true, value: adminScheduleFromSnapshot(parsed.data) }
+        : failure("invalid_response", false)
+    },
+    getAdminSettings: async (programId) => {
+      const session = await authenticatedSession(client)
+      if (!session.ok) return session
+      const result = await client.invokeRpc({
+        args: { target_program: programId },
+        function: "admin_settings_snapshot",
+      })
+      if (!result.ok) return rpcFailure(result)
+      const parsed = AdminSettingsSnapshotSchema.safeParse(result.value)
+      return parsed.success
+        ? { ok: true, value: adminSettingsFromSnapshot(parsed.data) }
         : failure("invalid_response", false)
     },
     getParticipantFeed: async (programId) => {

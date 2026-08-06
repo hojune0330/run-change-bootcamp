@@ -100,6 +100,11 @@ export type PilotRpcRequest =
       readonly function: "admin_schedule_snapshot"
       readonly signal?: AbortSignal
     }
+  | {
+      readonly args: { readonly target_program: string }
+      readonly function: "admin_settings_snapshot"
+      readonly signal?: AbortSignal
+    }
 
 export type PilotFunctionRequest = {
   readonly body: Readonly<Record<string, unknown>>
