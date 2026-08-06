@@ -141,6 +141,36 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
         },
       ],
     })),
+    getAdminMembers: vi.fn<PilotGateway["getAdminMembers"]>(async () => ({
+      ok: true,
+      value: {
+        members: [
+          {
+            completionPercent: 60,
+            displayName: "김러너",
+            email: "runner@example.com",
+            heartRateShared: true,
+            joinedAt: "2026-08-24T09:00:00.000Z",
+            membershipId: "77777777-7777-4777-8777-777777777777",
+            profileId: AUTH_USER_ID,
+            role: "participant",
+            status: "active",
+          },
+        ],
+        program: {
+          endsOn: "2026-10-24",
+          startsOn: "2026-08-24",
+          status: "active",
+          title: "PLUS Run",
+        },
+        summary: {
+          activeCoaches: 1,
+          activeParticipants: 1,
+          consentedCount: 1,
+          totalMembers: 2,
+        },
+      },
+    })),
     getSession: vi.fn<PilotGateway["getSession"]>(async () => ({ ok: true, value: session })),
     grantMetricConsent: vi.fn<PilotGateway["grantMetricConsent"]>(async () => ({
       ok: true,
@@ -392,10 +422,10 @@ describe("App runtime boundary", () => {
     await screen.findByRole("heading", { name: "PLUS Run" })
 
     // When
-    await user.click(screen.getByRole("link", { name: "멤버" }))
+    await user.click(screen.getByRole("link", { name: "일정" }))
 
     // Then
-    expect(await screen.findByText("/admin/members 화면")).toBeVisible()
+    expect(await screen.findByText("/admin/schedule 화면")).toBeVisible()
     expect(screen.getByText(/파일럿 준비 중/)).toBeVisible()
   })
 
@@ -426,5 +456,34 @@ describe("App runtime boundary", () => {
     expect(screen.getByRole("table", { name: "활동 로그" })).toBeVisible()
     expect(screen.getByRole("cell", { name: "코치" })).toBeVisible()
     expect(screen.getByText("1건")).toBeVisible()
+  })
+
+  it("routes an admin session to the member roster and renders snapshot rows", async () => {
+    // Given
+    const user = userEvent.setup()
+    const gateway = createGateway({
+      kind: "active",
+      membership: {
+        email: "admin@example.com",
+        membershipId: "77777777-7777-4777-8777-777777777777",
+        programId: PROGRAM_ID,
+        role: "admin",
+        route: "/admin/overview",
+        userId: AUTH_USER_ID,
+      },
+    })
+    render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
+    await screen.findByRole("heading", { name: "PLUS Run" })
+
+    // When
+    await user.click(screen.getByRole("link", { name: "멤버" }))
+
+    // Then
+    expect(await screen.findByRole("heading", { name: "멤버 명부" })).toBeVisible()
+    expect(gateway.getAdminMembers).toHaveBeenCalledWith(PROGRAM_ID)
+    expect(await screen.findByText("김러너")).toBeVisible()
+    expect(screen.getByRole("cell", { name: "runner@example.com" })).toBeVisible()
+    expect(screen.getByRole("cell", { name: "참여자" })).toBeVisible()
+    expect(screen.getByText("2명")).toBeVisible()
   })
 })

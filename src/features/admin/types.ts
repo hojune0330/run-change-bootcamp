@@ -43,3 +43,30 @@ export type AdminDashboardViewModel = {
   readonly actionOptions: readonly { readonly value: string; readonly label: string }[]
   readonly members: readonly AdminMemberRow[]
 }
+
+export type AdminMemberRosterRow = {
+  readonly id: string
+  readonly name: string
+  readonly email: string | null
+  readonly role: "participant" | "coach" | "admin" | "stakeholder"
+  readonly roleLabel: string
+  readonly status: "active" | "paused" | "ended"
+  readonly statusLabel: string
+  readonly joinedAtLabel: string
+  readonly completionPercent: number
+  readonly progressLabel: string
+  readonly shareLabel: string
+  readonly shareTone: "success" | "warning" | "neutral"
+}
+
+export type AdminMembersViewModel = {
+  readonly programName: string
+  readonly dateRangeLabel: string
+  readonly summary: {
+    readonly totalMembers: number
+    readonly activeParticipants: number
+    readonly activeCoaches: number
+    readonly consentedCount: number
+  }
+  readonly members: readonly AdminMemberRosterRow[]
+}

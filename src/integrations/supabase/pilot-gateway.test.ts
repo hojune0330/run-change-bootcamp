@@ -165,6 +165,34 @@ const ADMIN_ACTIVITY_SNAPSHOT = [
   },
 ] as const
 
+const ADMIN_MEMBERS_SNAPSHOT = {
+  members: [
+    {
+      completion_percent: 60,
+      display_name: "김러너",
+      email: "runner@example.com",
+      heart_rate_shared: true,
+      joined_at: "2026-08-24T09:00:00.000Z",
+      membership_id: MEMBERSHIP_ID,
+      profile_id: GRANTEE_ID,
+      role: "participant",
+      status: "active",
+    },
+  ],
+  program: {
+    ends_on: "2026-10-24",
+    starts_on: "2026-08-24",
+    status: "active",
+    title: "PLUS Run",
+  },
+  summary: {
+    active_coaches: 1,
+    active_participants: 1,
+    consented_count: 1,
+    total_members: 2,
+  },
+} as const
+
 const ADMIN_OVERVIEW_SNAPSHOT = {
   activity: [
     {
@@ -350,6 +378,8 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
           return { ok: true, value: ADMIN_OVERVIEW_SNAPSHOT }
         case "admin_activity_snapshot":
           return { ok: true, value: ADMIN_ACTIVITY_SNAPSHOT }
+        case "admin_members_snapshot":
+          return { ok: true, value: ADMIN_MEMBERS_SNAPSHOT }
       }
     },
     consentToggleResult,
@@ -1321,6 +1351,63 @@ describe("Supabase pilot gateway", () => {
 
     // When
     const result = await gateway.getAdminActivity(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
+    expect(client.rpcRequests).toEqual([])
+  })
+
+  it("maps the admin members snapshot into the public roster model", async () => {
+    // Given
+    const client = createFakeClient({ email: "admin@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getAdminMembers(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        members: [
+          {
+            completionPercent: 60,
+            displayName: "김러너",
+            email: "runner@example.com",
+            heartRateShared: true,
+            joinedAt: "2026-08-24T09:00:00.000Z",
+            membershipId: MEMBERSHIP_ID,
+            profileId: GRANTEE_ID,
+            role: "participant",
+            status: "active",
+          },
+        ],
+        program: {
+          endsOn: "2026-10-24",
+          startsOn: "2026-08-24",
+          status: "active",
+          title: "PLUS Run",
+        },
+        summary: {
+          activeCoaches: 1,
+          activeParticipants: 1,
+          consentedCount: 1,
+          totalMembers: 2,
+        },
+      },
+    })
+    expect(client.rpcRequests).toEqual([
+      { args: { target_program: PROGRAM_ID }, function: "admin_members_snapshot" },
+    ])
+  })
+
+  it("rejects admin members reads when the caller has no authenticated identity", async () => {
+    // Given
+    const client = createFakeClient(null)
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getAdminMembers(PROGRAM_ID)
 
     // Then
     expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })

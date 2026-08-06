@@ -237,6 +237,32 @@ export type PilotAdminOverview = {
   } | null
 }
 
+export type PilotAdminMembers = {
+  readonly members: readonly {
+    readonly completionPercent: number
+    readonly displayName: string
+    readonly email: string | null
+    readonly heartRateShared: boolean
+    readonly joinedAt: string
+    readonly membershipId: string
+    readonly profileId: string
+    readonly role: "participant" | "coach" | "admin" | "stakeholder"
+    readonly status: "active" | "paused" | "ended"
+  }[]
+  readonly program: {
+    readonly endsOn: string
+    readonly startsOn: string
+    readonly status: "active" | "archived" | "completed" | "draft"
+    readonly title: string
+  }
+  readonly summary: {
+    readonly activeCoaches: number
+    readonly activeParticipants: number
+    readonly consentedCount: number
+    readonly totalMembers: number
+  }
+}
+
 export interface PilotGateway {
   addPostComment(input: unknown): Promise<PilotOperationResult<PilotSubmitReference>>
   changeMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentToggleResult>>
@@ -253,6 +279,7 @@ export interface PilotGateway {
   getParticipantToday(programId: string): Promise<PilotOperationResult<PilotParticipantToday>>
   getAdminOverview(programId: string): Promise<PilotOperationResult<PilotAdminOverview>>
   getAdminActivity(programId: string): Promise<PilotOperationResult<readonly PilotAdminActivity[]>>
+  getAdminMembers(programId: string): Promise<PilotOperationResult<PilotAdminMembers>>
   getSession(): Promise<PilotOperationResult<PilotSessionState>>
   grantMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentReference>>
   listAuditEvents(): Promise<PilotOperationResult<readonly PilotAuditEvent[]>>
@@ -662,6 +689,47 @@ const AdminActivitySnapshotSchema = z
       .readonly(),
   )
   .readonly()
+const AdminMembersSnapshotSchema = z
+  .object({
+    members: z
+      .array(
+        z
+          .object({
+            completion_percent: z.number().int().min(0).max(100),
+            display_name: z.string().min(1).max(80),
+            email: z.email().nullable(),
+            heart_rate_shared: z.boolean(),
+            joined_at: z.iso.datetime({ offset: true }),
+            membership_id: z.uuid(),
+            profile_id: z.uuid(),
+            role: z.enum(["participant", "coach", "admin", "stakeholder"]),
+            status: z.enum(["active", "paused", "ended"]),
+          })
+          .strict()
+          .readonly(),
+      )
+      .readonly(),
+    program: z
+      .object({
+        ends_on: z.iso.date(),
+        starts_on: z.iso.date(),
+        status: z.enum(["draft", "active", "completed", "archived"]),
+        title: z.string().min(1).max(160),
+      })
+      .strict()
+      .readonly(),
+    summary: z
+      .object({
+        active_coaches: z.number().int().nonnegative(),
+        active_participants: z.number().int().nonnegative(),
+        consented_count: z.number().int().nonnegative(),
+        total_members: z.number().int().nonnegative(),
+      })
+      .strict()
+      .readonly(),
+  })
+  .strict()
+  .readonly()
 const CompleteAssignmentInputSchema = z
   .object({ assignmentId: z.uuid(), programId: z.uuid() })
   .strict()
@@ -696,6 +764,7 @@ type ParticipantChangeSnapshot = z.infer<typeof ParticipantChangeSnapshotSchema>
 type ConsentToggleResult = z.infer<typeof ConsentToggleResultSchema>
 type AdminOverviewSnapshot = z.infer<typeof AdminOverviewSnapshotSchema>
 type AdminActivitySnapshot = z.infer<typeof AdminActivitySnapshotSchema>
+type AdminMembersSnapshot = z.infer<typeof AdminMembersSnapshotSchema>
 
 function failure(
   kind: PilotOperationError["kind"],
@@ -1006,6 +1075,34 @@ function adminActivityFromSnapshot(snapshot: AdminActivitySnapshot): readonly Pi
   }))
 }
 
+function adminMembersFromSnapshot(snapshot: AdminMembersSnapshot): PilotAdminMembers {
+  return {
+    members: snapshot.members.map((member) => ({
+      completionPercent: member.completion_percent,
+      displayName: member.display_name,
+      email: member.email,
+      heartRateShared: member.heart_rate_shared,
+      joinedAt: member.joined_at,
+      membershipId: member.membership_id,
+      profileId: member.profile_id,
+      role: member.role,
+      status: member.status,
+    })),
+    program: {
+      endsOn: snapshot.program.ends_on,
+      startsOn: snapshot.program.starts_on,
+      status: snapshot.program.status,
+      title: snapshot.program.title,
+    },
+    summary: {
+      activeCoaches: snapshot.summary.active_coaches,
+      activeParticipants: snapshot.summary.active_participants,
+      consentedCount: snapshot.summary.consented_count,
+      totalMembers: snapshot.summary.total_members,
+    },
+  }
+}
+
 function coachParticipantDetailFromSnapshot(
   snapshot: CoachParticipantDetailSnapshot,
 ): PilotCoachParticipantDetail {
@@ -1255,6 +1352,19 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
       const parsed = AdminActivitySnapshotSchema.safeParse(result.value)
       return parsed.success
         ? { ok: true, value: adminActivityFromSnapshot(parsed.data) }
+        : failure("invalid_response", false)
+    },
+    getAdminMembers: async (programId) => {
+      const session = await authenticatedSession(client)
+      if (!session.ok) return session
+      const result = await client.invokeRpc({
+        args: { target_program: programId },
+        function: "admin_members_snapshot",
+      })
+      if (!result.ok) return rpcFailure(result)
+      const parsed = AdminMembersSnapshotSchema.safeParse(result.value)
+      return parsed.success
+        ? { ok: true, value: adminMembersFromSnapshot(parsed.data) }
         : failure("invalid_response", false)
     },
     getParticipantFeed: async (programId) => {

@@ -2,10 +2,13 @@ import type { ActivityAction } from "../../demo/state.ts"
 import type {
   AdminActivityEntry,
   AdminDashboardViewModel,
+  AdminMemberRosterRow,
   AdminMemberRow,
+  AdminMembersViewModel,
 } from "../../features/admin/index.ts"
 import type {
   PilotAdminActivity,
+  PilotAdminMembers,
   PilotAdminOverview,
 } from "../../integrations/supabase/pilot-gateway.ts"
 import { timeAgoLabel } from "./pilot-coach-models.ts"
@@ -81,6 +84,47 @@ export const ACTION_OPTIONS = [
   { value: "feedback_approve", label: "피드백 승인" },
   { value: "feedback_reject", label: "피드백 반려" },
 ] as const
+
+function adminMemberRosterRow(member: PilotAdminMembers["members"][number]): AdminMemberRosterRow {
+  const roleLabel =
+    member.role === "admin"
+      ? "관리자"
+      : member.role === "coach"
+        ? "코치"
+        : member.role === "stakeholder"
+          ? "이해관계자"
+          : "참여자"
+  const statusLabel =
+    member.status === "active" ? "활동 중" : member.status === "paused" ? "일시 중지" : "종료"
+  return {
+    id: `member:${member.profileId}`,
+    name: member.displayName,
+    email: member.email,
+    role: member.role,
+    roleLabel,
+    status: member.status,
+    statusLabel,
+    joinedAtLabel: timeAgoLabel(member.joinedAt),
+    completionPercent: member.completionPercent,
+    progressLabel: progressLabel(member.completionPercent),
+    shareLabel: member.heartRateShared ? "공유 중" : "기본 비공개",
+    shareTone: member.heartRateShared ? "success" : "neutral",
+  }
+}
+
+export function buildAdminMembersModel(members: PilotAdminMembers): AdminMembersViewModel {
+  return {
+    programName: members.program.title,
+    dateRangeLabel: formatDateRange(members.program.startsOn, members.program.endsOn),
+    summary: {
+      totalMembers: members.summary.totalMembers,
+      activeParticipants: members.summary.activeParticipants,
+      activeCoaches: members.summary.activeCoaches,
+      consentedCount: members.summary.consentedCount,
+    },
+    members: members.members.map(adminMemberRosterRow),
+  }
+}
 
 export function buildAdminOverviewModel(overview: PilotAdminOverview): AdminDashboardViewModel {
   const timeTrialLabel =

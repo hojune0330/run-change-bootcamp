@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react"
 import { Button, Card } from "../../components/primitives/index.ts"
 import { type BrandConfig, DEFAULT_BRAND } from "../../design/brand-config.ts"
-import { AdminActivityLog, AdminDashboard } from "../../features/admin/index.ts"
+import { AdminActivityLog, AdminDashboard, AdminMemberRoster } from "../../features/admin/index.ts"
 import type {
   PilotAdminActivity,
+  PilotAdminMembers,
   PilotAdminOverview,
   PilotGateway,
   PilotMembership,
@@ -14,6 +15,7 @@ import { ADMIN_HREFS, type AdminHref } from "../routes.ts"
 import {
   ACTION_OPTIONS,
   adminActivityEntry,
+  buildAdminMembersModel,
   buildAdminOverviewModel,
 } from "./pilot-admin-models.ts"
 import "./pilot-workspace.css"
@@ -57,8 +59,10 @@ export function PilotAdminWorkspace({
 }: PilotAdminWorkspaceProps) {
   const [overview, setOverview] = useState<PilotAdminOverview | null>(null)
   const [activity, setActivity] = useState<readonly PilotAdminActivity[]>([])
+  const [members, setMembers] = useState<PilotAdminMembers | null>(null)
   const [loadState, setLoadState] = useState<LoadState>({ kind: "loading" })
   const [activityState, setActivityState] = useState<LoadState>({ kind: "loading" })
+  const [membersState, setMembersState] = useState<LoadState>({ kind: "loading" })
   const [activeHref, setActiveHref] = useState<AdminHref>("/admin/overview")
 
   const loadOverview = useCallback(async () => {
@@ -86,9 +90,21 @@ export function PilotAdminWorkspace({
     setActivityState({ kind: "ready" })
   }, [gateway, membership.programId])
 
+  const loadMembers = useCallback(async () => {
+    setMembersState({ kind: "loading" })
+    const result = await gateway.getAdminMembers(membership.programId)
+    if (!result.ok) {
+      setMembersState({ kind: "error", message: operationMessage(result.error.kind) })
+      return
+    }
+    setMembers(result.value)
+    setMembersState({ kind: "ready" })
+  }, [gateway, membership.programId])
+
   useEffect(() => {
     if (activeHref === "/admin/activity") void loadActivity()
-  }, [activeHref, loadActivity])
+    if (activeHref === "/admin/members") void loadMembers()
+  }, [activeHref, loadActivity, loadMembers])
 
   const handleNavigate = (href: string) => {
     if (href === "/") {
@@ -165,6 +181,25 @@ export function PilotAdminWorkspace({
                 entries={activity.map(adminActivityEntry)}
               />
             )}
+          </Card>
+        ) : activeHref === "/admin/members" ? (
+          <Card eyebrow="전체 명부" title="멤버 명부">
+            {membersState.kind === "error" ? (
+              <>
+                <p className="pilot-workspace__status pilot-workspace__status--error" role="alert">
+                  {membersState.message}
+                </p>
+                <Button onClick={() => void loadMembers()} variant="secondary">
+                  다시 시도
+                </Button>
+              </>
+            ) : membersState.kind === "loading" && members === null ? (
+              <p aria-live="polite" className="pilot-workspace__status">
+                멤버 명부를 불러오고 있습니다.
+              </p>
+            ) : members !== null ? (
+              <AdminMemberRoster model={buildAdminMembersModel(members)} />
+            ) : null}
           </Card>
         ) : (
           <Card eyebrow="파일럿 준비 중" title={`${activeHref} 화면`}>
