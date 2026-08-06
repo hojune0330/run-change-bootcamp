@@ -349,6 +349,11 @@ const CHANGE_SNAPSHOT = {
   profile: { display_name: "김러너", profile_id: GRANTEE_ID },
 } as const
 
+const PARTICIPANT_RECORD_SNAPSHOT = {
+  recorded_on: "2026-08-26",
+  supported_extensions: ["csv", "fit", "gpx", "tcx", "xml", "json"],
+} as const
+
 type FakePilotClient = PilotClient & {
   readonly consentToggleResult: { value: unknown }
   readonly dataRequests: PilotDataRequest[]
@@ -449,6 +454,8 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
           return { ok: true, value: FEED_SNAPSHOT }
         case "participant_change_snapshot":
           return { ok: true, value: CHANGE_SNAPSHOT }
+        case "participant_record_snapshot":
+          return { ok: true, value: PARTICIPANT_RECORD_SNAPSHOT }
         case "participant_set_metric_consent":
           return { ok: true, value: consentToggleResult.value }
         case "admin_overview_snapshot":
@@ -1621,6 +1628,40 @@ describe("Supabase pilot gateway", () => {
 
     // When
     const result = await gateway.getAdminSettings(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
+    expect(client.rpcRequests).toEqual([])
+  })
+
+  it("maps the participant record snapshot into the record screen model", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getParticipantRecord(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        recordedOn: "2026-08-26",
+        supportedExtensions: ["csv", "fit", "gpx", "tcx", "xml", "json"],
+      },
+    })
+    expect(client.rpcRequests).toEqual([
+      { args: { target_program: PROGRAM_ID }, function: "participant_record_snapshot" },
+    ])
+  })
+
+  it("rejects participant record reads when the caller has no authenticated identity", async () => {
+    // Given
+    const client = createFakeClient(null)
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getParticipantRecord(PROGRAM_ID)
 
     // Then
     expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })

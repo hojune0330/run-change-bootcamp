@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { Button } from "../../components/primitives/index.ts"
-import { type BrandConfig, DEFAULT_BRAND } from "../../design/brand-config.ts"
 import { createShareServices } from "../../demo/participant-bindings.ts"
+import { type BrandConfig, DEFAULT_BRAND } from "../../design/brand-config.ts"
 import {
   FeedScreen,
   type Loadable,
@@ -18,6 +18,7 @@ import type {
   ManualMetricInput,
   MyChangeViewModel,
   PostId,
+  RecordViewModel,
   TodayViewModel,
 } from "../../features/participant/models.ts"
 import type {
@@ -30,6 +31,7 @@ import { PARTICIPANT_HREFS, type ParticipantHref } from "../routes.ts"
 import {
   buildParticipantChangeModel,
   buildParticipantFeedModel,
+  buildParticipantRecordModel,
   buildParticipantTodayModel,
 } from "./pilot-participant-models.ts"
 import "./pilot-workspace.css"
@@ -59,12 +61,6 @@ function operationMessage(kind: PilotOperationError["kind"]): string {
   }
 }
 
-function todayRecordedOn(): string {
-  const now = new Date()
-  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000)
-  return local.toISOString().slice(0, 10)
-}
-
 function pilotDraftError(): DraftResult {
   return { kind: "error", message: "파일 가져오기는 파일럿 준비 중이에요." }
 }
@@ -80,6 +76,9 @@ export function PilotParticipantWorkspace({
   const [todayState, setTodayState] = useState<Loadable<TodayViewModel>>({ status: "loading" })
   const [feedState, setFeedState] = useState<Loadable<FeedViewModel>>({ status: "loading" })
   const [changeState, setChangeState] = useState<Loadable<MyChangeViewModel>>({
+    status: "loading",
+  })
+  const [recordState, setRecordState] = useState<Loadable<RecordViewModel>>({
     status: "loading",
   })
   const [mutationMessage, setMutationMessage] = useState<string | null>(null)
@@ -117,6 +116,16 @@ export function PilotParticipantWorkspace({
     setChangeState({ status: "ready", data: buildParticipantChangeModel(result.value) })
   }, [gateway, membership.programId])
 
+  const loadRecord = useCallback(async () => {
+    setRecordState({ status: "loading" })
+    const result = await gateway.getParticipantRecord(membership.programId)
+    if (!result.ok) {
+      setRecordState({ status: "error", message: operationMessage(result.error.kind) })
+      return
+    }
+    setRecordState({ status: "ready", data: buildParticipantRecordModel(result.value) })
+  }, [gateway, membership.programId])
+
   useEffect(() => {
     void loadToday()
   }, [loadToday])
@@ -128,6 +137,10 @@ export function PilotParticipantWorkspace({
   useEffect(() => {
     void loadChange()
   }, [loadChange])
+
+  useEffect(() => {
+    void loadRecord()
+  }, [loadRecord])
 
   const handleNavigate = (href: string) => {
     if (href === "/") {
@@ -234,6 +247,7 @@ export function PilotParticipantWorkspace({
     if (activeHref === "/today") void loadToday()
     if (activeHref === "/feed") void loadFeed()
     if (activeHref === "/change") void loadChange()
+    if (activeHref === "/record") void loadRecord()
   }
 
   return (
@@ -293,13 +307,7 @@ export function PilotParticipantWorkspace({
               onUploadScreenshot: () => Promise.resolve(pilotDraftError()),
             }}
             onRetry={() => void retry()}
-            state={{
-              status: "ready",
-              data: {
-                recordedOn: todayRecordedOn(),
-                supportedExtensions: ["csv", "fit", "gpx", "tcx", "xml", "json"],
-              },
-            }}
+            state={recordState}
           />
         ) : null}
         {activeHref === "/change" ? (

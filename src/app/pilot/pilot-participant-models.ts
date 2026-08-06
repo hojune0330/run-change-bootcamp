@@ -1,4 +1,3 @@
-import { toBrowserPath } from "../base-path.ts"
 import type {
   ChangeMetricViewModel,
   ConsentAuditViewModel,
@@ -6,21 +5,19 @@ import type {
   FeedPostViewModel,
   FeedViewModel,
   MyChangeViewModel,
+  RecordViewModel,
   TodayViewModel,
 } from "../../features/participant/models.ts"
 import type {
   PilotParticipantChange,
-  PilotParticipantFeedback,
   PilotParticipantFeed,
+  PilotParticipantFeedback,
   PilotParticipantMetric,
+  PilotParticipantRecord,
   PilotParticipantToday,
 } from "../../integrations/supabase/pilot-gateway.ts"
-import {
-  formatMonthDay,
-  metricLabel,
-  metricValue,
-  timeAgoLabel,
-} from "./pilot-coach-models.ts"
+import { toBrowserPath } from "../base-path.ts"
+import { formatMonthDay, metricLabel, metricValue, timeAgoLabel } from "./pilot-coach-models.ts"
 
 function dueLabel(dueAt: string | null): string {
   if (dueAt === null) return "기한 미정"
@@ -89,7 +86,10 @@ export function buildParticipantTodayModel(today: PilotParticipantToday): TodayV
   }
 }
 
-export function buildParticipantFeedModel(feed: PilotParticipantFeed, origin: string): FeedViewModel {
+export function buildParticipantFeedModel(
+  feed: PilotParticipantFeed,
+  origin: string,
+): FeedViewModel {
   return {
     posts: feed.posts.map((post): FeedPostViewModel => {
       const postId: `post-${string}` = `post-${post.postId}`
@@ -121,19 +121,23 @@ export function buildParticipantChangeModel(change: PilotParticipantChange): MyC
         value: `${change.completionPercent}%`,
         changeLabel: "전체 과제 기준",
       },
-      ...change.metrics.map((metric): ChangeMetricViewModel => ({
-        id: `metric-${metric.metricType}`,
-        label: metricLabel(metric.metricType),
-        value: metricValue(metric),
-        changeLabel: metricChangeLabel(metric),
-      })),
+      ...change.metrics.map(
+        (metric): ChangeMetricViewModel => ({
+          id: `metric-${metric.metricType}`,
+          label: metricLabel(metric.metricType),
+          value: metricValue(metric),
+          changeLabel: metricChangeLabel(metric),
+        }),
+      ),
     ],
-    feedback: change.feedback.map((item): FeedbackViewModel => ({
-      id: `feedback-${item.feedbackId}`,
-      source: item.origin === "ai" ? "automated_summary" : "coach_approved",
-      title: feedbackTitle(item.classification),
-      body: item.body,
-    })),
+    feedback: change.feedback.map(
+      (item): FeedbackViewModel => ({
+        id: `feedback-${item.feedbackId}`,
+        source: item.origin === "ai" ? "automated_summary" : "coach_approved",
+        title: feedbackTitle(item.classification),
+        body: item.body,
+      }),
+    ),
     consents: [
       {
         key: "consent-resting-heart-rate",
@@ -148,5 +152,12 @@ export function buildParticipantChangeModel(change: PilotParticipantChange): MyC
         label: consentAuditLabel(event.eventType),
       }),
     ),
+  }
+}
+
+export function buildParticipantRecordModel(record: PilotParticipantRecord): RecordViewModel {
+  return {
+    recordedOn: record.recordedOn,
+    supportedExtensions: record.supportedExtensions,
   }
 }

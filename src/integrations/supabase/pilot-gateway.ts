@@ -190,6 +190,11 @@ export type PilotParticipantChange = {
   readonly profile: { readonly displayName: string; readonly profileId: string }
 }
 
+export type PilotParticipantRecord = {
+  readonly recordedOn: string
+  readonly supportedExtensions: readonly string[]
+}
+
 export type PilotConsentToggleResult = {
   readonly auditEventId: number | null
   readonly auditEventType: string | null
@@ -342,6 +347,7 @@ export interface PilotGateway {
     programId: string,
     participantId: string,
   ): Promise<PilotOperationResult<PilotCoachParticipantDetail>>
+  getParticipantRecord(programId: string): Promise<PilotOperationResult<PilotParticipantRecord>>
   getParticipantChange(programId: string): Promise<PilotOperationResult<PilotParticipantChange>>
   getParticipantFeed(programId: string): Promise<PilotOperationResult<PilotParticipantFeed>>
   getParticipantToday(programId: string): Promise<PilotOperationResult<PilotParticipantToday>>
@@ -674,6 +680,13 @@ const ParticipantChangeSnapshotSchema = z
   })
   .strict()
   .readonly()
+const ParticipantRecordSnapshotSchema = z
+  .object({
+    recorded_on: z.iso.date(),
+    supported_extensions: z.array(z.enum(["csv", "fit", "gpx", "tcx", "xml", "json"])).readonly(),
+  })
+  .strict()
+  .readonly()
 const ConsentToggleResultSchema = z
   .object({
     audit_event_id: z.number().int().positive().nullable().optional(),
@@ -945,6 +958,7 @@ type CoachParticipantDetailSnapshot = z.infer<typeof CoachParticipantDetailSnaps
 type ParticipantTodaySnapshot = z.infer<typeof ParticipantTodaySnapshotSchema>
 type ParticipantFeedSnapshot = z.infer<typeof ParticipantFeedSnapshotSchema>
 type ParticipantChangeSnapshot = z.infer<typeof ParticipantChangeSnapshotSchema>
+type ParticipantRecordSnapshot = z.infer<typeof ParticipantRecordSnapshotSchema>
 type ConsentToggleResult = z.infer<typeof ConsentToggleResultSchema>
 type AdminOverviewSnapshot = z.infer<typeof AdminOverviewSnapshotSchema>
 type AdminActivitySnapshot = z.infer<typeof AdminActivitySnapshotSchema>
@@ -1174,6 +1188,15 @@ function participantFeedFromSnapshot(snapshot: ParticipantFeedSnapshot): PilotPa
       isHearted: post.is_hearted,
       postId: post.post_id,
     })),
+  }
+}
+
+function participantRecordFromSnapshot(
+  snapshot: ParticipantRecordSnapshot,
+): PilotParticipantRecord {
+  return {
+    recordedOn: snapshot.recorded_on,
+    supportedExtensions: snapshot.supported_extensions,
   }
 }
 
@@ -1661,6 +1684,19 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
       const parsed = ParticipantFeedSnapshotSchema.safeParse(result.value)
       return parsed.success
         ? { ok: true, value: participantFeedFromSnapshot(parsed.data) }
+        : failure("invalid_response", false)
+    },
+    getParticipantRecord: async (programId) => {
+      const session = await authenticatedSession(client)
+      if (!session.ok) return session
+      const result = await client.invokeRpc({
+        args: { target_program: programId },
+        function: "participant_record_snapshot",
+      })
+      if (!result.ok) return rpcFailure(result)
+      const parsed = ParticipantRecordSnapshotSchema.safeParse(result.value)
+      return parsed.success
+        ? { ok: true, value: participantRecordFromSnapshot(parsed.data) }
         : failure("invalid_response", false)
     },
     getParticipantChange: async (programId) => {

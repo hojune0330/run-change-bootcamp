@@ -98,6 +98,13 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
       ok: true,
       value: { posts: [] },
     })),
+    getParticipantRecord: vi.fn<PilotGateway["getParticipantRecord"]>(async () => ({
+      ok: true,
+      value: {
+        recordedOn: "2026-08-26",
+        supportedExtensions: ["csv", "fit", "gpx", "tcx", "xml", "json"],
+      },
+    })),
     getParticipantToday: vi.fn<PilotGateway["getParticipantToday"]>(async () => ({
       ok: true,
       value: {
