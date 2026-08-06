@@ -338,4 +338,52 @@ describe("App runtime boundary", () => {
     expect(await screen.findByRole("textbox", { name: "초대 이메일" })).toBeEnabled()
     expect(screen.queryByRole("button", { name: "코치로 시작" })).not.toBeInTheDocument()
   })
+
+  it("routes an admin session into the admin workspace and renders the overview dashboard", async () => {
+    // Given
+    const gateway = createGateway({
+      kind: "active",
+      membership: {
+        email: "admin@example.com",
+        membershipId: "77777777-7777-4777-8777-777777777777",
+        programId: PROGRAM_ID,
+        role: "admin",
+        route: "/admin/overview",
+        userId: AUTH_USER_ID,
+      },
+    })
+    render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
+
+    // Then
+    expect(await screen.findByRole("heading", { name: "PLUS Run" })).toBeVisible()
+    expect(screen.getAllByText("PLUS Run 운영자")).toHaveLength(2)
+    expect(screen.getByText("admin@example.com")).toBeVisible()
+    expect(screen.getByText("정상 운영")).toBeVisible()
+    expect(gateway.getAdminOverview).toHaveBeenCalledWith(PROGRAM_ID)
+  })
+
+  it("shows the pilot-prepared boundary for admin routes beyond the overview", async () => {
+    // Given
+    const user = userEvent.setup()
+    const gateway = createGateway({
+      kind: "active",
+      membership: {
+        email: "admin@example.com",
+        membershipId: "77777777-7777-4777-8777-777777777777",
+        programId: PROGRAM_ID,
+        role: "admin",
+        route: "/admin/overview",
+        userId: AUTH_USER_ID,
+      },
+    })
+    render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
+    await screen.findByRole("heading", { name: "PLUS Run" })
+
+    // When
+    await user.click(screen.getByRole("link", { name: "멤버" }))
+
+    // Then
+    expect(await screen.findByText("/admin/members 화면")).toBeVisible()
+    expect(screen.getByText(/파일럿 준비 중/)).toBeVisible()
+  })
 })
