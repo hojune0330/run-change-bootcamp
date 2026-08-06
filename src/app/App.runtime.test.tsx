@@ -607,4 +607,32 @@ describe("App runtime boundary", () => {
     expect(screen.getByText("1회차 · 12분")).toBeVisible()
     expect(screen.getByText("2회")).toBeVisible()
   })
+
+  it("routes a participant session to the record screen and renders the snapshot", async () => {
+    // Given
+    const user = userEvent.setup()
+    const gateway = createGateway({
+      kind: "active",
+      membership: {
+        email: "runner@example.com",
+        membershipId: "77777777-7777-4777-8777-777777777777",
+        programId: PROGRAM_ID,
+        role: "participant",
+        route: "/today",
+        userId: AUTH_USER_ID,
+      },
+    })
+    render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
+    await screen.findByRole("heading", { name: "오늘" })
+
+    // When
+    await user.click(screen.getByRole("link", { name: "기록" }))
+
+    // Then
+    expect(await screen.findByRole("heading", { name: "기록" })).toBeVisible()
+    expect(gateway.getParticipantRecord).toHaveBeenCalledWith(PROGRAM_ID)
+    expect(screen.getByLabelText("측정일")).toHaveValue("2026-08-26")
+    await user.click(screen.getByRole("button", { name: "파일 가져오기" }))
+    expect(screen.getByText("지원: CSV, FIT, GPX, TCX, XML, JSON")).toBeVisible()
+  })
 })
