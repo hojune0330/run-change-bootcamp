@@ -898,7 +898,11 @@ describe("Supabase pilot gateway", () => {
       origin: "ai",
     })
     expect(result.value.consentHistory).toEqual([
-      { auditEventId: AUDIT_ID, eventType: "consent.granted", occurredAt: "2026-08-25T08:00:00.000Z" },
+      {
+        auditEventId: AUDIT_ID,
+        eventType: "consent.granted",
+        occurredAt: "2026-08-25T08:00:00.000Z",
+      },
     ])
     expect(client.rpcRequests).toEqual([
       { args: { target_program: PROGRAM_ID }, function: "participant_change_snapshot" },
@@ -984,7 +988,10 @@ describe("Supabase pilot gateway", () => {
     const gateway = createPilotGateway(client)
 
     // When
-    const result = await gateway.addPostComment({ body: "  다음 주도 같이 달려요!  ", postId: POST_ID })
+    const result = await gateway.addPostComment({
+      body: "  다음 주도 같이 달려요!  ",
+      postId: POST_ID,
+    })
 
     // Then
     expect(result).toEqual({ ok: true, value: { id: COMMENT_ID } })
@@ -1033,6 +1040,33 @@ describe("Supabase pilot gateway", () => {
       sensitivity: "activity",
       source: "manual",
       unit: "m",
+      verification_status: "accepted",
+    })
+  })
+
+  it("normalizes a date-only recordedOn to midnight UTC before saving", async () => {
+    // Given — 화면(ManualMetricForm)은 date-only(YYYY-MM-DD)를 보낸다
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.saveManualMetric({
+      metricKey: "sleep_hours",
+      programId: PROGRAM_ID,
+      recordedOn: "2026-08-25",
+      value: 7.5,
+    })
+
+    // Then
+    expect(result).toEqual({ ok: true, value: { id: METRIC_ID } })
+    const request = client.dataRequests.at(-1)
+    if (request?.kind !== "save_manual_metric") return
+    expect(request.values.observed_at).toBe("2026-08-25T00:00:00.000Z")
+    expect(request.values).toMatchObject({
+      metric_type: "sleep_hours",
+      numeric_value: 7.5,
+      sensitivity: "health",
+      unit: "h",
       verification_status: "accepted",
     })
   })

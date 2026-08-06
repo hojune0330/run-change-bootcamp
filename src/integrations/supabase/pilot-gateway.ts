@@ -558,7 +558,8 @@ const ManualMetricInputSchema = z
   .object({
     metricKey: z.enum(["distance_km", "duration_min", "resting_heart_rate", "sleep_hours"]),
     programId: z.uuid(),
-    recordedOn: z.iso.datetime({ offset: true }),
+    // 화면은 date-only(YYYY-MM-DD)를, 이전 클라이언트는 전체 datetime을 보낼 수 있다.
+    recordedOn: z.union([z.iso.date(), z.iso.datetime({ offset: true })]),
     value: z.number().positive(),
   })
   .strict()
@@ -651,6 +652,11 @@ function consentToggleFromResult(result: ConsentToggleResult): PilotConsentToggl
     auditEventType: result.audit_event_type ?? null,
     status: result.status,
   }
+}
+
+/** date-only(YYYY-MM-DD)는 자정(UTC) datetime으로 정규화해 metric_records.observed_at에 넣는다. */
+function normalizeObservedAt(recordedOn: string): string {
+  return recordedOn.length === 10 ? `${recordedOn}T00:00:00.000Z` : recordedOn
 }
 
 function manualMetricMapping(input: z.infer<typeof ManualMetricInputSchema>): {
@@ -1155,7 +1161,7 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
         values: {
           metric_type: mapped.metricType,
           numeric_value: mapped.numericValue,
-          observed_at: parsed.data.recordedOn,
+          observed_at: normalizeObservedAt(parsed.data.recordedOn),
           owner_profile_id: session.value.userId,
           program_id: parsed.data.programId,
           sensitivity: mapped.sensitivity,
