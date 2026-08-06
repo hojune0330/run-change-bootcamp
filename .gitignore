@@ -19,3 +19,4 @@ secrets/
 *.pem
 *.key
 .debug-journal.md
+core
