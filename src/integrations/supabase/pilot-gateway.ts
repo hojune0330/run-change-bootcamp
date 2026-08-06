@@ -196,6 +196,47 @@ export type PilotConsentToggleResult = {
   readonly status: "disabled" | "enabled" | "unavailable"
 }
 
+export type PilotAdminMember = {
+  readonly completionPercent: number
+  readonly displayName: string
+  readonly heartRateShared: boolean
+  readonly joinedAt: string
+  readonly profileId: string
+  readonly role: "participant" | "coach" | "admin" | "stakeholder"
+  readonly status: "active" | "paused" | "ended"
+}
+
+export type PilotAdminActivity = {
+  readonly actorRole: "coach" | "admin"
+  readonly auditEventId: number
+  readonly eventType: string
+  readonly occurredAt: string
+  readonly summary: string
+}
+
+export type PilotAdminOverview = {
+  readonly activity: readonly PilotAdminActivity[]
+  readonly members: readonly PilotAdminMember[]
+  readonly program: {
+    readonly endsOn: string
+    readonly startsOn: string
+    readonly status: "active" | "archived" | "completed" | "draft"
+    readonly title: string
+  }
+  readonly summary: {
+    readonly assignmentsCount: number
+    readonly consentedCount: number
+    readonly painRiskCount: number
+    readonly pendingFeedbackCount: number
+    readonly totalParticipants: number
+  }
+  readonly timeTrial: {
+    readonly decidedAt: string
+    readonly initialSessionNumber: 1 | 2
+    readonly protocol: "12_minute" | "3k" | "5k"
+  } | null
+}
+
 export interface PilotGateway {
   addPostComment(input: unknown): Promise<PilotOperationResult<PilotSubmitReference>>
   changeMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentToggleResult>>
@@ -210,6 +251,7 @@ export interface PilotGateway {
   getParticipantChange(programId: string): Promise<PilotOperationResult<PilotParticipantChange>>
   getParticipantFeed(programId: string): Promise<PilotOperationResult<PilotParticipantFeed>>
   getParticipantToday(programId: string): Promise<PilotOperationResult<PilotParticipantToday>>
+  getAdminOverview(programId: string): Promise<PilotOperationResult<PilotAdminOverview>>
   getSession(): Promise<PilotOperationResult<PilotSessionState>>
   grantMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentReference>>
   listAuditEvents(): Promise<PilotOperationResult<readonly PilotAuditEvent[]>>
@@ -542,6 +584,69 @@ const ConsentToggleResultSchema = z
   })
   .strict()
   .readonly()
+const AdminOverviewSnapshotSchema = z
+  .object({
+    activity: z
+      .array(
+        z
+          .object({
+            actor_role: z.enum(["coach", "admin"]),
+            audit_event_id: z.number().int().positive(),
+            event_type: z.string().min(3).max(100),
+            occurred_at: z.iso.datetime({ offset: true }),
+            summary: z.string().min(1).max(2000),
+          })
+          .strict()
+          .readonly(),
+      )
+      .readonly(),
+    members: z
+      .array(
+        z
+          .object({
+            completion_percent: z.number().int().min(0).max(100),
+            display_name: z.string().min(1).max(80),
+            heart_rate_shared: z.boolean(),
+            joined_at: z.iso.datetime({ offset: true }),
+            profile_id: z.uuid(),
+            role: z.enum(["participant", "coach", "admin", "stakeholder"]),
+            status: z.enum(["active", "paused", "ended"]),
+          })
+          .strict()
+          .readonly(),
+      )
+      .readonly(),
+    program: z
+      .object({
+        ends_on: z.iso.date(),
+        starts_on: z.iso.date(),
+        status: z.enum(["draft", "active", "completed", "archived"]),
+        title: z.string().min(1).max(160),
+      })
+      .strict()
+      .readonly(),
+    summary: z
+      .object({
+        assignments_count: z.number().int().nonnegative(),
+        consented_count: z.number().int().nonnegative(),
+        pain_risk_count: z.number().int().nonnegative(),
+        pending_feedback_count: z.number().int().nonnegative(),
+        total_participants: z.number().int().nonnegative(),
+      })
+      .strict()
+      .readonly(),
+    time_trial: z
+      .object({
+        decided_at: z.iso.datetime({ offset: true }),
+        initial_session_number: z.union([z.literal(1), z.literal(2)]),
+        protocol: z.enum(["12_minute", "3k", "5k"]),
+      })
+      .strict()
+      .readonly()
+      .nullable(),
+  })
+  .strict()
+  .readonly()
 const CompleteAssignmentInputSchema = z
   .object({ assignmentId: z.uuid(), programId: z.uuid() })
   .strict()
@@ -574,6 +679,7 @@ type ParticipantTodaySnapshot = z.infer<typeof ParticipantTodaySnapshotSchema>
 type ParticipantFeedSnapshot = z.infer<typeof ParticipantFeedSnapshotSchema>
 type ParticipantChangeSnapshot = z.infer<typeof ParticipantChangeSnapshotSchema>
 type ConsentToggleResult = z.infer<typeof ConsentToggleResultSchema>
+type AdminOverviewSnapshot = z.infer<typeof AdminOverviewSnapshotSchema>
 
 function failure(
   kind: PilotOperationError["kind"],
@@ -832,6 +938,48 @@ function participantChangeFromSnapshot(
   }
 }
 
+function adminOverviewFromSnapshot(snapshot: AdminOverviewSnapshot): PilotAdminOverview {
+  return {
+    activity: snapshot.activity.map((entry) => ({
+      actorRole: entry.actor_role,
+      auditEventId: entry.audit_event_id,
+      eventType: entry.event_type,
+      occurredAt: entry.occurred_at,
+      summary: entry.summary,
+    })),
+    members: snapshot.members.map((member) => ({
+      completionPercent: member.completion_percent,
+      displayName: member.display_name,
+      heartRateShared: member.heart_rate_shared,
+      joinedAt: member.joined_at,
+      profileId: member.profile_id,
+      role: member.role,
+      status: member.status,
+    })),
+    program: {
+      endsOn: snapshot.program.ends_on,
+      startsOn: snapshot.program.starts_on,
+      status: snapshot.program.status,
+      title: snapshot.program.title,
+    },
+    summary: {
+      assignmentsCount: snapshot.summary.assignments_count,
+      consentedCount: snapshot.summary.consented_count,
+      painRiskCount: snapshot.summary.pain_risk_count,
+      pendingFeedbackCount: snapshot.summary.pending_feedback_count,
+      totalParticipants: snapshot.summary.total_participants,
+    },
+    timeTrial:
+      snapshot.time_trial === null
+        ? null
+        : {
+            decidedAt: snapshot.time_trial.decided_at,
+            initialSessionNumber: snapshot.time_trial.initial_session_number,
+            protocol: snapshot.time_trial.protocol,
+          },
+  }
+}
+
 function coachParticipantDetailFromSnapshot(
   snapshot: CoachParticipantDetailSnapshot,
 ): PilotCoachParticipantDetail {
@@ -1055,6 +1203,19 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
       const parsed = ParticipantTodaySnapshotSchema.safeParse(result.value)
       return parsed.success
         ? { ok: true, value: participantTodayFromSnapshot(parsed.data) }
+        : failure("invalid_response", false)
+    },
+    getAdminOverview: async (programId) => {
+      const session = await authenticatedSession(client)
+      if (!session.ok) return session
+      const result = await client.invokeRpc({
+        args: { target_program: programId },
+        function: "admin_overview_snapshot",
+      })
+      if (!result.ok) return rpcFailure(result)
+      const parsed = AdminOverviewSnapshotSchema.safeParse(result.value)
+      return parsed.success
+        ? { ok: true, value: adminOverviewFromSnapshot(parsed.data) }
         : failure("invalid_response", false)
     },
     getParticipantFeed: async (programId) => {

@@ -148,6 +148,47 @@ const FEED_SNAPSHOT = {
   ],
 } as const
 
+const ADMIN_OVERVIEW_SNAPSHOT = {
+  activity: [
+    {
+      actor_role: "coach",
+      audit_event_id: AUDIT_ID,
+      event_type: "feedback.approved",
+      occurred_at: "2026-08-25T09:00:00.000Z",
+      summary: "김러너 이지런 피드백 승인",
+    },
+  ],
+  members: [
+    {
+      completion_percent: 50,
+      display_name: "김러너",
+      heart_rate_shared: true,
+      joined_at: "2026-08-24T00:00:00+09:00",
+      profile_id: GRANTEE_ID,
+      role: "participant",
+      status: "active",
+    },
+  ],
+  program: {
+    ends_on: "2026-10-24",
+    starts_on: "2026-08-24",
+    status: "active",
+    title: "PLUS Run 2026",
+  },
+  summary: {
+    assignments_count: 4,
+    consented_count: 1,
+    pain_risk_count: 1,
+    pending_feedback_count: 2,
+    total_participants: 1,
+  },
+  time_trial: {
+    decided_at: "2026-08-25T09:00:00.000Z",
+    initial_session_number: 1,
+    protocol: "12_minute",
+  },
+} as const
+
 const CHANGE_SNAPSHOT = {
   completion_percent: 20,
   consent_history: [
@@ -288,6 +329,8 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
           return { ok: true, value: CHANGE_SNAPSHOT }
         case "participant_set_metric_consent":
           return { ok: true, value: consentToggleResult.value }
+        case "admin_overview_snapshot":
+          return { ok: true, value: ADMIN_OVERVIEW_SNAPSHOT }
       }
     },
     consentToggleResult,
@@ -1148,6 +1191,75 @@ describe("Supabase pilot gateway", () => {
     expect(heart).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
     expect(consent).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
     expect(client.dataRequests).toEqual([])
+    expect(client.rpcRequests).toEqual([])
+  })
+
+  it("maps the admin overview snapshot into the public admin model", async () => {
+    // Given
+    const client = createFakeClient({ email: "admin@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getAdminOverview(PROGRAM_ID)
+
+    // Then
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.value).toEqual({
+      activity: [
+        {
+          actorRole: "coach",
+          auditEventId: AUDIT_ID,
+          eventType: "feedback.approved",
+          occurredAt: "2026-08-25T09:00:00.000Z",
+          summary: "김러너 이지런 피드백 승인",
+        },
+      ],
+      members: [
+        {
+          completionPercent: 50,
+          displayName: "김러너",
+          heartRateShared: true,
+          joinedAt: "2026-08-24T00:00:00+09:00",
+          profileId: GRANTEE_ID,
+          role: "participant",
+          status: "active",
+        },
+      ],
+      program: {
+        endsOn: "2026-10-24",
+        startsOn: "2026-08-24",
+        status: "active",
+        title: "PLUS Run 2026",
+      },
+      summary: {
+        assignmentsCount: 4,
+        consentedCount: 1,
+        painRiskCount: 1,
+        pendingFeedbackCount: 2,
+        totalParticipants: 1,
+      },
+      timeTrial: {
+        decidedAt: "2026-08-25T09:00:00.000Z",
+        initialSessionNumber: 1,
+        protocol: "12_minute",
+      },
+    })
+    expect(client.rpcRequests).toEqual([
+      { args: { target_program: PROGRAM_ID }, function: "admin_overview_snapshot" },
+    ])
+  })
+
+  it("rejects admin overview reads when the caller has no authenticated identity", async () => {
+    // Given
+    const client = createFakeClient(null)
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getAdminOverview(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
     expect(client.rpcRequests).toEqual([])
   })
 })

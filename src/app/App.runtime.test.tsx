@@ -108,6 +108,27 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
         program: { title: "PLUS Run" },
       },
     })),
+    getAdminOverview: vi.fn<PilotGateway["getAdminOverview"]>(async () => ({
+      ok: true,
+      value: {
+        activity: [],
+        members: [],
+        program: {
+          endsOn: "2026-10-24",
+          startsOn: "2026-08-24",
+          status: "active",
+          title: "PLUS Run",
+        },
+        summary: {
+          assignmentsCount: 0,
+          consentedCount: 0,
+          painRiskCount: 0,
+          pendingFeedbackCount: 0,
+          totalParticipants: 0,
+        },
+        timeTrial: null,
+      },
+    })),
     getSession: vi.fn<PilotGateway["getSession"]>(async () => ({ ok: true, value: session })),
     grantMetricConsent: vi.fn<PilotGateway["grantMetricConsent"]>(async () => ({
       ok: true,
