@@ -16,6 +16,7 @@ export const ADMIN_HREFS = [
   "/admin/members",
   "/admin/schedule",
   "/admin/activity",
+  "/admin/reports",
   "/admin/settings",
 ] as const
 export type AdminHref = (typeof ADMIN_HREFS)[number]

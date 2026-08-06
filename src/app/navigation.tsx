@@ -1,4 +1,5 @@
 import { CalendarBlankIcon } from "@phosphor-icons/react/CalendarBlank"
+import { ChartBarIcon } from "@phosphor-icons/react/ChartBar"
 import { ChartLineUpIcon } from "@phosphor-icons/react/ChartLineUp"
 import { ChatCircleIcon } from "@phosphor-icons/react/ChatCircle"
 import { CheckSquareIcon } from "@phosphor-icons/react/CheckSquare"
@@ -84,6 +85,11 @@ export const ADMIN_NAVIGATION = [
     href: "/admin/activity",
     label: "활동 로그",
     icon: <ClockCounterClockwiseIcon aria-hidden size={20} weight="bold" />,
+  },
+  {
+    href: "/admin/reports",
+    label: "보고",
+    icon: <ChartBarIcon aria-hidden size={20} weight="bold" />,
   },
   {
     href: "/admin/settings",

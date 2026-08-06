@@ -352,6 +352,39 @@ export type PilotAdminSettings = {
   }[]
 }
 
+export type PilotAdminReportCell = {
+  readonly columnKey: string
+  readonly numericValue: number | null
+  readonly participantCount: number | null
+  readonly rowKey: string
+  readonly suppressed: boolean
+  readonly suppressionReason: "complementary" | "primary" | null
+}
+
+export type PilotAdminReportSnapshot = {
+  readonly calculationVersion: string
+  readonly cells: readonly PilotAdminReportCell[]
+  readonly frozenAt: string | null
+  readonly generatedAt: string
+  readonly releasedAt: string | null
+  readonly snapshotId: string
+  readonly status: "draft" | "frozen" | "released" | "superseded"
+}
+
+export type PilotAdminReport = {
+  readonly program: {
+    readonly endsOn: string
+    readonly startsOn: string
+    readonly status: "active" | "archived" | "completed" | "draft"
+    readonly title: string
+  }
+  readonly summary: {
+    readonly releasedCount: number
+    readonly reportCount: number
+  }
+  readonly snapshots: readonly PilotAdminReportSnapshot[]
+}
+
 export interface PilotGateway {
   addPostComment(input: unknown): Promise<PilotOperationResult<PilotSubmitReference>>
   changeMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentToggleResult>>
@@ -372,6 +405,7 @@ export interface PilotGateway {
   getAdminMembers(programId: string): Promise<PilotOperationResult<PilotAdminMembers>>
   getAdminSchedule(programId: string): Promise<PilotOperationResult<PilotAdminSchedule>>
   getAdminSettings(programId: string): Promise<PilotOperationResult<PilotAdminSettings>>
+  getAdminReport(programId: string): Promise<PilotOperationResult<PilotAdminReport>>
   getSession(): Promise<PilotOperationResult<PilotSessionState>>
   importActivityDraft(input: unknown): Promise<PilotOperationResult<PilotUploadReference>>
   grantMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentReference>>
@@ -962,6 +996,57 @@ const AdminSettingsSnapshotSchema = z
   })
   .strict()
   .readonly()
+const AdminReportSnapshotSchema = z
+  .object({
+    program: z
+      .object({
+        ends_on: z.iso.date(),
+        starts_on: z.iso.date(),
+        status: z.enum(["draft", "active", "completed", "archived"]),
+        title: z.string().min(1).max(160),
+      })
+      .strict()
+      .readonly(),
+    summary: z
+      .object({
+        released_count: z.number().int().nonnegative(),
+        report_count: z.number().int().nonnegative(),
+      })
+      .strict()
+      .readonly(),
+    snapshots: z
+      .array(
+        z
+          .object({
+            snapshot_id: z.uuid(),
+            calculation_version: z.string().min(1).max(80),
+            status: z.enum(["draft", "frozen", "released", "superseded"]),
+            generated_at: z.iso.datetime({ offset: true }),
+            frozen_at: z.iso.datetime({ offset: true }).nullable(),
+            released_at: z.iso.datetime({ offset: true }).nullable(),
+            cells: z
+              .array(
+                z
+                  .object({
+                    row_key: z.string().min(1).max(80),
+                    column_key: z.string().min(1).max(80),
+                    participant_count: z.number().int().nonnegative().nullable(),
+                    numeric_value: z.number().nullable(),
+                    suppressed: z.boolean(),
+                    suppression_reason: z.enum(["complementary", "primary"]).nullable(),
+                  })
+                  .strict()
+                  .readonly(),
+              )
+              .readonly(),
+          })
+          .strict()
+          .readonly(),
+      )
+      .readonly(),
+  })
+  .strict()
+  .readonly()
 const CompleteAssignmentInputSchema = z
   .object({ assignmentId: z.uuid(), programId: z.uuid() })
   .strict()
@@ -1044,6 +1129,7 @@ type AdminActivitySnapshot = z.infer<typeof AdminActivitySnapshotSchema>
 type AdminMembersSnapshot = z.infer<typeof AdminMembersSnapshotSchema>
 type AdminScheduleSnapshot = z.infer<typeof AdminScheduleSnapshotSchema>
 type AdminSettingsSnapshot = z.infer<typeof AdminSettingsSnapshotSchema>
+type AdminReportSnapshot = z.infer<typeof AdminReportSnapshotSchema>
 
 function failure(
   kind: PilotOperationError["kind"],
@@ -1480,6 +1566,37 @@ function adminSettingsFromSnapshot(snapshot: AdminSettingsSnapshot): PilotAdminS
   }
 }
 
+function adminReportFromSnapshot(snapshot: AdminReportSnapshot): PilotAdminReport {
+  return {
+    program: {
+      endsOn: snapshot.program.ends_on,
+      startsOn: snapshot.program.starts_on,
+      status: snapshot.program.status,
+      title: snapshot.program.title,
+    },
+    summary: {
+      releasedCount: snapshot.summary.released_count,
+      reportCount: snapshot.summary.report_count,
+    },
+    snapshots: snapshot.snapshots.map((item) => ({
+      calculationVersion: item.calculation_version,
+      cells: item.cells.map((cell) => ({
+        columnKey: cell.column_key,
+        numericValue: cell.numeric_value,
+        participantCount: cell.participant_count,
+        rowKey: cell.row_key,
+        suppressed: cell.suppressed,
+        suppressionReason: cell.suppression_reason,
+      })),
+      frozenAt: item.frozen_at,
+      generatedAt: item.generated_at,
+      releasedAt: item.released_at,
+      snapshotId: item.snapshot_id,
+      status: item.status,
+    })),
+  }
+}
+
 function coachParticipantDetailFromSnapshot(
   snapshot: CoachParticipantDetailSnapshot,
 ): PilotCoachParticipantDetail {
@@ -1768,6 +1885,19 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
       const parsed = AdminSettingsSnapshotSchema.safeParse(result.value)
       return parsed.success
         ? { ok: true, value: adminSettingsFromSnapshot(parsed.data) }
+        : failure("invalid_response", false)
+    },
+    getAdminReport: async (programId) => {
+      const session = await authenticatedSession(client)
+      if (!session.ok) return session
+      const result = await client.invokeRpc({
+        args: { target_program: programId },
+        function: "admin_report_snapshot",
+      })
+      if (!result.ok) return rpcFailure(result)
+      const parsed = AdminReportSnapshotSchema.safeParse(result.value)
+      return parsed.success
+        ? { ok: true, value: adminReportFromSnapshot(parsed.data) }
         : failure("invalid_response", false)
     },
     getParticipantFeed: async (programId) => {

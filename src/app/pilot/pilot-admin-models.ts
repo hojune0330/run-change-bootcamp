@@ -6,6 +6,8 @@ import type {
   AdminMemberRosterRow,
   AdminMemberRow,
   AdminMembersViewModel,
+  AdminReportCell,
+  AdminReportsViewModel,
   AdminScheduleViewModel,
   AdminSettingsRow,
   AdminSettingsViewModel,
@@ -14,6 +16,7 @@ import type {
   PilotAdminActivity,
   PilotAdminMembers,
   PilotAdminOverview,
+  PilotAdminReport,
   PilotAdminSchedule,
   PilotAdminSettings,
 } from "../../integrations/supabase/pilot-gateway.ts"
@@ -306,5 +309,64 @@ export function buildAdminOverviewModel(overview: PilotAdminOverview): AdminDash
     recentActivity: activity.slice(0, 6),
     actionOptions: ACTION_OPTIONS,
     members: overview.members.map(adminMemberRow),
+  }
+}
+
+function adminReportStatusTone(
+  status: PilotAdminReport["snapshots"][number]["status"],
+): "success" | "warning" | "neutral" {
+  switch (status) {
+    case "released":
+      return "success"
+    case "frozen":
+      return "warning"
+    case "draft":
+    case "superseded":
+      return "neutral"
+  }
+}
+
+function adminReportStatusLabel(status: PilotAdminReport["snapshots"][number]["status"]): string {
+  switch (status) {
+    case "released":
+      return "발행됨"
+    case "frozen":
+      return "확정됨"
+    case "draft":
+      return "초안"
+    case "superseded":
+      return "대체됨"
+  }
+}
+
+function adminReportCell(
+  cell: PilotAdminReport["snapshots"][number]["cells"][number],
+): AdminReportCell {
+  return {
+    id: `cell:${cell.rowKey}:${cell.columnKey}`,
+    rowLabel: cell.rowKey,
+    columnLabel: cell.columnKey,
+    participantCountLabel: cell.participantCount === null ? "—" : `${cell.participantCount}명`,
+    valueLabel: cell.numericValue === null ? "—" : String(cell.numericValue),
+    suppressed: cell.suppressed,
+  }
+}
+
+export function buildAdminReportsModel(report: PilotAdminReport): AdminReportsViewModel {
+  return {
+    programName: report.program.title,
+    dateRangeLabel: formatDateRange(report.program.startsOn, report.program.endsOn),
+    summary: {
+      reportCount: report.summary.reportCount,
+      releasedCount: report.summary.releasedCount,
+    },
+    snapshots: report.snapshots.map((snapshot) => ({
+      id: `snapshot:${snapshot.snapshotId}`,
+      statusLabel: adminReportStatusLabel(snapshot.status),
+      statusTone: adminReportStatusTone(snapshot.status),
+      generatedAtLabel: timeAgoLabel(snapshot.generatedAt),
+      releasedAtLabel: snapshot.releasedAt === null ? "—" : timeAgoLabel(snapshot.releasedAt),
+      cells: snapshot.cells.map(adminReportCell),
+    })),
   }
 }

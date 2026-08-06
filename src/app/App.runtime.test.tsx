@@ -260,6 +260,41 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
         ],
       },
     })),
+    getAdminReport: vi.fn<PilotGateway["getAdminReport"]>(async () => ({
+      ok: true,
+      value: {
+        program: {
+          endsOn: "2026-10-24",
+          startsOn: "2026-08-24",
+          status: "active",
+          title: "PLUS Run",
+        },
+        summary: {
+          releasedCount: 1,
+          reportCount: 1,
+        },
+        snapshots: [
+          {
+            calculationVersion: "plus_run_measurement_v1",
+            cells: [
+              {
+                columnKey: "all_participants",
+                numericValue: 42,
+                participantCount: 20,
+                rowKey: "cohort",
+                suppressed: false,
+                suppressionReason: null,
+              },
+            ],
+            frozenAt: "2026-08-25T09:00:00.000Z",
+            generatedAt: "2026-08-25T09:00:00.000Z",
+            releasedAt: "2026-08-26T09:00:00.000Z",
+            snapshotId: "43434343-4343-4434-8434-434343434343",
+            status: "released",
+          },
+        ],
+      },
+    })),
     getSession: vi.fn<PilotGateway["getSession"]>(async () => ({ ok: true, value: session })),
     importActivityDraft: vi.fn<PilotGateway["importActivityDraft"]>(async () => ({
       ok: true,
@@ -618,6 +653,39 @@ describe("App runtime boundary", () => {
     expect(screen.getByRole("cell", { name: "기록 측정" })).toBeVisible()
     expect(screen.getByText("1회차 · 12분")).toBeVisible()
     expect(screen.getByText("2회")).toBeVisible()
+  })
+
+  it("routes an admin session to the reports and renders snapshot cells", async () => {
+    // Given
+    const user = userEvent.setup()
+    const gateway = createGateway({
+      kind: "active",
+      membership: {
+        email: "admin@example.com",
+        membershipId: "77777777-7777-4777-8777-777777777777",
+        programId: PROGRAM_ID,
+        role: "admin",
+        route: "/admin/overview",
+        userId: AUTH_USER_ID,
+      },
+    })
+    render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
+    await screen.findByRole("heading", { name: "PLUS Run" })
+
+    // When
+    await user.click(screen.getByRole("link", { name: "보고" }))
+
+    // Then
+    expect(await screen.findByRole("region", { name: "관리자 운영 보고" })).toBeVisible()
+    expect(gateway.getAdminReport).toHaveBeenCalledWith(PROGRAM_ID)
+    expect(screen.getByRole("table", { name: "집계 셀" })).toBeVisible()
+    expect(screen.getByRole("cell", { name: "cohort" })).toBeVisible()
+    expect(screen.getByRole("cell", { name: "all_participants" })).toBeVisible()
+    expect(screen.getByRole("cell", { name: "20명" })).toBeVisible()
+    expect(screen.getByRole("cell", { name: "42" })).toBeVisible()
+    expect(screen.getAllByText("발행됨")).toHaveLength(2)
+    expect(screen.getByText("집계 전용")).toBeVisible()
+    expect(screen.getAllByText("1건")).toHaveLength(2)
   })
 
   it("routes a participant session to the record screen and renders the snapshot", async () => {

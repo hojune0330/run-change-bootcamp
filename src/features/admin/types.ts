@@ -122,3 +122,31 @@ export type AdminSettingsViewModel = {
   readonly deletionRequests: readonly AdminSettingsRow[]
   readonly failedNotifications: readonly AdminFailedNotificationRow[]
 }
+
+export type AdminReportCell = {
+  readonly id: string
+  readonly rowLabel: string
+  readonly columnLabel: string
+  readonly participantCountLabel: string
+  readonly valueLabel: string
+  readonly suppressed: boolean
+}
+
+export type AdminReportSnapshotRow = {
+  readonly id: string
+  readonly statusLabel: string
+  readonly statusTone: "success" | "warning" | "neutral"
+  readonly generatedAtLabel: string
+  readonly releasedAtLabel: string
+  readonly cells: readonly AdminReportCell[]
+}
+
+export type AdminReportsViewModel = {
+  readonly programName: string
+  readonly dateRangeLabel: string
+  readonly summary: {
+    readonly reportCount: number
+    readonly releasedCount: number
+  }
+  readonly snapshots: readonly AdminReportSnapshotRow[]
+}

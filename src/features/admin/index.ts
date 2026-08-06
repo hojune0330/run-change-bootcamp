@@ -7,6 +7,10 @@ export {
   AdminMemberRoster,
   type AdminMemberRosterProps,
 } from "./AdminMemberRoster.tsx"
+export {
+  AdminReports,
+  type AdminReportsProps,
+} from "./AdminReports.tsx"
 export { AdminSchedule, type AdminScheduleProps } from "./AdminSchedule.tsx"
 export {
   AdminSettings,

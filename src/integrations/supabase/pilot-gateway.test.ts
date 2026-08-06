@@ -273,6 +273,39 @@ const ADMIN_SETTINGS_SNAPSHOT = {
   ],
 } as const
 
+const ADMIN_REPORT_SNAPSHOT = {
+  program: {
+    ends_on: "2026-10-24",
+    starts_on: "2026-08-24",
+    status: "active",
+    title: "PLUS Run",
+  },
+  summary: {
+    report_count: 1,
+    released_count: 1,
+  },
+  snapshots: [
+    {
+      snapshot_id: "43434343-4343-4434-8434-434343434343",
+      calculation_version: "plus_run_measurement_v1",
+      status: "released",
+      generated_at: "2026-08-25T09:00:00.000Z",
+      frozen_at: "2026-08-25T09:00:00.000Z",
+      released_at: "2026-08-26T09:00:00.000Z",
+      cells: [
+        {
+          row_key: "cohort",
+          column_key: "all_participants",
+          participant_count: 20,
+          numeric_value: 42,
+          suppressed: false,
+          suppression_reason: null,
+        },
+      ],
+    },
+  ],
+} as const
+
 const ADMIN_OVERVIEW_SNAPSHOT = {
   activity: [
     {
@@ -482,6 +515,8 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
           return { ok: true, value: ADMIN_SCHEDULE_SNAPSHOT }
         case "admin_settings_snapshot":
           return { ok: true, value: ADMIN_SETTINGS_SNAPSHOT }
+        case "admin_report_snapshot":
+          return { ok: true, value: ADMIN_REPORT_SNAPSHOT }
       }
     },
     consentToggleResult,
@@ -1648,6 +1683,68 @@ describe("Supabase pilot gateway", () => {
 
     // When
     const result = await gateway.getAdminSettings(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
+    expect(client.rpcRequests).toEqual([])
+  })
+
+  it("maps the admin report snapshot into the aggregate report model", async () => {
+    // Given
+    const client = createFakeClient({ email: "admin@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getAdminReport(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        program: {
+          endsOn: "2026-10-24",
+          startsOn: "2026-08-24",
+          status: "active",
+          title: "PLUS Run",
+        },
+        summary: {
+          releasedCount: 1,
+          reportCount: 1,
+        },
+        snapshots: [
+          {
+            calculationVersion: "plus_run_measurement_v1",
+            cells: [
+              {
+                columnKey: "all_participants",
+                numericValue: 42,
+                participantCount: 20,
+                rowKey: "cohort",
+                suppressed: false,
+                suppressionReason: null,
+              },
+            ],
+            frozenAt: "2026-08-25T09:00:00.000Z",
+            generatedAt: "2026-08-25T09:00:00.000Z",
+            releasedAt: "2026-08-26T09:00:00.000Z",
+            snapshotId: "43434343-4343-4434-8434-434343434343",
+            status: "released",
+          },
+        ],
+      },
+    })
+    expect(client.rpcRequests).toEqual([
+      { args: { target_program: PROGRAM_ID }, function: "admin_report_snapshot" },
+    ])
+  })
+
+  it("rejects admin report reads when the caller has no authenticated identity", async () => {
+    // Given
+    const client = createFakeClient(null)
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getAdminReport(PROGRAM_ID)
 
     // Then
     expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })

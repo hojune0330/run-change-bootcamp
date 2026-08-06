@@ -5,6 +5,7 @@ import {
   AdminActivityLog,
   AdminDashboard,
   AdminMemberRoster,
+  AdminReports,
   AdminSchedule,
   AdminSettings,
 } from "../../features/admin/index.ts"
@@ -12,6 +13,7 @@ import type {
   PilotAdminActivity,
   PilotAdminMembers,
   PilotAdminOverview,
+  PilotAdminReport,
   PilotAdminSchedule,
   PilotAdminSettings,
   PilotGateway,
@@ -25,6 +27,7 @@ import {
   adminActivityEntry,
   buildAdminMembersModel,
   buildAdminOverviewModel,
+  buildAdminReportsModel,
   buildAdminScheduleModel,
   buildAdminSettingsModel,
 } from "./pilot-admin-models.ts"
@@ -72,11 +75,13 @@ export function PilotAdminWorkspace({
   const [members, setMembers] = useState<PilotAdminMembers | null>(null)
   const [schedule, setSchedule] = useState<PilotAdminSchedule | null>(null)
   const [settings, setSettings] = useState<PilotAdminSettings | null>(null)
+  const [report, setReport] = useState<PilotAdminReport | null>(null)
   const [loadState, setLoadState] = useState<LoadState>({ kind: "loading" })
   const [activityState, setActivityState] = useState<LoadState>({ kind: "loading" })
   const [membersState, setMembersState] = useState<LoadState>({ kind: "loading" })
   const [scheduleState, setScheduleState] = useState<LoadState>({ kind: "loading" })
   const [settingsState, setSettingsState] = useState<LoadState>({ kind: "loading" })
+  const [reportsState, setReportsState] = useState<LoadState>({ kind: "loading" })
   const [activeHref, setActiveHref] = useState<AdminHref>("/admin/overview")
 
   const loadOverview = useCallback(async () => {
@@ -137,12 +142,24 @@ export function PilotAdminWorkspace({
     setSettingsState({ kind: "ready" })
   }, [gateway, membership.programId])
 
+  const loadReport = useCallback(async () => {
+    setReportsState({ kind: "loading" })
+    const result = await gateway.getAdminReport(membership.programId)
+    if (!result.ok) {
+      setReportsState({ kind: "error", message: operationMessage(result.error.kind) })
+      return
+    }
+    setReport(result.value)
+    setReportsState({ kind: "ready" })
+  }, [gateway, membership.programId])
+
   useEffect(() => {
     if (activeHref === "/admin/activity") void loadActivity()
     if (activeHref === "/admin/members") void loadMembers()
     if (activeHref === "/admin/schedule") void loadSchedule()
     if (activeHref === "/admin/settings") void loadSettings()
-  }, [activeHref, loadActivity, loadMembers, loadSchedule, loadSettings])
+    if (activeHref === "/admin/reports") void loadReport()
+  }, [activeHref, loadActivity, loadMembers, loadSchedule, loadSettings, loadReport])
 
   const handleNavigate = (href: string) => {
     if (href === "/") {
@@ -256,6 +273,25 @@ export function PilotAdminWorkspace({
               </p>
             ) : schedule !== null ? (
               <AdminSchedule model={buildAdminScheduleModel(schedule)} />
+            ) : null}
+          </Card>
+        ) : activeHref === "/admin/reports" ? (
+          <Card eyebrow="운영 보고" title="보고">
+            {reportsState.kind === "error" ? (
+              <>
+                <p className="pilot-workspace__status pilot-workspace__status--error" role="alert">
+                  {reportsState.message}
+                </p>
+                <Button onClick={() => void loadReport()} variant="secondary">
+                  다시 시도
+                </Button>
+              </>
+            ) : reportsState.kind === "loading" && report === null ? (
+              <p aria-live="polite" className="pilot-workspace__status">
+                운영 보고를 불러오고 있습니다.
+              </p>
+            ) : report !== null ? (
+              <AdminReports model={buildAdminReportsModel(report)} />
             ) : null}
           </Card>
         ) : activeHref === "/admin/settings" ? (

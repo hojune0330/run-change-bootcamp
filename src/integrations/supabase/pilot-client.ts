@@ -107,6 +107,11 @@ export type PilotRpcRequest =
     }
   | {
       readonly args: { readonly target_program: string }
+      readonly function: "admin_report_snapshot"
+      readonly signal?: AbortSignal
+    }
+  | {
+      readonly args: { readonly target_program: string }
       readonly function: "participant_record_snapshot"
       readonly signal?: AbortSignal
     }
