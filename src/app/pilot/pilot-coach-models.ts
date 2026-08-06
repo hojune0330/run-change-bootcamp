@@ -17,7 +17,7 @@ import type {
   PilotCoachSharedMetric,
 } from "../../integrations/supabase/pilot-gateway.ts"
 
-function formatMonthDay(iso: string): string {
+export function formatMonthDay(iso: string): string {
   const date = new Date(`${iso}T00:00:00`)
   if (Number.isNaN(date.getTime())) return iso
   return `${date.getMonth() + 1}월 ${date.getDate()}일`
@@ -38,7 +38,7 @@ function formatDateRange(startsOn: string, endsOn: string): string {
   return `${formatBrushedMonthDay(startsOn)} — ${end.getMonth() + 1}.${String(end.getDate()).padStart(2, "0")}`
 }
 
-function timeAgoLabel(iso: string | null): string {
+export function timeAgoLabel(iso: string | null): string {
   if (iso === null) return "기록 없음"
   const observed = new Date(iso)
   if (Number.isNaN(observed.getTime())) return formatMonthDay(iso)
@@ -152,7 +152,7 @@ export function buildCoachDashboardModel(dashboard: PilotCoachDashboard): CoachD
   }
 }
 
-function metricLabel(metricType: string): string {
+export function metricLabel(metricType: string): string {
   switch (metricType) {
     case "distance_m":
       return "주행 거리"
@@ -173,7 +173,7 @@ function metricLabel(metricType: string): string {
   }
 }
 
-function metricValue(metric: PilotCoachSharedMetric): string {
+export function metricValue(metric: PilotCoachSharedMetric): string {
   switch (metric.metricType) {
     case "distance_m": {
       const kilometers = metric.value / 1000
@@ -189,6 +189,8 @@ function metricValue(metric: PilotCoachSharedMetric): string {
       const seconds = Math.round(metric.value % 60)
       return `${minutes}'${String(seconds).padStart(2, "0")}"/km`
     }
+    case "sleep_hours":
+      return `${metric.value.toFixed(1)}시간`
     default:
       return `${metric.value} ${metric.unit}`
   }

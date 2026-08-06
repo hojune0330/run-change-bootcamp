@@ -6,16 +6,19 @@ import {
   type PilotDataRequest,
 } from "./pilot-gateway.ts"
 
+const ASSIGNMENT_ID = "99999999-9999-4999-8999-999999999999"
 const AUDIT_ID = 17
 const AUTH_USER_ID = "11111111-1111-4111-8111-111111111111"
 const CONSENT_ID = "33333333-3333-4333-8333-333333333333"
+const COMMENT_ID = "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
 const FEEDBACK_ID = "55555555-5555-4555-8555-555555555555"
 const GRANTEE_ID = "22222222-2222-4222-8222-222222222222"
 const MEMBERSHIP_ID = "77777777-7777-4777-8777-777777777777"
 const METRIC_ID = "44444444-4444-4444-8444-444444444444"
-const PROGRAM_ID = "66666666-6666-4666-8666-666666666666"
 const NOTICE_ID = "88888888-8888-4888-8888-888888888888"
-const ASSIGNMENT_ID = "99999999-9999-4999-8999-999999999999"
+const POST_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+const PROGRAM_ID = "66666666-6666-4666-8666-666666666666"
+const SUBMISSION_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 
 const DASHBOARD_SNAPSHOT = {
   feedback_queue: [
@@ -102,7 +105,89 @@ const PARTICIPANT_DETAIL_SNAPSHOT = {
   ],
 } as const
 
+const TODAY_SNAPSHOT = {
+  announcement: {
+    announcement_id: NOTICE_ID,
+    body: "다음 주 월요일은 이지런으로 대체합니다.",
+    pinned: true,
+    published_at: "2026-08-25T09:00:00.000Z",
+    title: "일정 변경 안내",
+  },
+  assignment: {
+    assignment_id: ASSIGNMENT_ID,
+    assignment_kind: "running",
+    completed: false,
+    due_at: "2026-09-01T14:59:59.000Z",
+    instructions: "이지런 30분, 심박 존 2 유지",
+    title: "주 1회 이지런",
+  },
+  date_label: "8월 31일 월요일",
+  profile: { display_name: "김러너", profile_id: GRANTEE_ID },
+  program: { title: "PLUS Run 2026" },
+} as const
+
+const FEED_SNAPSHOT = {
+  posts: [
+    {
+      author_name: "김러너",
+      author_profile_id: GRANTEE_ID,
+      body: "주말 이지런 완료했어요.",
+      comments: [
+        {
+          author_name: "박코치",
+          body: "페이스 좋아요!",
+          comment_id: COMMENT_ID,
+          created_at: "2026-08-25T10:00:00.000Z",
+        },
+      ],
+      created_at: "2026-08-25T09:30:00.000Z",
+      heart_count: 3,
+      is_hearted: true,
+      post_id: POST_ID,
+    },
+  ],
+} as const
+
+const CHANGE_SNAPSHOT = {
+  completion_percent: 20,
+  consent_history: [
+    {
+      audit_event_id: AUDIT_ID,
+      event_type: "consent.granted",
+      occurred_at: "2026-08-25T08:00:00.000Z",
+    },
+  ],
+  feedback: [
+    {
+      body: "이지런 페이스가 안정되고 있어요.",
+      classification: "low_risk",
+      feedback_id: FEEDBACK_ID,
+      origin: "ai",
+      published_at: "2026-08-25T09:00:00.000Z",
+    },
+  ],
+  heart_rate_consented: true,
+  metrics: [
+    {
+      count_14d: 3,
+      metric_type: "distance_m",
+      observed_at: "2026-08-25T08:00:00.000Z",
+      unit: "m",
+      value: 5000,
+    },
+    {
+      count_14d: 2,
+      metric_type: "heart_rate_bpm",
+      observed_at: "2026-08-25T07:30:00.000Z",
+      unit: "bpm",
+      value: 58,
+    },
+  ],
+  profile: { display_name: "김러너", profile_id: GRANTEE_ID },
+} as const
+
 type FakePilotClient = PilotClient & {
+  readonly consentToggleResult: { value: unknown }
   readonly dataRequests: PilotDataRequest[]
   readonly otpRequests: unknown[]
   readonly rpcRequests: unknown[]
@@ -110,6 +195,9 @@ type FakePilotClient = PilotClient & {
 }
 
 function createFakeClient(session: PilotClientSession | null): FakePilotClient {
+  const consentToggleResult: { value: unknown } = {
+    value: { audit_event_id: AUDIT_ID, audit_event_type: "consent.granted", status: "enabled" },
+  }
   const dataRequests: PilotDataRequest[] = []
   const otpRequests: unknown[] = []
   const rpcRequests: unknown[] = []
@@ -160,6 +248,16 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
           return { ok: true, value: { id: ASSIGNMENT_ID } }
         case "save_time_trial":
           return { ok: true, value: { program_id: PROGRAM_ID } }
+        case "complete_assignment":
+          return { ok: true, value: { id: SUBMISSION_ID } }
+        case "heart_post":
+          return { ok: true, value: { post_id: POST_ID } }
+        case "unheart_post":
+          return { ok: true, value: { post_id: POST_ID } }
+        case "add_feed_comment":
+          return { ok: true, value: { id: COMMENT_ID } }
+        case "save_manual_metric":
+          return { ok: true, value: { id: METRIC_ID } }
       }
     },
     invokeFunction: async () => ({ ok: true, value: null }),
@@ -182,8 +280,17 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
           return { ok: true, value: PARTICIPANT_DETAIL_SNAPSHOT }
         case "review_feedback":
           return { ok: true, value: FEEDBACK_ID }
+        case "participant_today_snapshot":
+          return { ok: true, value: TODAY_SNAPSHOT }
+        case "participant_feed_snapshot":
+          return { ok: true, value: FEED_SNAPSHOT }
+        case "participant_change_snapshot":
+          return { ok: true, value: CHANGE_SNAPSHOT }
+        case "participant_set_metric_consent":
+          return { ok: true, value: consentToggleResult.value }
       }
     },
+    consentToggleResult,
     otpRequests,
     rpcRequests,
     signOutCalls,
@@ -681,6 +788,331 @@ describe("Supabase pilot gateway", () => {
     // Then
     expect(assignment).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
     expect(timeTrial).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
+    expect(client.dataRequests).toEqual([])
+    expect(client.rpcRequests).toEqual([])
+  })
+
+  it("maps the participant today snapshot with published assignment and notice", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getParticipantToday(PROGRAM_ID)
+
+    // Then
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.value).toEqual({
+      announcement: {
+        announcementId: NOTICE_ID,
+        body: "다음 주 월요일은 이지런으로 대체합니다.",
+        pinned: true,
+        publishedAt: "2026-08-25T09:00:00.000Z",
+        title: "일정 변경 안내",
+      },
+      assignment: {
+        assignmentId: ASSIGNMENT_ID,
+        assignmentKind: "running",
+        completed: false,
+        dueAt: "2026-09-01T14:59:59.000Z",
+        instructions: "이지런 30분, 심박 존 2 유지",
+        title: "주 1회 이지런",
+      },
+      dateLabel: "8월 31일 월요일",
+      profile: { displayName: "김러너", profileId: GRANTEE_ID },
+      program: { title: "PLUS Run 2026" },
+    })
+    expect(client.rpcRequests).toEqual([
+      { args: { target_program: PROGRAM_ID }, function: "participant_today_snapshot" },
+    ])
+  })
+
+  it("maps the participant feed snapshot with comments and heart state", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getParticipantFeed(PROGRAM_ID)
+
+    // Then
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.value.posts).toHaveLength(1)
+    expect(result.value.posts[0]).toEqual({
+      authorName: "김러너",
+      authorProfileId: GRANTEE_ID,
+      body: "주말 이지런 완료했어요.",
+      comments: [
+        {
+          authorName: "박코치",
+          body: "페이스 좋아요!",
+          commentId: COMMENT_ID,
+          createdAt: "2026-08-25T10:00:00.000Z",
+        },
+      ],
+      createdAt: "2026-08-25T09:30:00.000Z",
+      heartCount: 3,
+      isHearted: true,
+      postId: POST_ID,
+    })
+    expect(client.rpcRequests).toEqual([
+      { args: { target_program: PROGRAM_ID }, function: "participant_feed_snapshot" },
+    ])
+  })
+
+  it("maps the participant change snapshot with metrics, feedback and consent history", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getParticipantChange(PROGRAM_ID)
+
+    // Then
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.value.completionPercent).toBe(20)
+    expect(result.value.heartRateConsented).toBe(true)
+    expect(result.value.metrics).toEqual([
+      {
+        count14d: 3,
+        metricType: "distance_m",
+        observedAt: "2026-08-25T08:00:00.000Z",
+        unit: "m",
+        value: 5000,
+      },
+      {
+        count14d: 2,
+        metricType: "heart_rate_bpm",
+        observedAt: "2026-08-25T07:30:00.000Z",
+        unit: "bpm",
+        value: 58,
+      },
+    ])
+    expect(result.value.feedback[0]).toMatchObject({
+      body: "이지런 페이스가 안정되고 있어요.",
+      classification: "low_risk",
+      feedbackId: FEEDBACK_ID,
+      origin: "ai",
+    })
+    expect(result.value.consentHistory).toEqual([
+      { auditEventId: AUDIT_ID, eventType: "consent.granted", occurredAt: "2026-08-25T08:00:00.000Z" },
+    ])
+    expect(client.rpcRequests).toEqual([
+      { args: { target_program: PROGRAM_ID }, function: "participant_change_snapshot" },
+    ])
+  })
+
+  it("serializes an assignment completion with participant identity and submit time", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.completeAssignment({
+      assignmentId: ASSIGNMENT_ID,
+      programId: PROGRAM_ID,
+    })
+
+    // Then
+    expect(result).toEqual({ ok: true, value: { id: SUBMISSION_ID } })
+    const request = client.dataRequests.at(-1)
+    if (request?.kind !== "complete_assignment") return
+    expect(request).toMatchObject({
+      kind: "complete_assignment",
+      returning: "id",
+      table: "homework_submissions",
+    })
+    expect(request.values).toMatchObject({
+      assignment_id: ASSIGNMENT_ID,
+      participant_id: AUTH_USER_ID,
+      program_id: PROGRAM_ID,
+      status: "submitted",
+    })
+    expect(typeof request.values.submitted_at).toBe("string")
+  })
+
+  it("inserts a heart reaction with participant identity and returns the post reference", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.setPostHeart({ hearted: true, postId: POST_ID })
+
+    // Then
+    expect(result).toEqual({ ok: true, value: { id: POST_ID } })
+    expect(client.dataRequests).toEqual([
+      {
+        kind: "heart_post",
+        returning: "post_id",
+        table: "feed_reactions",
+        values: {
+          author_profile_id: AUTH_USER_ID,
+          post_id: POST_ID,
+          reaction: "heart",
+        },
+      },
+    ])
+  })
+
+  it("deletes a heart reaction with participant identity filters", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.setPostHeart({ hearted: false, postId: POST_ID })
+
+    // Then
+    expect(result).toEqual({ ok: true, value: { id: POST_ID } })
+    expect(client.dataRequests).toEqual([
+      {
+        filters: { author_profile_id: AUTH_USER_ID, post_id: POST_ID },
+        kind: "unheart_post",
+        returning: "post_id",
+        table: "feed_reactions",
+      },
+    ])
+  })
+
+  it("serializes a feed comment with participant identity and trimmed body", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.addPostComment({ body: "  다음 주도 같이 달려요!  ", postId: POST_ID })
+
+    // Then
+    expect(result).toEqual({ ok: true, value: { id: COMMENT_ID } })
+    expect(client.dataRequests).toEqual([
+      {
+        kind: "add_feed_comment",
+        returning: "id",
+        table: "feed_comments",
+        values: {
+          author_profile_id: AUTH_USER_ID,
+          body: "다음 주도 같이 달려요!",
+          post_id: POST_ID,
+        },
+      },
+    ])
+  })
+
+  it("converts manual metric units before saving as an accepted record", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.saveManualMetric({
+      metricKey: "distance_km",
+      programId: PROGRAM_ID,
+      recordedOn: "2026-08-25T09:00:00.000Z",
+      value: 5.2,
+    })
+
+    // Then
+    expect(result).toEqual({ ok: true, value: { id: METRIC_ID } })
+    const request = client.dataRequests.at(-1)
+    if (request?.kind !== "save_manual_metric") return
+    expect(request).toMatchObject({
+      kind: "save_manual_metric",
+      returning: "id",
+      table: "metric_records",
+    })
+    expect(request.values).toMatchObject({
+      metric_type: "distance_m",
+      numeric_value: 5200,
+      observed_at: "2026-08-25T09:00:00.000Z",
+      owner_profile_id: AUTH_USER_ID,
+      program_id: PROGRAM_ID,
+      sensitivity: "activity",
+      source: "manual",
+      unit: "m",
+      verification_status: "accepted",
+    })
+  })
+
+  it("rejects a manual metric with a negative value before touching the provider", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.saveManualMetric({
+      metricKey: "sleep_hours",
+      programId: PROGRAM_ID,
+      recordedOn: "2026-08-25T09:00:00.000Z",
+      value: -1,
+    })
+
+    // Then
+    expect(result).toEqual({ ok: false, error: { kind: "invalid_request", retryable: false } })
+    expect(client.dataRequests).toEqual([])
+  })
+
+  it("toggles metric consent through the shared RPC and maps the audit reference", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.changeMetricConsent({ enabled: true, programId: PROGRAM_ID })
+
+    // Then
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        auditEventId: AUDIT_ID,
+        auditEventType: "consent.granted",
+        status: "enabled",
+      },
+    })
+    expect(client.rpcRequests).toEqual([
+      {
+        args: { target_enabled: true, target_program: PROGRAM_ID },
+        function: "participant_set_metric_consent",
+      },
+    ])
+  })
+
+  it("surfaces an unavailable consent toggle as a successful response", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    client.consentToggleResult.value = { status: "unavailable" }
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.changeMetricConsent({ enabled: true, programId: PROGRAM_ID })
+
+    // Then
+    expect(result).toEqual({
+      ok: true,
+      value: { auditEventId: null, auditEventType: null, status: "unavailable" },
+    })
+  })
+
+  it("rejects participant mutations when the caller has no authenticated identity", async () => {
+    // Given
+    const client = createFakeClient(null)
+    const gateway = createPilotGateway(client)
+
+    // When
+    const completion = await gateway.completeAssignment({
+      assignmentId: ASSIGNMENT_ID,
+      programId: PROGRAM_ID,
+    })
+    const heart = await gateway.setPostHeart({ hearted: true, postId: POST_ID })
+    const consent = await gateway.changeMetricConsent({ enabled: false, programId: PROGRAM_ID })
+
+    // Then
+    expect(completion).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
+    expect(heart).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
+    expect(consent).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
     expect(client.dataRequests).toEqual([])
     expect(client.rpcRequests).toEqual([])
   })

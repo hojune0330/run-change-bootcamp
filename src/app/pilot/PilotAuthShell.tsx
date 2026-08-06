@@ -8,6 +8,7 @@ import type {
   PilotSessionState,
 } from "../../integrations/supabase/pilot-gateway.ts"
 import { PilotCoachWorkspace } from "./PilotCoachWorkspace.tsx"
+import { PilotParticipantWorkspace } from "./PilotParticipantWorkspace.tsx"
 
 type AuthViewState =
   | PilotSessionState
@@ -144,6 +145,18 @@ export function PilotAuthShell({ brand = DEFAULT_BRAND, gateway }: PilotAuthShel
   if (authState.kind === "active" && authState.membership.role === "coach") {
     return (
       <PilotCoachWorkspace
+        brand={brand}
+        gateway={gateway}
+        membership={authState.membership}
+        onSignOut={() => void signOut()}
+        signOutBusy={signOutBusy}
+      />
+    )
+  }
+
+  if (authState.kind === "active" && authState.membership.role === "participant") {
+    return (
+      <PilotParticipantWorkspace
         brand={brand}
         gateway={gateway}
         membership={authState.membership}

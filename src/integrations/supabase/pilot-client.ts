@@ -57,6 +57,29 @@ export type PilotRpcRequest =
       readonly function: "review_feedback"
       readonly signal?: AbortSignal
     }
+  | {
+      readonly args: { readonly target_program: string }
+      readonly function: "participant_today_snapshot"
+      readonly signal?: AbortSignal
+    }
+  | {
+      readonly args: { readonly target_program: string }
+      readonly function: "participant_feed_snapshot"
+      readonly signal?: AbortSignal
+    }
+  | {
+      readonly args: { readonly target_program: string }
+      readonly function: "participant_change_snapshot"
+      readonly signal?: AbortSignal
+    }
+  | {
+      readonly args: {
+        readonly target_enabled: boolean
+        readonly target_program: string
+      }
+      readonly function: "participant_set_metric_consent"
+      readonly signal?: AbortSignal
+    }
 
 export type PilotFunctionRequest = {
   readonly body: Readonly<Record<string, unknown>>
@@ -151,6 +174,68 @@ export type PilotDataRequest =
         readonly initial_session_number: 1 | 2
         readonly program_id: string
         readonly protocol: "12_minute" | "3k" | "5k"
+      }
+    }
+  | {
+      readonly kind: "complete_assignment"
+      readonly returning: "id"
+      readonly signal?: AbortSignal
+      readonly table: "homework_submissions"
+      readonly values: {
+        readonly assignment_id: string
+        readonly participant_id: string
+        readonly program_id: string
+        readonly status: "submitted"
+        readonly submitted_at: string
+      }
+    }
+  | {
+      readonly kind: "heart_post"
+      readonly returning: "post_id"
+      readonly signal?: AbortSignal
+      readonly table: "feed_reactions"
+      readonly values: {
+        readonly author_profile_id: string
+        readonly post_id: string
+        readonly reaction: "heart"
+      }
+    }
+  | {
+      readonly filters: {
+        readonly author_profile_id: string
+        readonly post_id: string
+      }
+      readonly kind: "unheart_post"
+      readonly returning: "post_id"
+      readonly signal?: AbortSignal
+      readonly table: "feed_reactions"
+    }
+  | {
+      readonly kind: "add_feed_comment"
+      readonly returning: "id"
+      readonly signal?: AbortSignal
+      readonly table: "feed_comments"
+      readonly values: {
+        readonly author_profile_id: string
+        readonly body: string
+        readonly post_id: string
+      }
+    }
+  | {
+      readonly kind: "save_manual_metric"
+      readonly returning: "id"
+      readonly signal?: AbortSignal
+      readonly table: "metric_records"
+      readonly values: {
+        readonly metric_type: "distance_m" | "duration_s" | "heart_rate_bpm" | "sleep_hours"
+        readonly numeric_value: number
+        readonly observed_at: string
+        readonly owner_profile_id: string
+        readonly program_id: string
+        readonly sensitivity: "activity" | "health"
+        readonly source: "manual"
+        readonly unit: "h" | "m" | "s" | "bpm"
+        readonly verification_status: "accepted" | "draft"
       }
     }
 

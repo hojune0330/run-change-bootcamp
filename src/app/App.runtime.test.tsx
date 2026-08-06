@@ -16,11 +16,25 @@ const VALID_PILOT_ENVIRONMENT = {
   VITE_SUPABASE_URL: "https://boundary-test.supabase.co",
 } as const
 
+const ASSIGNMENT_ID = "99999999-9999-4999-8999-999999999999"
 const AUTH_USER_ID = "11111111-1111-4111-8111-111111111111"
+const POST_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 const PROGRAM_ID = "66666666-6666-4666-8666-666666666666"
 
 function createGateway(session: PilotSessionState = { kind: "signed_out" }): PilotGateway {
   return {
+    addPostComment: vi.fn<PilotGateway["addPostComment"]>(async () => ({
+      ok: true,
+      value: { id: POST_ID },
+    })),
+    changeMetricConsent: vi.fn<PilotGateway["changeMetricConsent"]>(async () => ({
+      ok: true,
+      value: { auditEventId: 17, auditEventType: "consent.granted", status: "enabled" },
+    })),
+    completeAssignment: vi.fn<PilotGateway["completeAssignment"]>(async () => ({
+      ok: true,
+      value: { id: ASSIGNMENT_ID },
+    })),
     completeAuthCallback: vi.fn<PilotGateway["completeAuthCallback"]>(async () => ({
       ok: true,
       value: session,
@@ -55,6 +69,45 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
         sharedMetrics: [],
       },
     })),
+    getParticipantChange: vi.fn<PilotGateway["getParticipantChange"]>(async () => ({
+      ok: true,
+      value: {
+        completionPercent: 20,
+        consentHistory: [
+          {
+            auditEventId: 17,
+            eventType: "consent.granted",
+            occurredAt: "2026-08-25T08:00:00.000Z",
+          },
+        ],
+        feedback: [],
+        heartRateConsented: true,
+        metrics: [
+          {
+            count14d: 3,
+            metricType: "distance_m",
+            observedAt: "2026-08-25T08:00:00.000Z",
+            unit: "m",
+            value: 5000,
+          },
+        ],
+        profile: { displayName: "Runner", profileId: AUTH_USER_ID },
+      },
+    })),
+    getParticipantFeed: vi.fn<PilotGateway["getParticipantFeed"]>(async () => ({
+      ok: true,
+      value: { posts: [] },
+    })),
+    getParticipantToday: vi.fn<PilotGateway["getParticipantToday"]>(async () => ({
+      ok: true,
+      value: {
+        announcement: null,
+        assignment: null,
+        dateLabel: "8월 31일 월요일",
+        profile: { displayName: "Runner", profileId: AUTH_USER_ID },
+        program: { title: "PLUS Run" },
+      },
+    })),
     getSession: vi.fn<PilotGateway["getSession"]>(async () => ({ ok: true, value: session })),
     grantMetricConsent: vi.fn<PilotGateway["grantMetricConsent"]>(async () => ({
       ok: true,
@@ -76,6 +129,10 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
       ok: true,
       value: undefined,
     })),
+    saveManualMetric: vi.fn<PilotGateway["saveManualMetric"]>(async () => ({
+      ok: true,
+      value: { id: "44444444-4444-4444-8444-444444444444" },
+    })),
     revokeMetricConsent: vi.fn<PilotGateway["revokeMetricConsent"]>(async () => ({
       ok: true,
       value: { id: "33333333-3333-4333-8333-333333333333" },
@@ -83,6 +140,10 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
     saveTimeTrial: vi.fn<PilotGateway["saveTimeTrial"]>(async () => ({
       ok: true,
       value: { programId: PROGRAM_ID },
+    })),
+    setPostHeart: vi.fn<PilotGateway["setPostHeart"]>(async () => ({
+      ok: true,
+      value: { id: POST_ID },
     })),
     signOut: vi.fn<PilotGateway["signOut"]>(async () => ({ ok: true, value: undefined })),
     subscribeToSession: vi.fn<PilotGateway["subscribeToSession"]>(() => () => undefined),

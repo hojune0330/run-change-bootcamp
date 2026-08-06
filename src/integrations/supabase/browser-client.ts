@@ -212,6 +212,51 @@ export function createBrowserSupabaseClient(config: SupabasePublicConfig): Pilot
             ? { ok: true, value: result.data }
             : providerFailure(result.error)
         }
+        case "complete_assignment": {
+          let query = supabase.from(request.table).insert(request.values).select(request.returning)
+          if (request.signal !== undefined) query = query.abortSignal(request.signal)
+          const result = await query.single()
+          return result.error === null
+            ? { ok: true, value: result.data }
+            : providerFailure(result.error)
+        }
+        case "heart_post": {
+          let query = supabase.from(request.table).insert(request.values).select(request.returning)
+          if (request.signal !== undefined) query = query.abortSignal(request.signal)
+          const result = await query.single()
+          return result.error === null
+            ? { ok: true, value: result.data }
+            : providerFailure(result.error)
+        }
+        case "unheart_post": {
+          let query = supabase
+            .from(request.table)
+            .delete()
+            .eq("post_id", request.filters.post_id)
+            .eq("author_profile_id", request.filters.author_profile_id)
+            .select(request.returning)
+          if (request.signal !== undefined) query = query.abortSignal(request.signal)
+          const result = await query.single()
+          return result.error === null
+            ? { ok: true, value: result.data }
+            : providerFailure(result.error)
+        }
+        case "add_feed_comment": {
+          let query = supabase.from(request.table).insert(request.values).select(request.returning)
+          if (request.signal !== undefined) query = query.abortSignal(request.signal)
+          const result = await query.single()
+          return result.error === null
+            ? { ok: true, value: result.data }
+            : providerFailure(result.error)
+        }
+        case "save_manual_metric": {
+          let query = supabase.from(request.table).insert(request.values).select(request.returning)
+          if (request.signal !== undefined) query = query.abortSignal(request.signal)
+          const result = await query.single()
+          return result.error === null
+            ? { ok: true, value: result.data }
+            : providerFailure(result.error)
+        }
       }
     })
 
