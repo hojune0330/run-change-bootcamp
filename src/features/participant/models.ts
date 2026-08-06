@@ -28,11 +28,20 @@ export type AssignmentViewModel = {
   readonly status: "pending" | "completed"
 }
 
+export type BacklogAssignmentViewModel = {
+  readonly id: AssignmentId
+  readonly title: string
+  readonly dueLabel: string
+  readonly status: "pending" | "completed"
+}
+
 export type TodayViewModel = {
   readonly displayName: string
   readonly dateLabel: string
   readonly announcement?: AnnouncementViewModel
   readonly assignment?: AssignmentViewModel
+  readonly backlog?: readonly BacklogAssignmentViewModel[]
+  readonly streakDays?: number
 }
 
 export type TodayHandlers = {
@@ -106,6 +115,7 @@ export type ChangeMetricViewModel = {
   readonly label: string
   readonly value: string
   readonly changeLabel: string
+  readonly deltaLabel?: string
 }
 
 export type FeedbackViewModel = {

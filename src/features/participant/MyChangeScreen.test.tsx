@@ -117,6 +117,34 @@ describe("MyChangeScreen", () => {
     expect(screen.getByText("코치 승인")).toBeInTheDocument()
   })
 
+  it("renders the week-over-week delta when the pilot provides a previous value", () => {
+    // Given
+    const model = {
+      ...CHANGE_MODEL,
+      metrics: [
+        {
+          id: "metric-distance",
+          label: "주행 거리",
+          value: "5.2 km",
+          changeLabel: "최근 14일 3건",
+          deltaLabel: "이전 +2000 m",
+        },
+      ],
+    } satisfies MyChangeViewModel
+
+    // When
+    render(
+      <MyChangeScreen
+        handlers={{ onConsentChange: vi.fn() }}
+        onRetry={vi.fn()}
+        state={{ status: "ready", data: model }}
+      />,
+    )
+
+    // Then
+    expect(screen.getByText("이전 +2000 m")).toBeInTheDocument()
+  })
+
   it("renders metric and feedback empty states without hiding consent controls", () => {
     // Given
     const emptyModel = { ...CHANGE_MODEL, metrics: [], feedback: [] } satisfies MyChangeViewModel

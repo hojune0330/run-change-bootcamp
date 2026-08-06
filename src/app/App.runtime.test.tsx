@@ -87,6 +87,8 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
             count14d: 3,
             metricType: "distance_m",
             observedAt: "2026-08-25T08:00:00.000Z",
+            previousObservedAt: null,
+            previousValue: null,
             unit: "m",
             value: 5000,
           },
@@ -110,9 +112,11 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
       value: {
         announcement: null,
         assignment: null,
+        backlog: [],
         dateLabel: "8월 31일 월요일",
         profile: { displayName: "Runner", profileId: AUTH_USER_ID },
         program: { title: "PLUS Run" },
+        streakDays: 0,
       },
     })),
     getAdminOverview: vi.fn<PilotGateway["getAdminOverview"]>(async () => ({
@@ -257,6 +261,10 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
       },
     })),
     getSession: vi.fn<PilotGateway["getSession"]>(async () => ({ ok: true, value: session })),
+    importActivityDraft: vi.fn<PilotGateway["importActivityDraft"]>(async () => ({
+      ok: true,
+      value: { draftCount: 6, uploadId: "abababab-abab-4bab-8bab-abababababab" },
+    })),
     grantMetricConsent: vi.fn<PilotGateway["grantMetricConsent"]>(async () => ({
       ok: true,
       value: { id: "33333333-3333-4333-8333-333333333333" },
@@ -276,6 +284,10 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
     requestEmailOtp: vi.fn<PilotGateway["requestEmailOtp"]>(async () => ({
       ok: true,
       value: undefined,
+    })),
+    saveActivityDraft: vi.fn<PilotGateway["saveActivityDraft"]>(async () => ({
+      ok: true,
+      value: { id: "accepted" },
     })),
     saveManualMetric: vi.fn<PilotGateway["saveManualMetric"]>(async () => ({
       ok: true,
@@ -634,5 +646,68 @@ describe("App runtime boundary", () => {
     expect(screen.getByLabelText("측정일")).toHaveValue("2026-08-26")
     await user.click(screen.getByRole("button", { name: "파일 가져오기" }))
     expect(screen.getByText("지원: CSV, FIT, GPX, TCX, XML, JSON")).toBeVisible()
+  })
+
+  it("imports an activity file into a review draft and saves it through the gateway", async () => {
+    // Given
+    const user = userEvent.setup({ applyAccept: false })
+    const gateway = createGateway({
+      kind: "active",
+      membership: {
+        email: "runner@example.com",
+        membershipId: "77777777-7777-4777-8777-777777777777",
+        programId: PROGRAM_ID,
+        role: "participant",
+        route: "/today",
+        userId: AUTH_USER_ID,
+      },
+    })
+    render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
+    await screen.findByRole("heading", { name: "오늘" })
+    await user.click(screen.getByRole("link", { name: "기록" }))
+    await screen.findByRole("heading", { name: "기록" })
+    await user.click(screen.getByRole("button", { name: "파일 가져오기" }))
+
+    // When
+    const csv =
+      "timestamp,metric,value,unit\n2026-08-26T07:00:00+09:00,distance,5230,m\n2026-08-26T07:10:00+09:00,duration,1500,s\n"
+    await user.upload(
+      screen.getByLabelText("활동 파일"),
+      new File([csv], "easy-run.csv", { type: "text/csv" }),
+    )
+    await user.click(screen.getByRole("button", { name: "초안 만들기" }))
+
+    // Then
+    expect(await screen.findByRole("heading", { name: "검토할 기록 초안" })).toBeVisible()
+    expect(gateway.importActivityDraft).toHaveBeenCalledWith({
+      draftRecords: [
+        {
+          metricType: "distance_m",
+          numericValue: 5230,
+          observedAt: "2026-08-26T07:00:00+09:00",
+          unit: "m",
+        },
+        {
+          metricType: "duration_s",
+          numericValue: 1500,
+          observedAt: "2026-08-26T07:10:00+09:00",
+          unit: "s",
+        },
+      ],
+      fileName: "easy-run.csv",
+      fileSize: expect.any(Number),
+      programId: PROGRAM_ID,
+      uploadKind: "csv",
+    })
+
+    // When
+    await user.click(screen.getByRole("button", { name: "검토 완료 · 초안 보관" }))
+
+    // Then
+    expect(await screen.findByRole("button", { name: "초안 보관됨" })).toBeDisabled()
+    expect(gateway.saveActivityDraft).toHaveBeenCalledWith({
+      programId: PROGRAM_ID,
+      uploadId: "abababab-abab-4bab-8bab-abababababab",
+    })
   })
 })

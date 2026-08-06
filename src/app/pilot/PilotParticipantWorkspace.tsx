@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Button } from "../../components/primitives/index.ts"
 import { createShareServices } from "../../demo/participant-bindings.ts"
 import { type BrandConfig, DEFAULT_BRAND } from "../../design/brand-config.ts"
@@ -13,6 +13,7 @@ import type {
   ActionResult,
   AssignmentId,
   ConsentChangeResult,
+  DraftId,
   DraftResult,
   FeedViewModel,
   ManualMetricInput,
@@ -28,6 +29,7 @@ import type {
 } from "../../integrations/supabase/pilot-gateway.ts"
 import { AppShell } from "../AppShell.tsx"
 import { PARTICIPANT_HREFS, type ParticipantHref } from "../routes.ts"
+import { importActivityFile } from "./pilot-participant-import.ts"
 import {
   buildParticipantChangeModel,
   buildParticipantFeedModel,
@@ -61,8 +63,8 @@ function operationMessage(kind: PilotOperationError["kind"]): string {
   }
 }
 
-function pilotDraftError(): DraftResult {
-  return { kind: "error", message: "파일 가져오기는 파일럿 준비 중이에요." }
+function screenshotDraftError(): DraftResult {
+  return { kind: "error", message: "스크린샷 올리기는 파일럿 준비 중이에요." }
 }
 
 export function PilotParticipantWorkspace({
@@ -82,6 +84,7 @@ export function PilotParticipantWorkspace({
     status: "loading",
   })
   const [mutationMessage, setMutationMessage] = useState<string | null>(null)
+  const uploadByDraftId = useRef(new Map<string, string>())
 
   const loadToday = useCallback(async () => {
     setTodayState({ status: "loading" })
@@ -207,6 +210,40 @@ export function PilotParticipantWorkspace({
     return { kind: "success" }
   }
 
+  const importFile = async (file: File): Promise<DraftResult> => {
+    const outcome = await importActivityFile(gateway, membership.programId, file)
+    switch (outcome.kind) {
+      case "success":
+        uploadByDraftId.current.set(outcome.draft.id, outcome.uploadId)
+        return { kind: "success", draft: outcome.draft }
+      case "local_error":
+        return { kind: "error", message: outcome.message }
+      case "gateway_error":
+        setMutationMessage(operationMessage(outcome.error.kind))
+        return { kind: "error", message: operationMessage(outcome.error.kind) }
+    }
+  }
+
+  const saveDraft = async (id: DraftId): Promise<ActionResult> => {
+    const uploadId = uploadByDraftId.current.get(id)
+    if (uploadId === undefined) {
+      const message = "초안을 찾지 못했어요. 파일을 다시 가져와 주세요."
+      setMutationMessage(message)
+      return { kind: "error", message }
+    }
+    const result = await gateway.saveActivityDraft({
+      programId: membership.programId,
+      uploadId,
+    })
+    if (!result.ok) {
+      setMutationMessage(operationMessage(result.error.kind))
+      return { kind: "error", message: operationMessage(result.error.kind) }
+    }
+    setMutationMessage(null)
+    void loadChange()
+    return { kind: "success" }
+  }
+
   const onChangeConsent = async (request: {
     readonly enabled: boolean
     readonly key: string
@@ -298,13 +335,10 @@ export function PilotParticipantWorkspace({
         {activeHref === "/record" ? (
           <RecordScreen
             handlers={{
-              onImportFile: () => Promise.resolve(pilotDraftError()),
-              onSaveDraft: async () => ({
-                kind: "error",
-                message: "초안 저장은 파일럿 준비 중이에요.",
-              }),
+              onImportFile: (file) => importFile(file),
+              onSaveDraft: (id) => saveDraft(id),
               onSaveManual: (input) => saveManualMetric(input),
-              onUploadScreenshot: () => Promise.resolve(pilotDraftError()),
+              onUploadScreenshot: () => Promise.resolve(screenshotDraftError()),
             }}
             onRetry={() => void retry()}
             state={recordState}

@@ -110,6 +110,30 @@ export type PilotRpcRequest =
       readonly function: "participant_record_snapshot"
       readonly signal?: AbortSignal
     }
+  | {
+      readonly args: {
+        readonly draft_records: ReadonlyArray<{
+          readonly metric_type: "distance_m" | "duration_s" | "heart_rate_bpm"
+          readonly numeric_value: number
+          readonly observed_at: string
+          readonly unit: "bpm" | "m" | "s"
+        }>
+        readonly file_name: string
+        readonly file_size: number
+        readonly target_program: string
+        readonly upload_kind: "csv" | "fit" | "gpx" | "json" | "tcx" | "xml"
+      }
+      readonly function: "import_activity_draft"
+      readonly signal?: AbortSignal
+    }
+  | {
+      readonly args: {
+        readonly target_program: string
+        readonly target_upload_id: string
+      }
+      readonly function: "save_activity_draft"
+      readonly signal?: AbortSignal
+    }
 
 export type PilotFunctionRequest = {
   readonly body: Readonly<Record<string, unknown>>

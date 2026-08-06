@@ -69,6 +69,67 @@ describe("TodayScreen", () => {
     expect(screen.getByText(TODAY_MODEL.displayName, { exact: false })).toBeInTheDocument()
   })
 
+  it("shows the streak badge and upcoming backlog when present", () => {
+    // Given
+    const model = {
+      displayName: TODAY_MODEL.displayName,
+      dateLabel: TODAY_MODEL.dateLabel,
+      streakDays: 6,
+      backlog: [
+        {
+          id: "assignment-easy-run",
+          title: "편안한 달리기",
+          dueLabel: "내일까지",
+          status: "pending",
+        },
+        {
+          id: "assignment-health",
+          title: "건강 체크",
+          dueLabel: "지난주까지",
+          status: "completed",
+        },
+      ],
+    } satisfies TodayViewModel
+
+    // When
+    render(
+      <TodayScreen
+        handlers={{ onCompleteAssignment: vi.fn() }}
+        onRetry={vi.fn()}
+        state={{ status: "ready", data: model }}
+      />,
+    )
+
+    // Then
+    expect(screen.getByRole("heading", { name: "꾸준히 이어오고 있어요" })).toBeInTheDocument()
+    expect(screen.getByText("6일 연속")).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "다음에 완료할 과제" })).toBeInTheDocument()
+    expect(screen.getByText("편안한 달리기")).toBeInTheDocument()
+    expect(screen.getByText("내일까지")).toBeInTheDocument()
+    expect(screen.getByText("완료")).toBeInTheDocument()
+  })
+
+  it("hides streak and backlog entirely when the pilot supplies none", () => {
+    // Given
+    const model = {
+      displayName: TODAY_MODEL.displayName,
+      dateLabel: TODAY_MODEL.dateLabel,
+    } satisfies TodayViewModel
+
+    // When
+    render(
+      <TodayScreen
+        handlers={{ onCompleteAssignment: vi.fn() }}
+        onRetry={vi.fn()}
+        state={{ status: "ready", data: model }}
+      />,
+    )
+
+    // Then
+    expect(screen.queryByText(/일 연속/)).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "다음에 완료할 과제" })).not.toBeInTheDocument()
+  })
+
   it("moves focus to a retryable error", async () => {
     // Given
     const user = userEvent.setup()

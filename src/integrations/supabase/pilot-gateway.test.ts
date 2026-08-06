@@ -22,6 +22,7 @@ const POST_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 const PROGRAM_ID = "66666666-6666-4666-8666-666666666666"
 const SESSION_ID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
 const SUBMISSION_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+const UPLOAD_ID = "abababab-abab-4bab-8bab-abababababab"
 
 const DASHBOARD_SNAPSHOT = {
   feedback_queue: [
@@ -124,9 +125,11 @@ const TODAY_SNAPSHOT = {
     instructions: "이지런 30분, 심박 존 2 유지",
     title: "주 1회 이지런",
   },
+  backlog: [],
   date_label: "8월 31일 월요일",
   profile: { display_name: "김러너", profile_id: GRANTEE_ID },
   program: { title: "PLUS Run 2026" },
+  streak_days: 0,
 } as const
 
 const FEED_SNAPSHOT = {
@@ -335,6 +338,8 @@ const CHANGE_SNAPSHOT = {
       count_14d: 3,
       metric_type: "distance_m",
       observed_at: "2026-08-25T08:00:00.000Z",
+      previous_observed_at: null,
+      previous_value: null,
       unit: "m",
       value: 5000,
     },
@@ -342,6 +347,8 @@ const CHANGE_SNAPSHOT = {
       count_14d: 2,
       metric_type: "heart_rate_bpm",
       observed_at: "2026-08-25T07:30:00.000Z",
+      previous_observed_at: null,
+      previous_value: null,
       unit: "bpm",
       value: 58,
     },
@@ -456,6 +463,13 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
           return { ok: true, value: CHANGE_SNAPSHOT }
         case "participant_record_snapshot":
           return { ok: true, value: PARTICIPANT_RECORD_SNAPSHOT }
+        case "import_activity_draft":
+          return { ok: true, value: { draft_count: 6, upload_id: UPLOAD_ID } }
+        case "save_activity_draft":
+          return {
+            ok: true,
+            value: { accepted_count: 6, status: "accepted" },
+          }
         case "participant_set_metric_consent":
           return { ok: true, value: consentToggleResult.value }
         case "admin_overview_snapshot":
@@ -999,9 +1013,11 @@ describe("Supabase pilot gateway", () => {
         instructions: "이지런 30분, 심박 존 2 유지",
         title: "주 1회 이지런",
       },
+      backlog: [],
       dateLabel: "8월 31일 월요일",
       profile: { displayName: "김러너", profileId: GRANTEE_ID },
       program: { title: "PLUS Run 2026" },
+      streakDays: 0,
     })
     expect(client.rpcRequests).toEqual([
       { args: { target_program: PROGRAM_ID }, function: "participant_today_snapshot" },
@@ -1060,6 +1076,8 @@ describe("Supabase pilot gateway", () => {
         count14d: 3,
         metricType: "distance_m",
         observedAt: "2026-08-25T08:00:00.000Z",
+        previousObservedAt: null,
+        previousValue: null,
         unit: "m",
         value: 5000,
       },
@@ -1067,6 +1085,8 @@ describe("Supabase pilot gateway", () => {
         count14d: 2,
         metricType: "heart_rate_bpm",
         observedAt: "2026-08-25T07:30:00.000Z",
+        previousObservedAt: null,
+        previousValue: null,
         unit: "bpm",
         value: 58,
       },
@@ -1653,6 +1673,109 @@ describe("Supabase pilot gateway", () => {
     expect(client.rpcRequests).toEqual([
       { args: { target_program: PROGRAM_ID }, function: "participant_record_snapshot" },
     ])
+  })
+
+  it("imports an activity file draft through the import RPC", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.importActivityDraft({
+      draftRecords: [
+        {
+          metricType: "distance_m",
+          numericValue: 5230,
+          observedAt: "2026-08-26T07:00:00.000Z",
+          unit: "m",
+        },
+      ],
+      fileName: "easy-run-0826.csv",
+      fileSize: 1024,
+      programId: PROGRAM_ID,
+      uploadKind: "csv",
+    })
+
+    // Then
+    expect(result).toEqual({
+      ok: true,
+      value: { draftCount: 6, uploadId: UPLOAD_ID },
+    })
+    expect(client.rpcRequests).toEqual([
+      {
+        args: {
+          draft_records: [
+            {
+              metric_type: "distance_m",
+              numeric_value: 5230,
+              observed_at: "2026-08-26T07:00:00.000Z",
+              unit: "m",
+            },
+          ],
+          file_name: "easy-run-0826.csv",
+          file_size: 1024,
+          target_program: PROGRAM_ID,
+          upload_kind: "csv",
+        },
+        function: "import_activity_draft",
+      },
+    ])
+  })
+
+  it("rejects file imports with a malformed draft payload", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.importActivityDraft({
+      draftRecords: [],
+      fileName: "empty.csv",
+      fileSize: 0,
+      programId: PROGRAM_ID,
+      uploadKind: "csv",
+    })
+
+    // Then
+    expect(result).toEqual({ ok: false, error: { kind: "invalid_request", retryable: false } })
+    expect(client.rpcRequests).toEqual([])
+  })
+
+  it("accepts a pending activity draft through the save RPC", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.saveActivityDraft({
+      programId: PROGRAM_ID,
+      uploadId: UPLOAD_ID,
+    })
+
+    // Then
+    expect(result).toEqual({ ok: true, value: { id: "accepted" } })
+    expect(client.rpcRequests).toEqual([
+      {
+        args: { target_program: PROGRAM_ID, target_upload_id: UPLOAD_ID },
+        function: "save_activity_draft",
+      },
+    ])
+  })
+
+  it("rejects draft saves when the caller has no authenticated identity", async () => {
+    // Given
+    const client = createFakeClient(null)
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.saveActivityDraft({
+      programId: PROGRAM_ID,
+      uploadId: UPLOAD_ID,
+    })
+
+    // Then
+    expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
+    expect(client.rpcRequests).toEqual([])
   })
 
   it("rejects participant record reads when the caller has no authenticated identity", async () => {

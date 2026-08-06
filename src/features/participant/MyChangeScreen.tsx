@@ -48,6 +48,7 @@ export function MyChangeScreen({
                       <dd>
                         <strong>{metric.value}</strong>
                         <span>{metric.changeLabel}</span>
+                        {metric.deltaLabel === undefined ? null : <span>{metric.deltaLabel}</span>}
                       </dd>
                     </div>
                   ))}

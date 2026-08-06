@@ -115,6 +115,18 @@ export type PilotCoachParticipantDetail = {
 
 export type PilotSubmitReference = { readonly id: string }
 export type PilotTimeTrialSaveReference = { readonly programId: string }
+export type PilotUploadReference = {
+  readonly draftCount: number
+  readonly uploadId: string
+}
+
+export type PilotBacklogAssignment = {
+  readonly assignmentId: string
+  readonly assignmentKind: "health" | "reflection" | "running"
+  readonly completed: boolean
+  readonly dueAt: string | null
+  readonly title: string
+}
 
 export type PilotParticipantToday = {
   readonly announcement: {
@@ -132,9 +144,11 @@ export type PilotParticipantToday = {
     readonly instructions: string
     readonly title: string
   } | null
+  readonly backlog: readonly PilotBacklogAssignment[]
   readonly dateLabel: string
   readonly profile: { readonly displayName: string; readonly profileId: string }
   readonly program: { readonly title: string }
+  readonly streakDays: number
 }
 
 export type PilotFeedComment = {
@@ -163,6 +177,8 @@ export type PilotParticipantMetric = {
   readonly count14d: number
   readonly metricType: string
   readonly observedAt: string | null
+  readonly previousObservedAt: string | null
+  readonly previousValue: number | null
   readonly unit: string
   readonly value: number
 }
@@ -357,12 +373,14 @@ export interface PilotGateway {
   getAdminSchedule(programId: string): Promise<PilotOperationResult<PilotAdminSchedule>>
   getAdminSettings(programId: string): Promise<PilotOperationResult<PilotAdminSettings>>
   getSession(): Promise<PilotOperationResult<PilotSessionState>>
+  importActivityDraft(input: unknown): Promise<PilotOperationResult<PilotUploadReference>>
   grantMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentReference>>
   listAuditEvents(): Promise<PilotOperationResult<readonly PilotAuditEvent[]>>
   publishAnnouncement(input: unknown): Promise<PilotOperationResult<PilotSubmitReference>>
   publishAssignment(input: unknown): Promise<PilotOperationResult<PilotSubmitReference>>
   requestEmailOtp(input: unknown): Promise<PilotOperationResult<void>>
   revokeMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentReference>>
+  saveActivityDraft(input: unknown): Promise<PilotOperationResult<PilotSubmitReference>>
   saveManualMetric(input: unknown): Promise<PilotOperationResult<PilotSubmitReference>>
   saveTimeTrial(input: unknown): Promise<PilotOperationResult<PilotTimeTrialSaveReference>>
   setPostHeart(input: unknown): Promise<PilotOperationResult<PilotSubmitReference>>
@@ -577,7 +595,22 @@ const ParticipantTodaySnapshotSchema = z
       .strict()
       .readonly()
       .nullable(),
+    backlog: z
+      .array(
+        z
+          .object({
+            assignment_id: z.uuid(),
+            assignment_kind: z.enum(["health", "reflection", "running"]),
+            completed: z.boolean(),
+            due_at: z.iso.datetime({ offset: true }).nullable(),
+            title: z.string().min(1).max(160),
+          })
+          .strict()
+          .readonly(),
+      )
+      .readonly(),
     date_label: z.string().min(1).max(40),
+    streak_days: z.number().int().nonnegative(),
     profile: z
       .object({
         display_name: z.string().min(1).max(80),
@@ -663,6 +696,8 @@ const ParticipantChangeSnapshotSchema = z
             count_14d: z.number().int().nonnegative(),
             metric_type: z.string().min(1).max(40),
             observed_at: z.iso.datetime({ offset: true }).nullable(),
+            previous_observed_at: z.iso.datetime({ offset: true }).nullable(),
+            previous_value: z.number().nonnegative().nullable(),
             unit: z.string().min(1).max(10),
             value: z.number().nonnegative(),
           })
@@ -953,12 +988,56 @@ const MetricConsentToggleInputSchema = z
   .object({ enabled: z.boolean(), programId: z.uuid() })
   .strict()
   .readonly()
+const ImportActivityDraftInputSchema = z
+  .object({
+    draftRecords: z
+      .array(
+        z
+          .object({
+            metricType: z.enum(["distance_m", "duration_s", "heart_rate_bpm"]),
+            numericValue: z.number().nonnegative(),
+            observedAt: z.iso.datetime({ offset: true }),
+            unit: z.enum(["bpm", "m", "s"]),
+          })
+          .strict()
+          .readonly(),
+      )
+      .min(1)
+      .max(50)
+      .readonly(),
+    fileName: z.string().trim().min(1).max(255),
+    fileSize: z.number().int().min(1).max(15_728_640),
+    programId: z.uuid(),
+    uploadKind: z.enum(["csv", "fit", "gpx", "json", "tcx", "xml"]),
+  })
+  .strict()
+  .readonly()
+const SaveActivityDraftInputSchema = z
+  .object({ programId: z.uuid(), uploadId: z.uuid() })
+  .strict()
+  .readonly()
+const ImportActivityDraftResultSchema = z
+  .object({
+    draft_count: z.number().int().nonnegative(),
+    upload_id: z.uuid(),
+  })
+  .strict()
+  .readonly()
+const SaveActivityDraftResultSchema = z
+  .object({
+    accepted_count: z.number().int().positive(),
+    status: z.literal("accepted"),
+  })
+  .strict()
+  .readonly()
 type CoachDashboardSnapshot = z.infer<typeof CoachDashboardSnapshotSchema>
 type CoachParticipantDetailSnapshot = z.infer<typeof CoachParticipantDetailSnapshotSchema>
 type ParticipantTodaySnapshot = z.infer<typeof ParticipantTodaySnapshotSchema>
 type ParticipantFeedSnapshot = z.infer<typeof ParticipantFeedSnapshotSchema>
 type ParticipantChangeSnapshot = z.infer<typeof ParticipantChangeSnapshotSchema>
 type ParticipantRecordSnapshot = z.infer<typeof ParticipantRecordSnapshotSchema>
+type ImportActivityDraftResult = z.infer<typeof ImportActivityDraftResultSchema>
+type SaveActivityDraftResult = z.infer<typeof SaveActivityDraftResultSchema>
 type ConsentToggleResult = z.infer<typeof ConsentToggleResultSchema>
 type AdminOverviewSnapshot = z.infer<typeof AdminOverviewSnapshotSchema>
 type AdminActivitySnapshot = z.infer<typeof AdminActivitySnapshotSchema>
@@ -1035,6 +1114,14 @@ function postReference(
   return parsed.success
     ? { ok: true, value: { id: parsed.data.post_id } }
     : failure("invalid_response")
+}
+
+function importActivityDraftFromResult(result: ImportActivityDraftResult): PilotUploadReference {
+  return { draftCount: result.draft_count, uploadId: result.upload_id }
+}
+
+function saveActivityDraftFromResult(result: SaveActivityDraftResult): PilotSubmitReference {
+  return { id: result.status }
 }
 
 function consentToggleFromResult(result: ConsentToggleResult): PilotConsentToggleResult {
@@ -1162,12 +1249,20 @@ function participantTodayFromSnapshot(snapshot: ParticipantTodaySnapshot): Pilot
             instructions: snapshot.assignment.instructions,
             title: snapshot.assignment.title,
           },
+    backlog: snapshot.backlog.map((item) => ({
+      assignmentId: item.assignment_id,
+      assignmentKind: item.assignment_kind,
+      completed: item.completed,
+      dueAt: item.due_at,
+      title: item.title,
+    })),
     dateLabel: snapshot.date_label,
     profile: {
       displayName: snapshot.profile.display_name,
       profileId: snapshot.profile.profile_id,
     },
     program: { title: snapshot.program.title },
+    streakDays: snapshot.streak_days,
   }
 }
 
@@ -1222,6 +1317,8 @@ function participantChangeFromSnapshot(
       count14d: metric.count_14d,
       metricType: metric.metric_type,
       observedAt: metric.observed_at,
+      previousObservedAt: metric.previous_observed_at,
+      previousValue: metric.previous_value,
       unit: metric.unit,
       value: metric.value,
     })),
@@ -1776,6 +1873,50 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
         },
       })
       return submitResult(result)
+    },
+    importActivityDraft: async (input) => {
+      const parsed = ImportActivityDraftInputSchema.safeParse(input)
+      if (!parsed.success) return failure("invalid_request", false)
+      const session = await authenticatedSession(client)
+      if (!session.ok) return session
+      const result = await client.invokeRpc({
+        args: {
+          draft_records: parsed.data.draftRecords.map((record) => ({
+            metric_type: record.metricType,
+            numeric_value: record.numericValue,
+            observed_at: record.observedAt,
+            unit: record.unit,
+          })),
+          file_name: parsed.data.fileName,
+          file_size: parsed.data.fileSize,
+          target_program: parsed.data.programId,
+          upload_kind: parsed.data.uploadKind,
+        },
+        function: "import_activity_draft",
+      })
+      if (!result.ok) return rpcFailure(result)
+      const parsedResult = ImportActivityDraftResultSchema.safeParse(result.value)
+      return parsedResult.success
+        ? { ok: true, value: importActivityDraftFromResult(parsedResult.data) }
+        : failure("invalid_response", false)
+    },
+    saveActivityDraft: async (input) => {
+      const parsed = SaveActivityDraftInputSchema.safeParse(input)
+      if (!parsed.success) return failure("invalid_request", false)
+      const session = await authenticatedSession(client)
+      if (!session.ok) return session
+      const result = await client.invokeRpc({
+        args: {
+          target_program: parsed.data.programId,
+          target_upload_id: parsed.data.uploadId,
+        },
+        function: "save_activity_draft",
+      })
+      if (!result.ok) return rpcFailure(result)
+      const parsedResult = SaveActivityDraftResultSchema.safeParse(result.value)
+      return parsedResult.success
+        ? { ok: true, value: saveActivityDraftFromResult(parsedResult.data) }
+        : failure("invalid_response", false)
     },
     saveManualMetric: async (input) => {
       const parsed = ManualMetricInputSchema.safeParse(input)

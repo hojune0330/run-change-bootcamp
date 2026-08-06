@@ -121,8 +121,18 @@ export function TodayScreen({ brand = DEFAULT_BRAND, state, handlers, onRetry }:
           <div className="participant-screen__content">
             <div className="participant-greeting">
               <p className="participant-greeting__date">{model.dateLabel}</p>
-              <p className="participant-greeting__name">{model.displayName}, 하나만 완료해요.</p>
+              <p className="participant-greeting__name">{model.displayName}, 하나만 완료해요.</p>
             </div>
+
+            {model.streakDays !== undefined && model.streakDays > 0 ? (
+              <Card
+                action={<Badge tone="success">{model.streakDays}일 연속</Badge>}
+                eyebrow="연속 기록"
+                title="꾸준히 이어오고 있어요"
+              >
+                <p className="participant-empty-copy">매일 하나씩 완료해 기록을 이어가요.</p>
+              </Card>
+            ) : null}
 
             {model.assignment === undefined ? (
               <Card eyebrow="오늘의 과제" title="쉬어가는 날" tone="muted">
@@ -134,6 +144,22 @@ export function TodayScreen({ brand = DEFAULT_BRAND, state, handlers, onRetry }:
                 handlers={handlers}
                 key={model.assignment.id}
               />
+            )}
+
+            {model.backlog === undefined || model.backlog.length === 0 ? null : (
+              <Card eyebrow="백로그" title="다음에 완료할 과제">
+                <dl className="participant-metric-list">
+                  {model.backlog.map((item) => (
+                    <div key={item.id}>
+                      <dt>{item.title}</dt>
+                      <dd>
+                        <strong>{item.status === "completed" ? "완료" : "예정"}</strong>
+                        <span>{item.dueLabel}</span>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </Card>
             )}
 
             {model.announcement === undefined ? (

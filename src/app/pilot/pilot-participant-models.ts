@@ -57,10 +57,34 @@ function metricChangeLabel(metric: PilotParticipantMetric): string {
   return metric.count14d > 0 ? `최근 14일 ${metric.count14d}건` : "최근 기록 없음"
 }
 
+function metricDeltaLabel(metric: PilotParticipantMetric): string | undefined {
+  if (metric.previousValue === null) {
+    return undefined
+  }
+  const delta = metric.value - metric.previousValue
+  const sign = delta > 0 ? "+" : ""
+  const baseline =
+    metric.metricType === "distance_m" || metric.metricType === "duration_s"
+      ? `${sign}${Math.round(delta)}`
+      : `${sign}${Math.round(delta * 10) / 10}`
+  return `이전 ${baseline} ${metric.unit}`
+}
+
 export function buildParticipantTodayModel(today: PilotParticipantToday): TodayViewModel {
   return {
     displayName: today.profile.displayName,
     dateLabel: today.dateLabel,
+    ...(today.backlog.length === 0
+      ? {}
+      : {
+          backlog: today.backlog.map((item) => ({
+            id: `assignment-${item.assignmentId}`,
+            title: item.title,
+            dueLabel: dueLabel(item.dueAt),
+            status: item.completed ? "completed" : "pending",
+          })),
+        }),
+    ...(today.streakDays > 0 ? { streakDays: today.streakDays } : {}),
     ...(today.assignment === null
       ? {}
       : {
@@ -121,14 +145,16 @@ export function buildParticipantChangeModel(change: PilotParticipantChange): MyC
         value: `${change.completionPercent}%`,
         changeLabel: "전체 과제 기준",
       },
-      ...change.metrics.map(
-        (metric): ChangeMetricViewModel => ({
+      ...change.metrics.map((metric): ChangeMetricViewModel => {
+        const deltaLabel = metricDeltaLabel(metric)
+        return {
           id: `metric-${metric.metricType}`,
           label: metricLabel(metric.metricType),
           value: metricValue(metric),
           changeLabel: metricChangeLabel(metric),
-        }),
-      ),
+          ...(deltaLabel === undefined ? {} : { deltaLabel }),
+        }
+      }),
     ],
     feedback: change.feedback.map(
       (item): FeedbackViewModel => ({
