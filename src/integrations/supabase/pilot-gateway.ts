@@ -263,6 +263,39 @@ export type PilotAdminMembers = {
   }
 }
 
+export type PilotAdminSchedule = {
+  readonly program: {
+    readonly endsOn: string
+    readonly startsOn: string
+    readonly status: "active" | "archived" | "completed" | "draft"
+    readonly title: string
+  }
+  readonly sessions: readonly {
+    readonly scheduledAt: string
+    readonly sessionId: string
+    readonly sessionKind:
+      | "easy"
+      | "onboarding"
+      | "recovery"
+      | "retest"
+      | "technique"
+      | "time_trial"
+      | "training"
+    readonly sessionNumber: number
+    readonly title: string
+  }[]
+  readonly summary: {
+    readonly pastCount: number
+    readonly timeTrial: {
+      readonly decidedAt: string
+      readonly initialSessionNumber: 1 | 2
+      readonly protocol: "12_minute" | "3k" | "5k"
+    } | null
+    readonly totalSessions: number
+    readonly upcomingCount: number
+  }
+}
+
 export interface PilotGateway {
   addPostComment(input: unknown): Promise<PilotOperationResult<PilotSubmitReference>>
   changeMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentToggleResult>>
@@ -280,6 +313,7 @@ export interface PilotGateway {
   getAdminOverview(programId: string): Promise<PilotOperationResult<PilotAdminOverview>>
   getAdminActivity(programId: string): Promise<PilotOperationResult<readonly PilotAdminActivity[]>>
   getAdminMembers(programId: string): Promise<PilotOperationResult<PilotAdminMembers>>
+  getAdminSchedule(programId: string): Promise<PilotOperationResult<PilotAdminSchedule>>
   getSession(): Promise<PilotOperationResult<PilotSessionState>>
   grantMetricConsent(input: unknown): Promise<PilotOperationResult<PilotConsentReference>>
   listAuditEvents(): Promise<PilotOperationResult<readonly PilotAuditEvent[]>>
@@ -730,6 +764,59 @@ const AdminMembersSnapshotSchema = z
   })
   .strict()
   .readonly()
+const AdminScheduleSnapshotSchema = z
+  .object({
+    program: z
+      .object({
+        ends_on: z.iso.date(),
+        starts_on: z.iso.date(),
+        status: z.enum(["draft", "active", "completed", "archived"]),
+        title: z.string().min(1).max(160),
+      })
+      .strict()
+      .readonly(),
+    sessions: z
+      .array(
+        z
+          .object({
+            scheduled_at: z.iso.datetime({ offset: true }),
+            session_id: z.uuid(),
+            session_kind: z.enum([
+              "easy",
+              "onboarding",
+              "recovery",
+              "retest",
+              "technique",
+              "time_trial",
+              "training",
+            ]),
+            session_number: z.number().int().positive(),
+            title: z.string().min(1).max(160),
+          })
+          .strict()
+          .readonly(),
+      )
+      .readonly(),
+    summary: z
+      .object({
+        past_count: z.number().int().nonnegative(),
+        time_trial: z
+          .object({
+            decided_at: z.iso.datetime({ offset: true }),
+            initial_session_number: z.union([z.literal(1), z.literal(2)]),
+            protocol: z.enum(["12_minute", "3k", "5k"]),
+          })
+          .strict()
+          .readonly()
+          .nullable(),
+        total_sessions: z.number().int().nonnegative(),
+        upcoming_count: z.number().int().nonnegative(),
+      })
+      .strict()
+      .readonly(),
+  })
+  .strict()
+  .readonly()
 const CompleteAssignmentInputSchema = z
   .object({ assignmentId: z.uuid(), programId: z.uuid() })
   .strict()
@@ -765,6 +852,7 @@ type ConsentToggleResult = z.infer<typeof ConsentToggleResultSchema>
 type AdminOverviewSnapshot = z.infer<typeof AdminOverviewSnapshotSchema>
 type AdminActivitySnapshot = z.infer<typeof AdminActivitySnapshotSchema>
 type AdminMembersSnapshot = z.infer<typeof AdminMembersSnapshotSchema>
+type AdminScheduleSnapshot = z.infer<typeof AdminScheduleSnapshotSchema>
 
 function failure(
   kind: PilotOperationError["kind"],
@@ -1103,6 +1191,37 @@ function adminMembersFromSnapshot(snapshot: AdminMembersSnapshot): PilotAdminMem
   }
 }
 
+function adminScheduleFromSnapshot(snapshot: AdminScheduleSnapshot): PilotAdminSchedule {
+  return {
+    program: {
+      endsOn: snapshot.program.ends_on,
+      startsOn: snapshot.program.starts_on,
+      status: snapshot.program.status,
+      title: snapshot.program.title,
+    },
+    sessions: snapshot.sessions.map((session) => ({
+      scheduledAt: session.scheduled_at,
+      sessionId: session.session_id,
+      sessionKind: session.session_kind,
+      sessionNumber: session.session_number,
+      title: session.title,
+    })),
+    summary: {
+      pastCount: snapshot.summary.past_count,
+      timeTrial:
+        snapshot.summary.time_trial === null
+          ? null
+          : {
+              decidedAt: snapshot.summary.time_trial.decided_at,
+              initialSessionNumber: snapshot.summary.time_trial.initial_session_number,
+              protocol: snapshot.summary.time_trial.protocol,
+            },
+      totalSessions: snapshot.summary.total_sessions,
+      upcomingCount: snapshot.summary.upcoming_count,
+    },
+  }
+}
+
 function coachParticipantDetailFromSnapshot(
   snapshot: CoachParticipantDetailSnapshot,
 ): PilotCoachParticipantDetail {
@@ -1365,6 +1484,19 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
       const parsed = AdminMembersSnapshotSchema.safeParse(result.value)
       return parsed.success
         ? { ok: true, value: adminMembersFromSnapshot(parsed.data) }
+        : failure("invalid_response", false)
+    },
+    getAdminSchedule: async (programId) => {
+      const session = await authenticatedSession(client)
+      if (!session.ok) return session
+      const result = await client.invokeRpc({
+        args: { target_program: programId },
+        function: "admin_schedule_snapshot",
+      })
+      if (!result.ok) return rpcFailure(result)
+      const parsed = AdminScheduleSnapshotSchema.safeParse(result.value)
+      return parsed.success
+        ? { ok: true, value: adminScheduleFromSnapshot(parsed.data) }
         : failure("invalid_response", false)
     },
     getParticipantFeed: async (programId) => {

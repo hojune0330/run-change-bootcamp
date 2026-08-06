@@ -7,4 +7,5 @@ export {
   AdminMemberRoster,
   type AdminMemberRosterProps,
 } from "./AdminMemberRoster.tsx"
+export { AdminSchedule, type AdminScheduleProps } from "./AdminSchedule.tsx"
 export type * from "./types.ts"

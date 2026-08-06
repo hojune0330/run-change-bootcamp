@@ -171,6 +171,43 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
         },
       },
     })),
+    getAdminSchedule: vi.fn<PilotGateway["getAdminSchedule"]>(async () => ({
+      ok: true,
+      value: {
+        program: {
+          endsOn: "2026-10-24",
+          startsOn: "2026-08-24",
+          status: "active",
+          title: "PLUS Run",
+        },
+        sessions: [
+          {
+            scheduledAt: "2026-08-26T19:00:00.000Z",
+            sessionId: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+            sessionKind: "time_trial",
+            sessionNumber: 1,
+            title: "기록 측정 1회차",
+          },
+          {
+            scheduledAt: "2026-08-29T19:00:00.000Z",
+            sessionId: "ffffffff-ffff-4fff-8fff-ffffffffffff",
+            sessionKind: "easy",
+            sessionNumber: 2,
+            title: "이지런 2회차",
+          },
+        ],
+        summary: {
+          pastCount: 1,
+          timeTrial: {
+            decidedAt: "2026-08-25T09:00:00.000Z",
+            initialSessionNumber: 1,
+            protocol: "12_minute",
+          },
+          totalSessions: 2,
+          upcomingCount: 1,
+        },
+      },
+    })),
     getSession: vi.fn<PilotGateway["getSession"]>(async () => ({ ok: true, value: session })),
     grantMetricConsent: vi.fn<PilotGateway["grantMetricConsent"]>(async () => ({
       ok: true,
@@ -422,10 +459,10 @@ describe("App runtime boundary", () => {
     await screen.findByRole("heading", { name: "PLUS Run" })
 
     // When
-    await user.click(screen.getByRole("link", { name: "일정" }))
+    await user.click(screen.getByRole("link", { name: "설정" }))
 
     // Then
-    expect(await screen.findByText("/admin/schedule 화면")).toBeVisible()
+    expect(await screen.findByText("/admin/settings 화면")).toBeVisible()
     expect(screen.getByText(/파일럿 준비 중/)).toBeVisible()
   })
 
@@ -485,5 +522,34 @@ describe("App runtime boundary", () => {
     expect(screen.getByRole("cell", { name: "runner@example.com" })).toBeVisible()
     expect(screen.getByRole("cell", { name: "참여자" })).toBeVisible()
     expect(screen.getByText("2명")).toBeVisible()
+  })
+
+  it("routes an admin session to the schedule and renders snapshot sessions", async () => {
+    // Given
+    const user = userEvent.setup()
+    const gateway = createGateway({
+      kind: "active",
+      membership: {
+        email: "admin@example.com",
+        membershipId: "77777777-7777-4777-8777-777777777777",
+        programId: PROGRAM_ID,
+        role: "admin",
+        route: "/admin/overview",
+        userId: AUTH_USER_ID,
+      },
+    })
+    render(<App pilotGatewayFactory={() => gateway} runtimeEnvironment={VALID_PILOT_ENVIRONMENT} />)
+    await screen.findByRole("heading", { name: "PLUS Run" })
+
+    // When
+    await user.click(screen.getByRole("link", { name: "일정" }))
+
+    // Then
+    expect(await screen.findByRole("table", { name: "프로그램 일정" })).toBeVisible()
+    expect(gateway.getAdminSchedule).toHaveBeenCalledWith(PROGRAM_ID)
+    expect(await screen.findByText("기록 측정 1회차")).toBeVisible()
+    expect(screen.getByRole("cell", { name: "기록 측정" })).toBeVisible()
+    expect(screen.getByText("1회차 · 12분")).toBeVisible()
+    expect(screen.getByText("2회")).toBeVisible()
   })
 })

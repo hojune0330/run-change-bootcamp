@@ -5,11 +5,13 @@ import type {
   AdminMemberRosterRow,
   AdminMemberRow,
   AdminMembersViewModel,
+  AdminScheduleViewModel,
 } from "../../features/admin/index.ts"
 import type {
   PilotAdminActivity,
   PilotAdminMembers,
   PilotAdminOverview,
+  PilotAdminSchedule,
 } from "../../integrations/supabase/pilot-gateway.ts"
 import { timeAgoLabel } from "./pilot-coach-models.ts"
 
@@ -123,6 +125,52 @@ export function buildAdminMembersModel(members: PilotAdminMembers): AdminMembers
       consentedCount: members.summary.consentedCount,
     },
     members: members.members.map(adminMemberRosterRow),
+  }
+}
+
+function adminScheduleSessionRow(
+  session: PilotAdminSchedule["sessions"][number],
+): AdminScheduleViewModel["sessions"][number] {
+  const kindLabel =
+    session.sessionKind === "onboarding"
+      ? "온보딩"
+      : session.sessionKind === "easy"
+        ? "이지런"
+        : session.sessionKind === "time_trial"
+          ? "기록 측정"
+          : session.sessionKind === "recovery"
+            ? "회복"
+            : session.sessionKind === "technique"
+              ? "테크닉"
+              : session.sessionKind === "retest"
+                ? "재측정"
+                : "훈련"
+  return {
+    id: `session:${session.sessionId}`,
+    sessionNumber: session.sessionNumber,
+    kindLabel,
+    title: session.title,
+    scheduledAtLabel: timeAgoLabel(session.scheduledAt),
+  }
+}
+
+export function buildAdminScheduleModel(schedule: PilotAdminSchedule): AdminScheduleViewModel {
+  const timeTrialLabel =
+    schedule.summary.timeTrial === null
+      ? "미정"
+      : `${
+          schedule.summary.timeTrial.initialSessionNumber === 1 ? "1회차" : "2회차"
+        } · ${timeTrialProtocolLabel(schedule.summary.timeTrial.protocol)}`
+  return {
+    programName: schedule.program.title,
+    dateRangeLabel: formatDateRange(schedule.program.startsOn, schedule.program.endsOn),
+    timeTrialLabel,
+    summary: {
+      totalSessions: schedule.summary.totalSessions,
+      upcomingCount: schedule.summary.upcomingCount,
+      pastCount: schedule.summary.pastCount,
+    },
+    sessions: schedule.sessions.map(adminScheduleSessionRow),
   }
 }
 

@@ -18,6 +18,7 @@ const METRIC_ID = "44444444-4444-4444-8444-444444444444"
 const NOTICE_ID = "88888888-8888-4888-8888-888888888888"
 const POST_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 const PROGRAM_ID = "66666666-6666-4666-8666-666666666666"
+const SESSION_ID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
 const SUBMISSION_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 
 const DASHBOARD_SNAPSHOT = {
@@ -190,6 +191,41 @@ const ADMIN_MEMBERS_SNAPSHOT = {
     active_participants: 1,
     consented_count: 1,
     total_members: 2,
+  },
+} as const
+
+const ADMIN_SCHEDULE_SNAPSHOT = {
+  program: {
+    ends_on: "2026-10-24",
+    starts_on: "2026-08-24",
+    status: "active",
+    title: "PLUS Run",
+  },
+  sessions: [
+    {
+      scheduled_at: "2026-08-26T19:00:00.000Z",
+      session_id: SESSION_ID,
+      session_kind: "time_trial",
+      session_number: 1,
+      title: "기록 측정 1회차",
+    },
+    {
+      scheduled_at: "2026-08-29T19:00:00.000Z",
+      session_id: "ffffffff-ffff-4fff-8fff-ffffffffffff",
+      session_kind: "easy",
+      session_number: 2,
+      title: "이지런 2회차",
+    },
+  ],
+  summary: {
+    past_count: 1,
+    time_trial: {
+      decided_at: "2026-08-25T09:00:00.000Z",
+      initial_session_number: 1,
+      protocol: "12_minute",
+    },
+    total_sessions: 2,
+    upcoming_count: 1,
   },
 } as const
 
@@ -380,6 +416,8 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
           return { ok: true, value: ADMIN_ACTIVITY_SNAPSHOT }
         case "admin_members_snapshot":
           return { ok: true, value: ADMIN_MEMBERS_SNAPSHOT }
+        case "admin_schedule_snapshot":
+          return { ok: true, value: ADMIN_SCHEDULE_SNAPSHOT }
       }
     },
     consentToggleResult,
@@ -1408,6 +1446,70 @@ describe("Supabase pilot gateway", () => {
 
     // When
     const result = await gateway.getAdminMembers(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
+    expect(client.rpcRequests).toEqual([])
+  })
+
+  it("maps the admin schedule snapshot into the public calendar model", async () => {
+    // Given
+    const client = createFakeClient({ email: "admin@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getAdminSchedule(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        program: {
+          endsOn: "2026-10-24",
+          startsOn: "2026-08-24",
+          status: "active",
+          title: "PLUS Run",
+        },
+        sessions: [
+          {
+            scheduledAt: "2026-08-26T19:00:00.000Z",
+            sessionId: SESSION_ID,
+            sessionKind: "time_trial",
+            sessionNumber: 1,
+            title: "기록 측정 1회차",
+          },
+          {
+            scheduledAt: "2026-08-29T19:00:00.000Z",
+            sessionId: "ffffffff-ffff-4fff-8fff-ffffffffffff",
+            sessionKind: "easy",
+            sessionNumber: 2,
+            title: "이지런 2회차",
+          },
+        ],
+        summary: {
+          pastCount: 1,
+          timeTrial: {
+            decidedAt: "2026-08-25T09:00:00.000Z",
+            initialSessionNumber: 1,
+            protocol: "12_minute",
+          },
+          totalSessions: 2,
+          upcomingCount: 1,
+        },
+      },
+    })
+    expect(client.rpcRequests).toEqual([
+      { args: { target_program: PROGRAM_ID }, function: "admin_schedule_snapshot" },
+    ])
+  })
+
+  it("rejects admin schedule reads when the caller has no authenticated identity", async () => {
+    // Given
+    const client = createFakeClient(null)
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.getAdminSchedule(PROGRAM_ID)
 
     // Then
     expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })

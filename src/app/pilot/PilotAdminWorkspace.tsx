@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useState } from "react"
 import { Button, Card } from "../../components/primitives/index.ts"
 import { type BrandConfig, DEFAULT_BRAND } from "../../design/brand-config.ts"
-import { AdminActivityLog, AdminDashboard, AdminMemberRoster } from "../../features/admin/index.ts"
+import {
+  AdminActivityLog,
+  AdminDashboard,
+  AdminMemberRoster,
+  AdminSchedule,
+} from "../../features/admin/index.ts"
 import type {
   PilotAdminActivity,
   PilotAdminMembers,
   PilotAdminOverview,
+  PilotAdminSchedule,
   PilotGateway,
   PilotMembership,
   PilotOperationError,
@@ -17,6 +23,7 @@ import {
   adminActivityEntry,
   buildAdminMembersModel,
   buildAdminOverviewModel,
+  buildAdminScheduleModel,
 } from "./pilot-admin-models.ts"
 import "./pilot-workspace.css"
 
@@ -60,9 +67,11 @@ export function PilotAdminWorkspace({
   const [overview, setOverview] = useState<PilotAdminOverview | null>(null)
   const [activity, setActivity] = useState<readonly PilotAdminActivity[]>([])
   const [members, setMembers] = useState<PilotAdminMembers | null>(null)
+  const [schedule, setSchedule] = useState<PilotAdminSchedule | null>(null)
   const [loadState, setLoadState] = useState<LoadState>({ kind: "loading" })
   const [activityState, setActivityState] = useState<LoadState>({ kind: "loading" })
   const [membersState, setMembersState] = useState<LoadState>({ kind: "loading" })
+  const [scheduleState, setScheduleState] = useState<LoadState>({ kind: "loading" })
   const [activeHref, setActiveHref] = useState<AdminHref>("/admin/overview")
 
   const loadOverview = useCallback(async () => {
@@ -101,10 +110,22 @@ export function PilotAdminWorkspace({
     setMembersState({ kind: "ready" })
   }, [gateway, membership.programId])
 
+  const loadSchedule = useCallback(async () => {
+    setScheduleState({ kind: "loading" })
+    const result = await gateway.getAdminSchedule(membership.programId)
+    if (!result.ok) {
+      setScheduleState({ kind: "error", message: operationMessage(result.error.kind) })
+      return
+    }
+    setSchedule(result.value)
+    setScheduleState({ kind: "ready" })
+  }, [gateway, membership.programId])
+
   useEffect(() => {
     if (activeHref === "/admin/activity") void loadActivity()
     if (activeHref === "/admin/members") void loadMembers()
-  }, [activeHref, loadActivity, loadMembers])
+    if (activeHref === "/admin/schedule") void loadSchedule()
+  }, [activeHref, loadActivity, loadMembers, loadSchedule])
 
   const handleNavigate = (href: string) => {
     if (href === "/") {
@@ -199,6 +220,25 @@ export function PilotAdminWorkspace({
               </p>
             ) : members !== null ? (
               <AdminMemberRoster model={buildAdminMembersModel(members)} />
+            ) : null}
+          </Card>
+        ) : activeHref === "/admin/schedule" ? (
+          <Card eyebrow="프로그램 일정" title="일정">
+            {scheduleState.kind === "error" ? (
+              <>
+                <p className="pilot-workspace__status pilot-workspace__status--error" role="alert">
+                  {scheduleState.message}
+                </p>
+                <Button onClick={() => void loadSchedule()} variant="secondary">
+                  다시 시도
+                </Button>
+              </>
+            ) : scheduleState.kind === "loading" && schedule === null ? (
+              <p aria-live="polite" className="pilot-workspace__status">
+                프로그램 일정을 불러오고 있습니다.
+              </p>
+            ) : schedule !== null ? (
+              <AdminSchedule model={buildAdminScheduleModel(schedule)} />
             ) : null}
           </Card>
         ) : (

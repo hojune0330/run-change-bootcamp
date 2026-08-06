@@ -70,3 +70,23 @@ export type AdminMembersViewModel = {
   }
   readonly members: readonly AdminMemberRosterRow[]
 }
+
+export type AdminSessionRow = {
+  readonly id: string
+  readonly sessionNumber: number
+  readonly kindLabel: string
+  readonly title: string
+  readonly scheduledAtLabel: string
+}
+
+export type AdminScheduleViewModel = {
+  readonly programName: string
+  readonly dateRangeLabel: string
+  readonly timeTrialLabel: string
+  readonly summary: {
+    readonly totalSessions: number
+    readonly upcomingCount: number
+    readonly pastCount: number
+  }
+  readonly sessions: readonly AdminSessionRow[]
+}
