@@ -239,10 +239,12 @@
 @media (max-width: 30rem) {
   .app-shell__header {
     flex-wrap: wrap;
+    gap: var(--space-2);
   }
 
   .app-shell__brand {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
+    min-inline-size: 0;
   }
 
   .app-shell__brand-logo {
@@ -257,18 +259,22 @@
   }
 
   .app-shell__brand-name {
-    max-inline-size: var(--brand-logo-compact-name-max-inline);
+    flex: 1 1 auto;
+    max-inline-size: 100%;
   }
 
   .app-shell__brand-name strong {
     max-inline-size: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: break-word;
+    word-break: keep-all;
+  }
+
+  .app-shell__brand-name small {
+    display: none;
   }
 
   .app-shell__header-actions {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
     gap: var(--space-1);
     justify-content: flex-end;
   }

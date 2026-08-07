@@ -58,6 +58,13 @@ describe("runtime configuration", () => {
     expect(result).toEqual({ kind: "ready", mode: "preview" })
   })
 
+  it("keeps preview when opt-in dev tooling is enabled", () => {
+    expect(resolveRuntimeConfiguration({ VITE_ENABLE_DEV_TOOLS: "1" })).toEqual({
+      kind: "ready",
+      mode: "preview",
+    })
+  })
+
   it("blocks a browser secret even when runtime would otherwise default to preview", () => {
     // Given
     const environment = { VITE_SUPABASE_SERVICE_ROLE_KEY: "forbidden" }

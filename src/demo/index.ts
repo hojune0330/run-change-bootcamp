@@ -1,4 +1,10 @@
-export { adminModel } from "./admin-models.ts"
+export {
+  adminMembersModel,
+  adminModel,
+  adminReportsModel,
+  adminScheduleModel,
+  adminSettingsModel,
+} from "./admin-models.ts"
 export { coachBindings } from "./coach-bindings.ts"
 export { coachModel, DEMO_COHORT_OPTIONS } from "./coach-models.ts"
 export { participantBindings } from "./participant-bindings.ts"

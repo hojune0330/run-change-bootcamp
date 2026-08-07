@@ -99,7 +99,11 @@ export function CoachDashboard({ handlers, model }: CoachDashboardProps) {
   const focusRoster = () => {
     const roster = document.querySelector<HTMLElement>(".coach-roster")
     roster?.scrollIntoView({ block: "start" })
-    const search = document.querySelector<HTMLInputElement>('search input[type="search"]')
+    const search = document.querySelector<HTMLInputElement>(
+      // 프록시 앱 외부에서 호출되는 사이드바 버튼 핸들러. PR #10 코드리뷰에서
+      // React <search> → role="search" div로 교체함에 따라 셀렉터도 동기화.
+      '[role="search"] input[type="search"]',
+    )
     search?.focus({ preventScroll: true })
   }
 

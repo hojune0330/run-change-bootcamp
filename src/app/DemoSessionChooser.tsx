@@ -106,12 +106,12 @@ export function DemoSessionChooser({
           </div>
         </Card>
 
-        <Card eyebrow="운영 연결" title="로그인 연결 안내" tone="muted">
+        <Card eyebrow="데모 안내" title="공개 프리뷰 안내" tone="muted">
           <p className="demo-entry__note">
-            <span>이 화면은 로컬 데모입니다.</span>
-            <span>이메일 매직 링크를 연결하세요.</span>
-            <span>Supabase 인증 키를 설정하세요.</span>
-            <span>허용 URL도 설정하세요.</span>
+            <span>이 데모는 시드 데이터로 동작하는 공개 프리뷰입니다.</span>
+            <span>모든 기록은 이 브라우저에만 저장돼요.</span>
+            <span>실제 운영에서는 초대 전용 이메일 로그인으로 연결돼요.</span>
+            <span>아래 버튼으로 언제든 처음 상태로 되돌릴 수 있어요.</span>
           </p>
           <Button
             icon={<ArrowCounterClockwiseIcon aria-hidden size={19} weight="bold" />}

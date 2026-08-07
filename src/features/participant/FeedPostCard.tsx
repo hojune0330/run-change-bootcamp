@@ -223,6 +223,7 @@ export function FeedPostCard({
             <textarea
               id={commentId}
               onChange={(event) => setComment(event.currentTarget.value)}
+              placeholder="응원 한마디를 남겨보세요"
               rows={2}
               value={comment}
             />

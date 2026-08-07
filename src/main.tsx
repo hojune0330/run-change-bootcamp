@@ -44,7 +44,15 @@ if (rootElement === null) {
   throw new MissingRootElementError()
 }
 
-if (import.meta.env.DEV && import.meta.env.VITE_DISABLE_REACT_DEVTOOLS !== "1") {
+// Dev-only agent tooling (react-grab / react-scan) is an explicit opt-in:
+// react-grab injects a full-screen overlay that intercepts pointer events and
+// breaks the shell's bottom navigation clicks, so it must never be on by default.
+// Set VITE_ENABLE_DEV_TOOLS=1 in your local environment to enable it.
+const devToolsEnabled =
+  import.meta.env.DEV &&
+  import.meta.env.VITE_DISABLE_REACT_DEVTOOLS !== "1" &&
+  import.meta.env.VITE_ENABLE_DEV_TOOLS === "1"
+if (devToolsEnabled) {
   void import("react-grab")
   void import("react-scan")
 }

@@ -46,7 +46,10 @@
 .coach-summary {
   display: grid;
   gap: var(--space-2);
-  grid-template-columns: repeat(auto-fit, minmax(min(8rem, 100%), 1fr));
+  /* 모바일(<=22rem 폭)에서는 min(11rem, 100%)가 폭을 초과해 1열로 떨어지므로
+     5개 카드가 단독 홀로 남지 않고 균형 있게 쌓입니다. 더 넓은 폭에서는
+     11rem이 한 컬럼의 최소 너비라 데스크톱 5열로 자연스럽게 정렬됩니다. */
+  grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
   list-style: none;
   margin: 0;
   padding: 0;

@@ -19,7 +19,7 @@ function routeControl(href: CoachHref): HTMLElement | null {
   )
   switch (href) {
     case "/coach/cohort":
-      return document.querySelector<HTMLInputElement>('search input[type="search"]')
+      return document.querySelector<HTMLInputElement>('[role="search"] input[type="search"]')
     case "/coach/assignments":
       return publisherForms.item(0).querySelector<HTMLElement>("input, select, textarea, button")
     case "/coach/feedback":

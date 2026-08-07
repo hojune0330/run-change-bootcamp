@@ -13,7 +13,7 @@ describe("demo session boundary", () => {
 
   afterEach(cleanup)
 
-  it("explains production magic-link setup and offers participant and coach sessions", () => {
+  it("explains the public seed preview boundary and offers participant and coach sessions", () => {
     // Given
     render(<App />)
 
@@ -22,7 +22,7 @@ describe("demo session boundary", () => {
 
     // Then
     expect(chooser).toBeInTheDocument()
-    expect(screen.getByText("이메일 매직 링크를 연결하세요.")).toBeVisible()
+    expect(screen.getByText("모든 기록은 이 브라우저에만 저장돼요.")).toBeVisible()
     expect(screen.getByRole("combobox", { name: "참여자 선택" })).toHaveLength(20)
     expect(screen.getByRole("button", { name: "참여자로 시작" })).toBeEnabled()
     expect(screen.getByRole("button", { name: "코치로 시작" })).toBeEnabled()
