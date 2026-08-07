@@ -19,13 +19,31 @@ function participant(id: DemoParticipantId) {
   return found
 }
 
+const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/
+
+const KOREAN_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"] as const
+
+export function dueDateLabel(isoDate: string): string {
+  const match = ISO_DATE_PATTERN.exec(isoDate)
+  if (match === null) return `${isoDate}까지`
+  const [, , month, day] = match
+  return `${Number(month)}월 ${Number(day)}일까지`
+}
+
+export function todayDateLabel(reference: Date = new Date()): string {
+  const month = reference.getMonth() + 1
+  const day = reference.getDate()
+  const weekday = KOREAN_WEEKDAYS[reference.getDay()] ?? ""
+  return `${month}월 ${day}일 ${weekday}요일`
+}
+
 export function todayModel(state: DemoState, participantId: DemoParticipantId): TodayViewModel {
   const member = participant(participantId)
   const assignment = state.assignments.at(-1)
   const notice = state.notices.at(-1)
   return {
     displayName: member.displayName,
-    dateLabel: "8월 31일 월요일",
+    dateLabel: todayDateLabel(),
     ...(assignment === undefined
       ? {}
       : {
@@ -33,7 +51,7 @@ export function todayModel(state: DemoState, participantId: DemoParticipantId): 
             id: assignment.id,
             title: assignment.title,
             summary: assignment.summary,
-            dueLabel: `${assignment.dueDate}까지`,
+            dueLabel: dueDateLabel(assignment.dueDate),
             durationLabel: assignment.category === "running" ? "약 20분" : "약 5분",
             status: state.completions.some(
               (item) => item.participantId === participantId && item.assignmentId === assignment.id,
