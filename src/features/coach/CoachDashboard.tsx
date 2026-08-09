@@ -109,7 +109,7 @@ export function CoachDashboard({ handlers, model }: CoachDashboardProps) {
         <div>
           <p>코치 데스크 · {model.dateRangeLabel}</p>
           <h1>{model.programName}</h1>
-          <span>20명 코호트의 과제, 안전 신호, 승인 대기를 한곳에서 확인합니다.</span>
+          <span>20명 코호트의 과제, 안전 신호, 승인 대기를 한곳에서 확인합니다.</span>
         </div>
       </header>
 

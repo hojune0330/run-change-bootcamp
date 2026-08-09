@@ -12,6 +12,14 @@ const ADMIN_SCREENS = [
   ["설정", "관리자 프로그램 설정", "settings"],
 ] as const
 
+const ADMIN_UNBROKEN_PHRASES = [
+  "결정하면",
+  "한 화면에서",
+  "요청하면",
+  "5명 미만",
+  "건강 공유 현황",
+] as const
+
 async function resetPreview(page: Page): Promise<void> {
   await page.goto("./")
   await page.evaluate(() => window.localStorage.clear())
@@ -50,19 +58,20 @@ async function expectTableContentReachable(page: Page): Promise<void> {
 
 async function expectPhrasesOnOneLine(locator: Locator, phrases: readonly string[]): Promise<void> {
   const measured = await locator.evaluate((element, expectedPhrases) => {
-    const text = element.textContent ?? ""
+    const text = (element.textContent ?? "").replaceAll("\u00a0", " ")
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
     const nodes: { end: number; node: Text; start: number }[] = []
     let cursor = 0
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      const textNode = node as Text
-      nodes.push({ end: cursor + textNode.length, node: textNode, start: cursor })
-      cursor += textNode.length
+      if (!(node instanceof Text)) continue
+      nodes.push({ end: cursor + node.length, node, start: cursor })
+      cursor += node.length
     }
 
     return expectedPhrases.map((phrase) => {
-      const start = text.indexOf(phrase)
-      const end = start + phrase.length - 1
+      const normalizedPhrase = phrase.replaceAll("\u00a0", " ")
+      const start = text.indexOf(normalizedPhrase)
+      const end = start + normalizedPhrase.length - 1
       const startNode = nodes.find((node) => start >= node.start && start < node.end)
       const endNode = nodes.find((node) => end >= node.start && end < node.end)
       if (start < 0 || startNode === undefined || endNode === undefined) {
@@ -83,14 +92,19 @@ async function expectPhrasesOnOneLine(locator: Locator, phrases: readonly string
 
 async function expectAdminCopyWithoutOrphans(page: Page): Promise<void> {
   const eyebrow = page.locator(".admin-dashboard__eyebrow")
-  const text = (await eyebrow.textContent()) ?? ""
-  const dateTokens = text.match(/\d{1,2}월[ \u00a0]\d{1,2}일/g) ?? []
+  const eyebrowText = (await eyebrow.textContent()) ?? ""
+  const dateTokens = eyebrowText.match(/\d{1,2}월[ \u00a0]\d{1,2}일/g) ?? []
   await expectPhrasesOnOneLine(eyebrow, dateTokens)
 
   const description = page.locator(".admin-dashboard__header > div > span")
   if ((await description.textContent())?.includes("확인합니다.")) {
     await expectPhrasesOnOneLine(description, ["확인합니다."])
   }
+
+  const dashboard = page.locator(".admin-dashboard")
+  const dashboardText = ((await dashboard.textContent()) ?? "").replaceAll("\u00a0", " ")
+  const presentPhrases = ADMIN_UNBROKEN_PHRASES.filter((phrase) => dashboardText.includes(phrase))
+  await expectPhrasesOnOneLine(dashboard, presentPhrases)
 }
 
 function observeRuntimeErrors(page: Page): string[] {
@@ -151,6 +165,7 @@ test("participant and coach preview journeys preserve synthetic-data context", a
     await expectNoHorizontalOverflow(page)
     if (label === "기록") {
       await expect(page.getByText("8월 31일")).toBeVisible()
+      await expectPhrasesOnOneLine(page.locator(".participant-screen"), ["초안으로 만들어요."])
       await resetCaptureViewport(page)
       await page.screenshot({ path: testInfo.outputPath("participant-record.png") })
     }
@@ -163,6 +178,7 @@ test("participant and coach preview journeys preserve synthetic-data context", a
   await expect(page.getByRole("region", { name: "코치 운영 대시보드" })).toBeVisible()
   await expect(page.getByText("시연용 합성 데이터")).toBeVisible()
   await expectNoHorizontalOverflow(page)
+  await expectPhrasesOnOneLine(page.locator(".coach-dashboard"), ["한곳에서 확인합니다."])
   await resetCaptureViewport(page)
   await page.screenshot({ path: testInfo.outputPath("coach-dashboard.png") })
 

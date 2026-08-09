@@ -27,7 +27,7 @@ export function RecordScreen({ state, handlers, onRetry }: RecordScreenProps) {
       <header className="participant-screen__header">
         <p className="participant-screen__eyebrow">기본 비공개</p>
         <h1 id="participant-record-title">기록</h1>
-        <p>직접 입력하거나 파일과 스크린샷을 검토할 초안으로 만들어요.</p>
+        <p>직접 입력하거나 파일과 스크린샷을 검토할 초안으로 만들어요.</p>
       </header>
       <LoadableBoundary onRetry={onRetry} state={state}>
         {(model) => (

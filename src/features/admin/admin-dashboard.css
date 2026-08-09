@@ -35,14 +35,17 @@
   overflow-wrap: anywhere;
 }
 
-.admin-dashboard__header span {
+:is(.admin-dashboard__header span, .admin-activity__empty) {
   color: var(--color-text-muted);
-  display: block;
   line-height: 1.55;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+.admin-dashboard__header span {
+  display: block;
   margin-block-start: var(--space-3);
   max-inline-size: 44rem;
-  overflow-wrap: break-word;
-  word-break: keep-all;
 }
 
 .admin-kpis {
@@ -202,7 +205,6 @@
 }
 
 .admin-activity__empty {
-  color: var(--color-text-muted);
   line-height: 1.6;
   margin: 0;
 }

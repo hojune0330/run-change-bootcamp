@@ -17,7 +17,7 @@ export function AdminMemberRoster({ model }: AdminMemberRosterProps) {
         <div>
           <p className="admin-dashboard__eyebrow">전체 명부 · {model.dateRangeLabel}</p>
           <h1>{model.programName}</h1>
-          <span>프로그램 멤버의 역할·상태·진척도와 건강 공유 현황을 확인합니다.</span>
+          <span>프로그램 멤버의 역할·상태·진척도와 건강 공유 현황을 확인합니다.</span>
         </div>
         <Badge tone="success">멤버 명부</Badge>
       </header>

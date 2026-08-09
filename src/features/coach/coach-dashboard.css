@@ -41,6 +41,8 @@
   line-height: 1.55;
   margin-block-start: var(--space-3);
   max-inline-size: 44rem;
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 .coach-summary {
