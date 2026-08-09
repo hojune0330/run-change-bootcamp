@@ -24,6 +24,7 @@
   font-weight: 620;
   letter-spacing: 0.04em;
   margin: 0 0 var(--space-2);
+  word-break: keep-all;
 }
 
 .admin-dashboard__header h1 {
@@ -40,6 +41,8 @@
   line-height: 1.55;
   margin-block-start: var(--space-3);
   max-inline-size: 44rem;
+  overflow-wrap: break-word;
+  word-break: keep-all;
 }
 
 .admin-kpis {
@@ -231,4 +234,59 @@
 
 .admin-activity__table td {
   font-size: var(--font-size-body);
+}
+
+@media (max-width: 63.999rem) {
+  .admin-activity__table-wrap--stacked {
+    overflow: visible;
+  }
+
+  .admin-activity__table--stacked {
+    display: block;
+    min-inline-size: 0;
+  }
+
+  .admin-activity__table--stacked thead {
+    block-size: 1px;
+    clip-path: inset(50%);
+    inline-size: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+  }
+
+  .admin-activity__table--stacked tbody {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .admin-activity__table--stacked tr {
+    background: var(--color-surface);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-panel);
+    display: block;
+    padding: var(--space-3);
+  }
+
+  .admin-activity__table--stacked td {
+    align-items: baseline;
+    border-block-end: var(--border-width) solid var(--color-border);
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: minmax(5.5rem, 34%) minmax(0, 1fr);
+    overflow-wrap: anywhere;
+    padding: var(--space-2) 0;
+  }
+
+  .admin-activity__table--stacked td::before {
+    color: var(--color-text-muted);
+    content: attr(data-label);
+    font-size: var(--font-size-small);
+    font-weight: 620;
+    word-break: keep-all;
+  }
+
+  .admin-activity__table--stacked td:last-child {
+    border-block-end: 0;
+  }
 }

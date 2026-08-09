@@ -47,7 +47,9 @@ function readWorkflowNodeVersionFile(): string {
 
 type BuildOutput = {
   readonly assets: readonly string[]
+  readonly devToolsAssets: readonly string[]
   readonly index: string
+  readonly javaScript: string
   readonly manifest: z.infer<typeof ManifestSchema>
   readonly serviceWorker: string
 }
@@ -66,9 +68,23 @@ function buildWithMode(mode: "preview" | "pages"): BuildOutput {
         timeout: deploymentBuildTimeoutMs,
       },
     )
+    const assets = readdirSync(join(outputDirectory, "assets"))
+    const javaScriptAssets = assets
+      .filter((asset) => asset.endsWith(".js"))
+      .map((asset) => ({
+        asset,
+        source: readFileSync(join(outputDirectory, "assets", asset), "utf8"),
+      }))
     return {
-      assets: readdirSync(join(outputDirectory, "assets")),
+      assets,
+      devToolsAssets: javaScriptAssets
+        .filter(
+          ({ source }) =>
+            source.includes("data-react-grab") || source.includes("reactScanIdCounter"),
+        )
+        .map(({ asset }) => asset),
       index: readFileSync(join(outputDirectory, "index.html"), "utf8"),
+      javaScript: javaScriptAssets.map(({ source }) => source).join("\n"),
       manifest: ManifestSchema.parse(
         JSON.parse(readFileSync(join(outputDirectory, "manifest.webmanifest"), "utf8")),
       ),
@@ -185,5 +201,18 @@ describe("Vite/PWA deployment modes", () => {
     expect(output.serviceWorker).toContain(coreScript)
     expect(output.serviceWorker).toContain("index.html")
     expect(precachesPilotRuntime).toBe(false)
+  })
+
+  it("omits opt-in React inspection tools from production assets and the PWA precache", () => {
+    // Given
+    const output = buildWithMode("pages")
+
+    // Then
+    expect(output.javaScript).not.toContain("data-react-grab")
+    expect(output.javaScript).not.toContain("reactScanIdCounter")
+    expect(output.javaScript).not.toContain("react-grab")
+    expect(output.javaScript).not.toContain("react-scan")
+    expect(output.devToolsAssets).toEqual([])
+    expect(output.devToolsAssets.every((asset) => !output.serviceWorker.includes(asset))).toBe(true)
   })
 })

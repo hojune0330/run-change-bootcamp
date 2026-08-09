@@ -6,7 +6,6 @@ import { PRODUCT_METADATA, resolveBrandConfig } from "./design/brand-config.ts"
 import { COLOR_TOKEN_ENTRIES } from "./design/color-tokens.ts"
 import "./design/tokens.css"
 import "./design/global.css"
-import { shouldLoadReactDevTools } from "./app/react-dev-tools.ts"
 
 const RuntimeApp =
   import.meta.env.VITE_APP_RUNTIME === "pilot"
@@ -43,11 +42,6 @@ const rootElement = document.getElementById("root")
 
 if (rootElement === null) {
   throw new MissingRootElementError()
-}
-
-if (shouldLoadReactDevTools(import.meta.env)) {
-  void import("react-grab")
-  void import("react-scan")
 }
 
 createRoot(rootElement).render(

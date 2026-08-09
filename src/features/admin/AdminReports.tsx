@@ -65,8 +65,11 @@ export function AdminReports({ model }: AdminReportsProps) {
                 </div>
               </dl>
             </div>
-            <div className="admin-activity__table-wrap">
-              <table aria-label="집계 셀" className="admin-activity__table">
+            <div className="admin-activity__table-wrap admin-activity__table-wrap--stacked">
+              <table
+                aria-label="집계 셀"
+                className="admin-activity__table admin-activity__table--stacked"
+              >
                 <thead>
                   <tr>
                     <th scope="col">항목</th>
@@ -78,16 +81,16 @@ export function AdminReports({ model }: AdminReportsProps) {
                 <tbody>
                   {snapshot.cells.map((cell) => (
                     <tr key={cell.id}>
-                      <td>{cell.rowLabel}</td>
-                      <td>{cell.columnLabel}</td>
-                      <td>
+                      <td data-label="항목">{cell.rowLabel}</td>
+                      <td data-label="구분">{cell.columnLabel}</td>
+                      <td data-label="참여자 수">
                         {cell.suppressed ? (
                           <Badge tone="neutral">숨김</Badge>
                         ) : (
                           cell.participantCountLabel
                         )}
                       </td>
-                      <td>{cell.suppressed ? "—" : cell.valueLabel}</td>
+                      <td data-label="값">{cell.suppressed ? "—" : cell.valueLabel}</td>
                     </tr>
                   ))}
                 </tbody>

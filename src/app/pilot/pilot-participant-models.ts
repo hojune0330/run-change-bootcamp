@@ -27,8 +27,7 @@ import { metricLabel, metricValue, timeAgoLabel } from "./pilot-coach-models.ts"
 
 function dueLabel(dueAt: string | null): string {
   if (dueAt === null) return "기한 미정"
-  const dateText = dueAt.length >= 10 ? dueAt.slice(0, 10) : dueAt
-  return formatKoreanDueDate(dateText)
+  return formatKoreanDueDate(dueAt)
 }
 
 function durationLabel(kind: "health" | "reflection" | "running"): string {

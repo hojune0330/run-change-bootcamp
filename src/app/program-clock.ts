@@ -1,4 +1,4 @@
-import { type IsoDate, IsoDateSchema } from "../domain/values.ts"
+import { type IsoDate, IsoDateSchema, IsoDateTimeSchema } from "../domain/values.ts"
 
 export type ProgramClock = {
   readonly today: () => IsoDate
@@ -31,18 +31,27 @@ export function createSeoulProgramClock(now: () => Date = () => new Date()): Pro
 }
 
 export function formatKoreanDate(date: IsoDate, style: "month_day" | "full_with_weekday"): string {
+  return formatDateInSeoul(dateAtSeoulMidnight(date), style)
+}
+
+function formatDateInSeoul(date: Date, style: "month_day" | "full_with_weekday"): string {
   const formatted = new Intl.DateTimeFormat("ko-KR", {
     day: "numeric",
     month: "long",
     timeZone: SEOUL_TIME_ZONE,
     ...(style === "full_with_weekday" ? { weekday: "long" as const } : {}),
-  }).format(dateAtSeoulMidnight(date))
+  }).format(date)
   return formatted.replaceAll(". ", "월 ").replace(".", "일")
 }
 
 export function formatKoreanDueDate(value: string): string {
   const date = IsoDateSchema.safeParse(value)
-  return date.success ? `${formatKoreanDate(date.data, "month_day")}까지` : "기한 미정"
+  if (date.success) return `${formatKoreanDate(date.data, "month_day")}까지`
+
+  const dateTime = IsoDateTimeSchema.safeParse(value)
+  return dateTime.success
+    ? `${formatDateInSeoul(new Date(dateTime.data), "month_day")}까지`
+    : "기한 미정"
 }
 
 export function formatKoreanProgramRange(startsOn: string, endsOn: string): string {
@@ -51,5 +60,6 @@ export function formatKoreanProgramRange(startsOn: string, endsOn: string): stri
   if (!start.success || !end.success) return "일정 미정"
 
   const [startYear] = start.data.split("-")
-  return `${startYear}년 ${formatKoreanDate(start.data, "month_day")} – ${formatKoreanDate(end.data, "month_day")}`
+  const keepMonthDayTogether = (label: string) => label.replace("월 ", "월 ")
+  return `${startYear}년 ${keepMonthDayTogether(formatKoreanDate(start.data, "month_day"))} – ${keepMonthDayTogether(formatKoreanDate(end.data, "month_day"))}`
 }

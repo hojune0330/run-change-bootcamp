@@ -38,6 +38,31 @@
   min-inline-size: 0;
 }
 
+.participant-date-control {
+  align-items: center;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  display: flex;
+  min-block-size: var(--target-min);
+  padding: var(--space-3);
+  position: relative;
+}
+
+.participant-date-control:focus-within {
+  outline: var(--focus-width) solid var(--color-accent);
+  outline-offset: var(--space-1);
+}
+
+.participant-date-control input {
+  block-size: 100%;
+  cursor: pointer;
+  inset: 0;
+  opacity: 0;
+  padding: 0;
+  position: absolute;
+}
+
 .participant-mode-picker button,
 .participant-switch {
   background: var(--color-surface);

@@ -50,8 +50,11 @@ export function AdminSchedule({ model }: AdminScheduleProps) {
           아직 등록된 세션이 없습니다. 일정이 추가되면 여기에 표시돼요.
         </p>
       ) : (
-        <div className="admin-activity__table-wrap">
-          <table aria-label="프로그램 일정" className="admin-activity__table">
+        <div className="admin-activity__table-wrap admin-activity__table-wrap--stacked">
+          <table
+            aria-label="프로그램 일정"
+            className="admin-activity__table admin-activity__table--stacked"
+          >
             <thead>
               <tr>
                 <th scope="col">회차</th>
@@ -63,12 +66,12 @@ export function AdminSchedule({ model }: AdminScheduleProps) {
             <tbody>
               {model.sessions.map((session) => (
                 <tr key={session.id}>
-                  <td>{session.sessionNumber}회차</td>
-                  <td>
+                  <td data-label="회차">{session.sessionNumber}회차</td>
+                  <td data-label="종류">
                     <Badge tone={kindTone(session)}>{session.kindLabel}</Badge>
                   </td>
-                  <td>{session.title}</td>
-                  <td>{session.scheduledAtLabel}</td>
+                  <td data-label="제목">{session.title}</td>
+                  <td data-label="일시">{session.scheduledAtLabel}</td>
                 </tr>
               ))}
             </tbody>

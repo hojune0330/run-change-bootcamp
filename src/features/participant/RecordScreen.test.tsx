@@ -31,6 +31,8 @@ describe("RecordScreen", () => {
       />,
     )
 
+    expect(screen.getByText("8월 31일")).toBeInTheDocument()
+
     // When
     await user.selectOptions(screen.getByLabelText("측정 항목"), "distance_km")
     await user.type(screen.getByLabelText("측정값"), "5.2")

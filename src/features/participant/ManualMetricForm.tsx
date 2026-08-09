@@ -1,6 +1,8 @@
 import { type FormEvent, useId, useRef, useState } from "react"
 import { z } from "zod"
+import { formatKoreanDate } from "../../app/program-clock.ts"
 import { Button } from "../../components/primitives/index.ts"
+import { IsoDateSchema } from "../../domain/values.ts"
 import { ActionFeedback } from "./ActionFeedback.tsx"
 import { type ActionFeedbackState, rejectedActionFeedback } from "./action-feedback-state.ts"
 import { assertParticipantNever, type RecordHandlers } from "./models.ts"
@@ -32,6 +34,10 @@ export function ManualMetricForm({ handlers, recordedOn }: ManualMetricFormProps
   const [feedback, setFeedback] = useState<ActionFeedbackState>()
   const actionPending = useRef(false)
   const date = dateOverride ?? recordedOn
+  const parsedDate = IsoDateSchema.safeParse(date)
+  const dateLabel = parsedDate.success
+    ? formatKoreanDate(parsedDate.data, "month_day")
+    : "날짜를 선택해 주세요"
 
   const saveMetric = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -109,13 +115,16 @@ export function ManualMetricForm({ handlers, recordedOn }: ManualMetricFormProps
         </div>
         <div className="participant-field">
           <label htmlFor={`${fieldPrefix}-date`}>측정일</label>
-          <input
-            id={`${fieldPrefix}-date`}
-            onChange={(event) => setDateOverride(event.currentTarget.value)}
-            required
-            type="date"
-            value={date}
-          />
+          <div className="participant-date-control">
+            <span aria-hidden="true">{dateLabel}</span>
+            <input
+              id={`${fieldPrefix}-date`}
+              onChange={(event) => setDateOverride(event.currentTarget.value)}
+              required
+              type="date"
+              value={date}
+            />
+          </div>
         </div>
       </div>
       <p className="participant-form__hint">건강 측정값은 저장해도 자동으로 공유되지 않아요.</p>

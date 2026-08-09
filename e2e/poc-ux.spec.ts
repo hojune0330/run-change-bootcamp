@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test"
 
+type Page = import("@playwright/test").Page
+type Locator = import("@playwright/test").Locator
+
 const ADMIN_SCREENS = [
   ["운영 개요", "관리자 운영 대시보드", "overview"],
   ["멤버", "관리자 멤버 명부", "members"],
@@ -9,27 +12,135 @@ const ADMIN_SCREENS = [
   ["설정", "관리자 프로그램 설정", "settings"],
 ] as const
 
-async function resetPreview(page: import("@playwright/test").Page): Promise<void> {
+async function resetPreview(page: Page): Promise<void> {
   await page.goto("./")
   await page.evaluate(() => window.localStorage.clear())
   await page.reload()
 }
 
-async function expectNoHorizontalOverflow(page: import("@playwright/test").Page): Promise<void> {
+async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const overflows = await page
     .locator("html")
     .evaluate((element) => element.scrollWidth > element.clientWidth)
   expect(overflows).toBe(false)
 }
 
+async function expectTableContentReachable(page: Page): Promise<void> {
+  const viewport = page.viewportSize()
+  for (const region of await page.locator(".admin-activity__table-wrap").all()) {
+    const state = await region.evaluate((element) => {
+      const lastCell = element.querySelector("tbody tr:last-child > :last-child")
+      const regionRect = element.getBoundingClientRect()
+      const cellRect = lastCell?.getBoundingClientRect()
+      return {
+        contentFits:
+          cellRect === undefined ||
+          (cellRect.left >= regionRect.left - 1 && cellRect.right <= regionRect.right + 1),
+        scrollWidth: element.scrollWidth,
+        width: element.clientWidth,
+      }
+    })
+
+    if (viewport !== null && viewport.width < 1024) {
+      expect(state.scrollWidth).toBeLessThanOrEqual(state.width + 1)
+      expect(state.contentFits).toBe(true)
+    }
+  }
+}
+
+async function expectPhrasesOnOneLine(locator: Locator, phrases: readonly string[]): Promise<void> {
+  const measured = await locator.evaluate((element, expectedPhrases) => {
+    const text = element.textContent ?? ""
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+    const nodes: { end: number; node: Text; start: number }[] = []
+    let cursor = 0
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const textNode = node as Text
+      nodes.push({ end: cursor + textNode.length, node: textNode, start: cursor })
+      cursor += textNode.length
+    }
+
+    return expectedPhrases.map((phrase) => {
+      const start = text.indexOf(phrase)
+      const end = start + phrase.length - 1
+      const startNode = nodes.find((node) => start >= node.start && start < node.end)
+      const endNode = nodes.find((node) => end >= node.start && end < node.end)
+      if (start < 0 || startNode === undefined || endNode === undefined) {
+        return { lineCount: 0, phrase }
+      }
+      const range = document.createRange()
+      range.setStart(startNode.node, start - startNode.start)
+      range.setEnd(endNode.node, end - endNode.start + 1)
+      const lines = new Set(
+        Array.from(range.getClientRects(), (rect) => Math.round(rect.top * 10) / 10),
+      )
+      return { lineCount: lines.size, phrase }
+    })
+  }, phrases)
+
+  expect(measured).toEqual(phrases.map((phrase) => ({ lineCount: 1, phrase })))
+}
+
+async function expectAdminCopyWithoutOrphans(page: Page): Promise<void> {
+  const eyebrow = page.locator(".admin-dashboard__eyebrow")
+  const text = (await eyebrow.textContent()) ?? ""
+  const dateTokens = text.match(/\d{1,2}월[ \u00a0]\d{1,2}일/g) ?? []
+  await expectPhrasesOnOneLine(eyebrow, dateTokens)
+
+  const description = page.locator(".admin-dashboard__header > div > span")
+  if ((await description.textContent())?.includes("확인합니다.")) {
+    await expectPhrasesOnOneLine(description, ["확인합니다."])
+  }
+}
+
+function observeRuntimeErrors(page: Page): string[] {
+  const errors: string[] = []
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(`console:${message.text()}`)
+  })
+  page.on("pageerror", (error) => errors.push(`pageerror:${error.message}`))
+  page.on("requestfailed", (request) =>
+    errors.push(`requestfailed:${request.url()}:${request.failure()?.errorText ?? "unknown"}`),
+  )
+  page.on("response", (response) => {
+    if (response.status() >= 400) errors.push(`response:${response.status()}:${response.url()}`)
+  })
+  return errors
+}
+
+async function resetCaptureViewport(page: Page): Promise<void> {
+  const geometry = await page.evaluate(() => {
+    window.scrollTo({ left: 0, top: 0 })
+    document.querySelector<HTMLElement>(".app-shell")?.scrollTo({ left: 0, top: 0 })
+    document.querySelector<HTMLElement>(".app-shell__main")?.scrollTo({ left: 0, top: 0 })
+
+    const header = document.querySelector<HTMLElement>(".app-shell__header")
+    const provenance = document.querySelector<HTMLElement>("[data-demo-provenance]")
+    const headerRect = header?.getBoundingClientRect()
+    const provenanceRect = provenance?.getBoundingClientRect()
+    return {
+      headerBottom: headerRect?.bottom ?? -1,
+      headerTop: headerRect?.top ?? -1,
+      provenanceBottom: provenanceRect?.bottom ?? -1,
+      provenanceTop: provenanceRect?.top ?? -1,
+      viewportHeight: window.innerHeight,
+    }
+  })
+
+  expect(geometry.headerTop).toBeGreaterThanOrEqual(0)
+  expect(geometry.headerBottom).toBeLessThanOrEqual(geometry.viewportHeight)
+  expect(geometry.provenanceTop).toBeGreaterThanOrEqual(geometry.headerTop)
+  expect(geometry.provenanceBottom).toBeLessThanOrEqual(geometry.headerBottom)
+}
+
 test("participant and coach preview journeys preserve synthetic-data context", async ({
   page,
 }, testInfo) => {
-  const consoleErrors: string[] = []
-  page.on("console", (message) => {
-    if (message.type() === "error") consoleErrors.push(message.text())
-  })
+  const runtimeErrors = observeRuntimeErrors(page)
   await page.emulateMedia({ reducedMotion: "reduce" })
+  expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(
+    true,
+  )
   await resetPreview(page)
 
   await page.getByRole("button", { name: "참여자로 시작" }).click()
@@ -38,7 +149,13 @@ test("participant and coach preview journeys preserve synthetic-data context", a
     await expect(page.getByRole("heading", { level: 1, name: label })).toBeVisible()
     await expect(page.getByText("시연용 합성 데이터")).toBeVisible()
     await expectNoHorizontalOverflow(page)
+    if (label === "기록") {
+      await expect(page.getByText("8월 31일")).toBeVisible()
+      await resetCaptureViewport(page)
+      await page.screenshot({ path: testInfo.outputPath("participant-record.png") })
+    }
   }
+  await resetCaptureViewport(page)
   await page.screenshot({ path: testInfo.outputPath("participant-change.png") })
 
   await page.getByRole("link", { name: "세션 바꾸기" }).click()
@@ -46,25 +163,27 @@ test("participant and coach preview journeys preserve synthetic-data context", a
   await expect(page.getByRole("region", { name: "코치 운영 대시보드" })).toBeVisible()
   await expect(page.getByText("시연용 합성 데이터")).toBeVisible()
   await expectNoHorizontalOverflow(page)
+  await resetCaptureViewport(page)
   await page.screenshot({ path: testInfo.outputPath("coach-dashboard.png") })
 
-  expect(consoleErrors).toEqual([])
+  expect(runtimeErrors).toEqual([])
 })
 
 test("all six admin routes are distinct, usable, and visually captured", async ({
   page,
 }, testInfo) => {
-  const consoleErrors: string[] = []
-  page.on("console", (message) => {
-    if (message.type() === "error") consoleErrors.push(message.text())
-  })
+  const runtimeErrors = observeRuntimeErrors(page)
   await page.emulateMedia({ reducedMotion: "reduce" })
+  expect(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(
+    true,
+  )
   await resetPreview(page)
   await page.getByRole("button", { name: "관리자로 시작" }).click()
 
   for (const [navigationLabel, screenLabel, artifactName] of ADMIN_SCREENS) {
     const navigationLink = page.getByRole("link", { name: navigationLabel })
-    await navigationLink.click()
+    await navigationLink.focus()
+    await page.keyboard.press("Enter")
     await expect(page.getByRole("region", { name: screenLabel })).toBeVisible()
     await expect(navigationLink).toHaveAttribute("aria-current", "page")
     await expect(page.getByText("시연용 합성 데이터")).toBeVisible()
@@ -78,8 +197,11 @@ test("all six admin routes are distinct, usable, and visually captured", async (
       await expect(page.locator("#main-content")).toBeFocused()
     }
     await expectNoHorizontalOverflow(page)
+    await expectAdminCopyWithoutOrphans(page)
+    await expectTableContentReachable(page)
+    await resetCaptureViewport(page)
     await page.screenshot({ path: testInfo.outputPath(`admin-${artifactName}.png`) })
   }
 
-  expect(consoleErrors).toEqual([])
+  expect(runtimeErrors).toEqual([])
 })
