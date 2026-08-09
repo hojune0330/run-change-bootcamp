@@ -17,12 +17,18 @@ import type {
   PilotParticipantToday,
 } from "../../integrations/supabase/pilot-gateway.ts"
 import { toBrowserPath } from "../base-path.ts"
-import { formatMonthDay, metricLabel, metricValue, timeAgoLabel } from "./pilot-coach-models.ts"
+import {
+  createSeoulProgramClock,
+  formatKoreanDate,
+  formatKoreanDueDate,
+  type ProgramClock,
+} from "../program-clock.ts"
+import { metricLabel, metricValue, timeAgoLabel } from "./pilot-coach-models.ts"
 
 function dueLabel(dueAt: string | null): string {
   if (dueAt === null) return "기한 미정"
   const dateText = dueAt.length >= 10 ? dueAt.slice(0, 10) : dueAt
-  return `${formatMonthDay(dateText)}까지`
+  return formatKoreanDueDate(dateText)
 }
 
 function durationLabel(kind: "health" | "reflection" | "running"): string {
@@ -70,10 +76,15 @@ function metricDeltaLabel(metric: PilotParticipantMetric): string | undefined {
   return `이전 ${baseline} ${metric.unit}`
 }
 
-export function buildParticipantTodayModel(today: PilotParticipantToday): TodayViewModel {
+const PILOT_PROGRAM_CLOCK = createSeoulProgramClock()
+
+export function buildParticipantTodayModel(
+  today: PilotParticipantToday,
+  clock: ProgramClock = PILOT_PROGRAM_CLOCK,
+): TodayViewModel {
   return {
     displayName: today.profile.displayName,
-    dateLabel: today.dateLabel,
+    dateLabel: formatKoreanDate(clock.today(), "full_with_weekday"),
     ...(today.backlog.length === 0
       ? {}
       : {

@@ -385,7 +385,7 @@ describe("App runtime boundary", () => {
     render(<App pilotGatewayFactory={pilotGatewayFactory} runtimeEnvironment={{}} />)
 
     // Then
-    expect(screen.getByRole("region", { name: "데모 세션 선택" })).toBeVisible()
+    expect(screen.getByRole("region", { name: "미리 볼 역할을 선택하세요" })).toBeVisible()
     expect(screen.getByRole("button", { name: "참여자로 시작" })).toBeEnabled()
     expect(screen.getByRole("button", { name: "코치로 시작" })).toBeEnabled()
     expect(window.localStorage.getItem(DEMO_STORAGE_KEY)).toMatch(/^\{"version":1,/)

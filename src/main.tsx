@@ -6,6 +6,7 @@ import { PRODUCT_METADATA, resolveBrandConfig } from "./design/brand-config.ts"
 import { COLOR_TOKEN_ENTRIES } from "./design/color-tokens.ts"
 import "./design/tokens.css"
 import "./design/global.css"
+import { shouldLoadReactDevTools } from "./app/react-dev-tools.ts"
 
 const RuntimeApp =
   import.meta.env.VITE_APP_RUNTIME === "pilot"
@@ -44,7 +45,7 @@ if (rootElement === null) {
   throw new MissingRootElementError()
 }
 
-if (import.meta.env.DEV && import.meta.env.VITE_DISABLE_REACT_DEVTOOLS !== "1") {
+if (shouldLoadReactDevTools(import.meta.env)) {
   void import("react-grab")
   void import("react-scan")
 }

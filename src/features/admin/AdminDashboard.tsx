@@ -76,9 +76,11 @@ export function AdminDashboard({ model }: AdminDashboardProps) {
         </Card>
       </div>
 
-      <Card eyebrow="전체 활동" title="활동 로그">
-        <AdminActivityLog actionOptions={model.actionOptions} entries={model.activity} />
-      </Card>
+      <div className="admin-dashboard__full-activity">
+        <Card eyebrow="전체 활동" title="활동 로그">
+          <AdminActivityLog actionOptions={model.actionOptions} entries={model.activity} />
+        </Card>
+      </div>
     </section>
   )
 }

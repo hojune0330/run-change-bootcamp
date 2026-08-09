@@ -99,7 +99,7 @@ export function CoachDashboard({ handlers, model }: CoachDashboardProps) {
   const focusRoster = () => {
     const roster = document.querySelector<HTMLElement>(".coach-roster")
     roster?.scrollIntoView({ block: "start" })
-    const search = document.querySelector<HTMLInputElement>('search input[type="search"]')
+    const search = document.querySelector<HTMLInputElement>('[role="search"] input[type="search"]')
     search?.focus({ preventScroll: true })
   }
 

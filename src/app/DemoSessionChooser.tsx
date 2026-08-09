@@ -5,7 +5,11 @@ import { UsersThreeIcon } from "@phosphor-icons/react/UsersThree"
 import { useState } from "react"
 import { BrandLogo } from "../components/BrandLogo.tsx"
 import { Badge, Button, Card } from "../components/primitives/index.ts"
-import type { DemoParticipantId, DemoRepository } from "../demo/index.ts"
+import {
+  DEMO_DATA_PROVENANCE_LABEL,
+  type DemoParticipantId,
+  type DemoRepository,
+} from "../demo/index.ts"
 import { type BrandConfig, DEFAULT_BRAND } from "../design/brand-config.ts"
 import { DEMO_PARTICIPANTS } from "../fixtures/index.ts"
 
@@ -34,10 +38,10 @@ export function DemoSessionChooser({
       <section aria-labelledby="demo-session-title" className="demo-entry__panel">
         <header className="demo-entry__header">
           <BrandLogo brand={brand} className="demo-entry__brand-logo" />
-          <Badge tone="success">시드 데모 · 20명</Badge>
+          <Badge tone="warning">{DEMO_DATA_PROVENANCE_LABEL}</Badge>
           <p>{brand.tenantName}</p>
-          <h1 id="demo-session-title">데모 세션 선택</h1>
-          <span>참여자와 코치가 같은 저장소에서 변화를 확인합니다.</span>
+          <h1 id="demo-session-title">미리 볼 역할을 선택하세요</h1>
+          <span>참여자, 코치, 관리자의 8주 프로그램 경험을 둘러볼 수 있어요.</span>
           <a
             className="demo-entry__about-link"
             href="/about"
@@ -106,12 +110,11 @@ export function DemoSessionChooser({
           </div>
         </Card>
 
-        <Card eyebrow="운영 연결" title="로그인 연결 안내" tone="muted">
+        <Card eyebrow="프리뷰 안내" title="안심하고 둘러보세요" tone="muted">
           <p className="demo-entry__note">
-            <span>이 화면은 로컬 데모입니다.</span>
-            <span>이메일 매직 링크를 연결하세요.</span>
-            <span>Supabase 인증 키를 설정하세요.</span>
-            <span>허용 URL도 설정하세요.</span>
+            <span>실제 임직원·건강 정보가 아닙니다.</span>
+            <span>선택과 기록은 이 브라우저에만 저장돼요.</span>
+            <span>아래 버튼으로 언제든 처음 상태로 되돌릴 수 있어요.</span>
           </p>
           <Button
             icon={<ArrowCounterClockwiseIcon aria-hidden size={19} weight="bold" />}

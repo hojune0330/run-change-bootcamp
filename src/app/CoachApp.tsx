@@ -1,5 +1,11 @@
 import { useEffect } from "react"
-import { coachBindings, coachModel, type DemoRepository, type DemoState } from "../demo/index.ts"
+import {
+  coachBindings,
+  coachModel,
+  DEMO_DATA_PROVENANCE_LABEL,
+  type DemoRepository,
+  type DemoState,
+} from "../demo/index.ts"
 import { type BrandConfig, DEFAULT_BRAND } from "../design/brand-config.ts"
 import { CoachDashboard } from "../features/coach/index.ts"
 import { AppShell } from "./AppShell.tsx"
@@ -19,7 +25,7 @@ function routeControl(href: CoachHref): HTMLElement | null {
   )
   switch (href) {
     case "/coach/cohort":
-      return document.querySelector<HTMLInputElement>('search input[type="search"]')
+      return document.querySelector<HTMLInputElement>('[role="search"] input[type="search"]')
     case "/coach/assignments":
       return publisherForms.item(0).querySelector<HTMLElement>("input, select, textarea, button")
     case "/coach/feedback":
@@ -73,6 +79,7 @@ export function CoachApp({
       brand={brand}
       mode="coach"
       onNavigate={onNavigate}
+      provenanceLabel={DEMO_DATA_PROVENANCE_LABEL}
       sessionLabel={`${brand.productName} 코치`}
     >
       <CoachDashboard handlers={coachBindings(repository)} model={brandedModel} />

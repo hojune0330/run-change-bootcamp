@@ -6,6 +6,7 @@ import type {
   ParticipantStatusViewModel,
 } from "../features/coach/index.ts"
 import { DEMO_PARTICIPANTS } from "../fixtures/index.ts"
+import { DEMO_PROGRAM_DATE_RANGE_LABEL } from "./program-config.ts"
 import type { DemoParticipantId, DemoState } from "./state.ts"
 
 export const DEMO_COHORT_OPTIONS = [{ id: "cohort:run-change", label: "RUN CHANGE 20명" }] as const
@@ -111,7 +112,7 @@ export function coachModel(state: DemoState): CoachDashboardViewModel {
       : participantDetail(state, state.selectedParticipantId)
   return {
     programName: "RUN CHANGE 2026",
-    dateRangeLabel: "2026.08.24 — 10.24",
+    dateRangeLabel: DEMO_PROGRAM_DATE_RANGE_LABEL,
     summary: {
       totalParticipants: allStatuses.length,
       missingHomeworkCount: allStatuses.reduce(

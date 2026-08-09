@@ -43,9 +43,28 @@ export function createInitialDemoState() {
     ],
     metrics: [],
     drafts: [],
-    consentedParticipants: [],
+    consentedParticipants: ["participant-02", "participant-05", "participant-08"],
     revokedParticipants: [],
-    consentEvents: [],
+    consentEvents: [
+      {
+        id: "audit-seed-consent-02",
+        participantId: "participant-02",
+        kind: "granted",
+        label: "8월 24일 · 안정 시 심박수 공유 동의",
+      },
+      {
+        id: "audit-seed-consent-05",
+        participantId: "participant-05",
+        kind: "granted",
+        label: "8월 24일 · 안정 시 심박수 공유 동의",
+      },
+      {
+        id: "audit-seed-consent-08",
+        participantId: "participant-08",
+        kind: "granted",
+        label: "8월 24일 · 안정 시 심박수 공유 동의",
+      },
+    ],
     activityLog: [],
     deliveredFeedback: [
       {

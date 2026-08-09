@@ -85,6 +85,16 @@
   min-inline-size: 0;
 }
 
+.admin-dashboard__full-activity {
+  display: none;
+}
+
+@media (min-width: 48rem) {
+  .admin-dashboard__full-activity {
+    display: block;
+  }
+}
+
 @media (min-width: 64rem) {
   .admin-dashboard__grid {
     align-items: start;

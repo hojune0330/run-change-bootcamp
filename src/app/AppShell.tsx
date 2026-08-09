@@ -13,6 +13,7 @@ export type AppShellProps = {
   readonly children: ReactNode
   readonly mode: AppMode
   readonly onNavigate?: (href: string) => void
+  readonly provenanceLabel?: string
   readonly sessionLabel?: string
 }
 
@@ -22,6 +23,7 @@ export function AppShell({
   children,
   mode,
   onNavigate,
+  provenanceLabel,
   sessionLabel = "8주 과정",
 }: AppShellProps) {
   const navigationItems = NAVIGATION_BY_MODE[mode]
@@ -40,7 +42,12 @@ export function AppShell({
   }
 
   return (
-    <div className="app-shell" data-brand-tenant={brand.tenantId} data-product={brand.productName}>
+    <div
+      className="app-shell"
+      data-brand-tenant={brand.tenantId}
+      data-mode={mode}
+      data-product={brand.productName}
+    >
       <a className="app-shell__skip-link" href="#main-content">
         본문으로 건너뛰기
       </a>
@@ -58,7 +65,14 @@ export function AppShell({
           </span>
         </a>
         <div className="app-shell__header-actions">
-          <Badge tone="neutral">{sessionLabel}</Badge>
+          {provenanceLabel === undefined ? null : (
+            <span className="app-shell__provenance" data-demo-provenance>
+              <Badge tone="warning">{provenanceLabel}</Badge>
+            </span>
+          )}
+          <span className="app-shell__session-badge">
+            <Badge tone="neutral">{sessionLabel}</Badge>
+          </span>
           <a
             className="app-shell__mode-switch"
             href={toBrowserPath(modeSwitchLink.href)}

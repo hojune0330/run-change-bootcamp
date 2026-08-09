@@ -9,7 +9,8 @@ export type CoachFiltersProps = {
 
 export function CoachFilters({ model, onCohortChange, onQueryChange }: CoachFiltersProps) {
   return (
-    <search aria-label="참가자 필터">
+    // biome-ignore lint/a11y/useSemanticElements: React logs an unknown-element warning for search.
+    <div aria-label="참가자 필터" role="search">
       <form className="coach-filters" onSubmit={(event) => event.preventDefault()}>
         <label className="coach-field coach-field--search">
           <span>참가자 검색</span>
@@ -47,6 +48,6 @@ export function CoachFilters({ model, onCohortChange, onQueryChange }: CoachFilt
           {model.resultCount}명 표시
         </p>
       </form>
-    </search>
+    </div>
   )
 }

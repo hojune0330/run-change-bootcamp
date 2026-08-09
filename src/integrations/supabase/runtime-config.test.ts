@@ -50,6 +50,10 @@ describe("runtime configuration", () => {
       environment: { VITE_APP_RUNTIME: "preview", VITE_DISABLE_REACT_DEVTOOLS: "1" },
       label: "explicit",
     },
+    {
+      environment: { VITE_APP_RUNTIME: "preview", VITE_ENABLE_DEV_TOOLS: "1" },
+      label: "developer opt-in",
+    },
   ])("keeps $label preview when React devtools instrumentation is disabled", ({ environment }) => {
     // Given / When
     const result = resolveRuntimeConfiguration(environment)

@@ -1,4 +1,5 @@
 import { DEMO_PARTICIPANTS } from "../fixtures/index.ts"
+import { DEMO_PROGRAM_DATE_RANGE_LABEL } from "./program-config.ts"
 import type { ActivityAction, DemoState } from "./state.ts"
 
 const ACTION_LABEL: Record<ActivityAction, string> = {
@@ -71,7 +72,7 @@ export function adminModel(state: DemoState) {
 
   return {
     programName: "RUN CHANGE 2026",
-    dateRangeLabel: "2026.08.24 — 10.24",
+    dateRangeLabel: DEMO_PROGRAM_DATE_RANGE_LABEL,
     operationStatusLabel: "정상 운영",
     timeTrialLabel,
     consentedCount,
