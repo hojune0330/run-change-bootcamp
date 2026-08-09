@@ -13,6 +13,13 @@ const packageManifestPath = resolve(repositoryRoot, "package.json")
 const nodeVersionPath = resolve(repositoryRoot, ".node-version")
 const jsdomManifestPath = resolve(repositoryRoot, "node_modules", "jsdom", "package.json")
 const pagesWorkflowPath = resolve(repositoryRoot, ".github", "workflows", "deploy-pages.yml")
+const devToolsSourceMarkers = [
+  "data-react-grab",
+  "reactScanIdCounter",
+  "react-grab",
+  "react-scan",
+] as const
+const devToolsEntryFileName = /react[-_.]?(?:grab|scan)(?:[-_.]|$)/i
 const ManifestSchema = z.object({
   start_url: z.string(),
   scope: z.string(),
@@ -52,7 +59,49 @@ type BuildOutput = {
   readonly index: string
   readonly javaScript: string
   readonly manifest: z.infer<typeof ManifestSchema>
+  readonly precacheAssets: readonly string[]
   readonly serviceWorker: string
+}
+
+type JavaScriptAsset = {
+  readonly asset: string
+  readonly source: string
+}
+
+function findDevToolsAssets(javaScriptAssets: readonly JavaScriptAsset[]): readonly string[] {
+  return javaScriptAssets
+    .filter(({ source }) => devToolsSourceMarkers.some((marker) => source.includes(marker)))
+    .map(({ asset }) => asset)
+}
+
+function parsePrecacheAssetNames(serviceWorker: string): readonly string[] {
+  const assetNames = Array.from(
+    serviceWorker.matchAll(/\burl\s*:\s*["']([^"']+)["']/g),
+    (match) => {
+      const rawUrl = match[1]
+      if (rawUrl === undefined) throw new Error("Precache URL capture must be defined")
+
+      const pathname = new URL(rawUrl, "https://pwa.invalid").pathname.replaceAll("\\", "/")
+      const fileName = pathname.split("/").at(-1)
+      if (fileName === undefined || fileName.length === 0) {
+        throw new Error(`Precache URL must end with a filename: ${rawUrl}`)
+      }
+      return decodeURIComponent(fileName)
+    },
+  )
+  return [...new Set(assetNames)]
+}
+
+function findPrecachedAssets(
+  candidateAssets: readonly string[],
+  precacheAssets: readonly string[],
+): readonly string[] {
+  const precacheAssetSet = new Set(precacheAssets)
+  return candidateAssets.filter((asset) => precacheAssetSet.has(asset))
+}
+
+function findRecognizableDevToolsEntries(precacheAssets: readonly string[]): readonly string[] {
+  return precacheAssets.filter((asset) => devToolsEntryFileName.test(asset))
 }
 
 function buildWithMode(mode: "preview" | "pages"): BuildOutput {
@@ -76,20 +125,17 @@ function buildWithMode(mode: "preview" | "pages"): BuildOutput {
         asset,
         source: readFileSync(join(outputDirectory, "assets", asset), "utf8"),
       }))
+    const serviceWorker = readFileSync(join(outputDirectory, "sw.js"), "utf8")
     return {
       assets,
-      devToolsAssets: javaScriptAssets
-        .filter(
-          ({ source }) =>
-            source.includes("data-react-grab") || source.includes("reactScanIdCounter"),
-        )
-        .map(({ asset }) => asset),
+      devToolsAssets: findDevToolsAssets(javaScriptAssets),
       index: readFileSync(join(outputDirectory, "index.html"), "utf8"),
       javaScript: javaScriptAssets.map(({ source }) => source).join("\n"),
       manifest: ManifestSchema.parse(
         JSON.parse(readFileSync(join(outputDirectory, "manifest.webmanifest"), "utf8")),
       ),
-      serviceWorker: readFileSync(join(outputDirectory, "sw.js"), "utf8"),
+      precacheAssets: parsePrecacheAssetNames(serviceWorker),
+      serviceWorker,
     }
   } finally {
     rmSync(outputDirectory, { force: true, recursive: true })
@@ -213,13 +259,40 @@ describe("Vite/PWA deployment modes", () => {
 
   it("omits opt-in React inspection tools from production assets and the PWA precache", () => {
     // Given
-    const output = buildWithMode("pages")
+    const syntheticDevToolsAsset = {
+      asset: "react-grab-entry-deadbeef.js",
+      source: 'import("react-grab")',
+    }
+    const syntheticServiceWorker =
+      'precacheAndRoute([{revision:"deadbeef",url:"/run-change-bootcamp/assets/react-grab-entry-deadbeef.js?revision=1#asset"}])'
+
+    // When
+    const syntheticDevToolsAssets = findDevToolsAssets([syntheticDevToolsAsset])
+    const syntheticPrecacheAssets = parsePrecacheAssetNames(syntheticServiceWorker)
 
     // Then
+    expect(syntheticDevToolsAssets).toEqual([syntheticDevToolsAsset.asset])
+    expect(syntheticPrecacheAssets).toContain(syntheticDevToolsAsset.asset)
+    expect(findPrecachedAssets(syntheticDevToolsAssets, syntheticPrecacheAssets)).toEqual([
+      syntheticDevToolsAsset.asset,
+    ])
+    expect(findRecognizableDevToolsEntries(syntheticPrecacheAssets)).toEqual([
+      syntheticDevToolsAsset.asset,
+    ])
+
+    const output = buildWithMode("pages")
+    const precachedDevToolsAssets = findPrecachedAssets(
+      output.devToolsAssets,
+      output.precacheAssets,
+    )
+    const recognizableDevToolsEntries = findRecognizableDevToolsEntries(output.precacheAssets)
+
     expect(output.javaScript).not.toContain("data-react-grab")
     expect(output.javaScript).not.toContain("reactScanIdCounter")
     expect(output.javaScript).not.toContain("react-grab")
     expect(output.javaScript).not.toContain("react-scan")
+    expect(precachedDevToolsAssets).toEqual([])
+    expect(recognizableDevToolsEntries).toEqual([])
     expect(output.devToolsAssets).toEqual([])
     expect(output.serviceWorker).not.toContain("data-react-grab")
     expect(output.serviceWorker).not.toContain("reactScanIdCounter")
