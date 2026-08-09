@@ -80,6 +80,26 @@ function buildWithMode(mode: "preview" | "pages"): BuildOutput {
 }
 
 describe("Vite/PWA deployment modes", () => {
+  it("runs the complete Pages build gate on pull requests without allowing a PR deployment", () => {
+    // Given
+    const workflow = readFileSync(pagesWorkflowPath, "utf8")
+
+    // When
+    const deployJob = workflow.slice(workflow.indexOf("\n  deploy:"))
+
+    // Then
+    expect(workflow).toMatch(/^\s{2}pull_request:\s*$/m)
+    expect(workflow).toContain("run: pnpm test")
+    expect(workflow).toContain("run: pnpm test:deployment")
+    expect(workflow).toContain("run: pnpm typecheck")
+    expect(workflow).toContain("run: pnpm lint")
+    expect(workflow).toContain("run: pnpm build")
+    expect(workflow).toContain("run: pnpm test:e2e:pages:artifact")
+    expect(deployJob).toContain(
+      "if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'",
+    )
+  })
+
   it("keeps the Pages Node runtime compatible with project and frozen jsdom engines", () => {
     // Given
     const packageManifest = PackageManifestSchema.parse(
