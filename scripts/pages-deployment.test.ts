@@ -21,6 +21,7 @@ const ManifestSchema = z.object({
 const PackageManifestSchema = z.object({
   engines: z.object({ node: z.string().min(1) }),
   devDependencies: z.object({ jsdom: z.string().min(1) }),
+  scripts: z.record(z.string(), z.string()),
 })
 const JsdomManifestSchema = z.object({
   version: z.string(),
@@ -99,6 +100,9 @@ describe("Vite/PWA deployment modes", () => {
   it("runs the complete Pages build gate on pull requests without allowing a PR deployment", () => {
     // Given
     const workflow = readFileSync(pagesWorkflowPath, "utf8")
+    const packageManifest = PackageManifestSchema.parse(
+      JSON.parse(readFileSync(packageManifestPath, "utf8")),
+    )
 
     // When
     const deployJob = workflow.slice(workflow.indexOf("\n  deploy:"))
@@ -111,6 +115,10 @@ describe("Vite/PWA deployment modes", () => {
     expect(workflow).toContain("run: pnpm lint")
     expect(workflow).toContain("run: pnpm build")
     expect(workflow).toContain("run: pnpm test:e2e:pages:artifact")
+    expect(workflow).toContain("run: pnpm test:e2e:poc:artifact")
+    expect(packageManifest.scripts["test:e2e:poc:artifact"]).toBe(
+      "playwright test e2e/poc-ux.spec.ts",
+    )
     expect(deployJob).toContain(
       "if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'",
     )
@@ -213,6 +221,9 @@ describe("Vite/PWA deployment modes", () => {
     expect(output.javaScript).not.toContain("react-grab")
     expect(output.javaScript).not.toContain("react-scan")
     expect(output.devToolsAssets).toEqual([])
-    expect(output.devToolsAssets.every((asset) => !output.serviceWorker.includes(asset))).toBe(true)
+    expect(output.serviceWorker).not.toContain("data-react-grab")
+    expect(output.serviceWorker).not.toContain("reactScanIdCounter")
+    expect(output.serviceWorker).not.toContain("react-grab")
+    expect(output.serviceWorker).not.toContain("react-scan")
   })
 })
