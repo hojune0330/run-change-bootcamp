@@ -12,6 +12,7 @@ import {
   PUBLIC_HREFS,
 } from "../src/app/routes-contract.ts"
 import { deploymentBuildTimeoutMs } from "./pages-deployment-timeouts.ts"
+import { type ArtifactTextFile, findPilotArtifactLeaks } from "./pages-pilot-artifact-scan.ts"
 
 const repositoryRoot = resolve(import.meta.dirname, "..")
 const viteCli = resolve(repositoryRoot, "node_modules", "vite", "bin", "vite.js")
@@ -74,6 +75,7 @@ type BuildOutput = {
   readonly manifest: z.infer<typeof ManifestSchema>
   readonly precacheAssets: readonly string[]
   readonly serviceWorker: string
+  readonly textFiles: readonly ArtifactTextFile[]
 }
 
 type JavaScriptAsset = {
@@ -117,6 +119,15 @@ function findRecognizableDevToolsEntries(precacheAssets: readonly string[]): rea
   return precacheAssets.filter((asset) => devToolsEntryFileName.test(asset))
 }
 
+function listArtifactFiles(directory: string, relativeDirectory = ""): readonly string[] {
+  return readdirSync(resolve(directory, relativeDirectory), { withFileTypes: true }).flatMap(
+    (entry) => {
+      const relativePath = join(relativeDirectory, entry.name).replaceAll("\\", "/")
+      return entry.isDirectory() ? listArtifactFiles(directory, relativePath) : [relativePath]
+    },
+  )
+}
+
 function buildWithMode(mode: "preview" | "pages"): BuildOutput {
   const outputDirectory = mkdtempSync(join(tmpdir(), `run-change-${mode}-`))
 
@@ -139,6 +150,12 @@ function buildWithMode(mode: "preview" | "pages"): BuildOutput {
         source: readFileSync(join(outputDirectory, "assets", asset), "utf8"),
       }))
     const serviceWorker = readFileSync(join(outputDirectory, "sw.js"), "utf8")
+    const textFiles = listArtifactFiles(outputDirectory)
+      .filter((asset) => /\.(?:css|js)$/i.test(asset))
+      .map((asset) => ({
+        path: asset,
+        source: readFileSync(resolve(outputDirectory, asset), "utf8"),
+      }))
     return {
       assets,
       devToolsAssets: findDevToolsAssets(javaScriptAssets),
@@ -149,6 +166,7 @@ function buildWithMode(mode: "preview" | "pages"): BuildOutput {
       ),
       precacheAssets: parsePrecacheAssetNames(serviceWorker),
       serviceWorker,
+      textFiles,
     }
   } finally {
     rmSync(outputDirectory, { force: true, recursive: true })
@@ -297,23 +315,84 @@ describe("Vite/PWA deployment modes", () => {
     expect(output.serviceWorker).not.toContain('createHandlerBoundToURL("/index.html")')
   })
 
-  it("precaches the core shell without fetching the pilot-only runtime", () => {
+  it("detects browser and generic PilotRuntime leaks across the full artifact graph", () => {
+    // Given
+    const browserRuntime = "assets/BrowserPilotRuntime-deadbeef.js"
+    const genericRuntime = "assets/PilotRuntime-deadbeef.css"
+    const stage2Runtime = "assets/Stage2Runtime-deadbeef.js"
+    const syntheticArtifact = {
+      indexHtml:
+        '<script type="module" src="/run-change-bootcamp/assets/index-deadbeef.js"></script>',
+      precacheAssetNames: ["index-deadbeef.js", browserRuntime, genericRuntime, stage2Runtime],
+      textFiles: [
+        {
+          path: "assets/index-deadbeef.js",
+          source: `const __vite__mapDeps = ["${browserRuntime}", "${genericRuntime}", "${stage2Runtime}"]`,
+        },
+        {
+          path: browserRuntime,
+          source: 'const storageKey = "run-change:pilot-auth"',
+        },
+        {
+          path: genericRuntime,
+          source: ".pilot-entry__status{display:grid}",
+        },
+        {
+          path: stage2Runtime,
+          source: "class Stage2Runtime {}",
+        },
+        {
+          path: "sw.js",
+          source: `precacheAndRoute([{url:"${browserRuntime}"},{url:"${genericRuntime}"},{url:"${stage2Runtime}"}])`,
+        },
+      ],
+    } satisfies Parameters<typeof findPilotArtifactLeaks>[0]
+
+    // When
+    const leaks = findPilotArtifactLeaks(syntheticArtifact)
+
+    // Then
+    expect(leaks.emittedNamedFiles).toEqual([browserRuntime, genericRuntime, stage2Runtime])
+    expect(leaks.contentFiles).toEqual([
+      browserRuntime,
+      genericRuntime,
+      stage2Runtime,
+      "assets/index-deadbeef.js",
+      "sw.js",
+    ])
+    expect(leaks.loadGraphReferences).toEqual([
+      { source: "assets/index-deadbeef.js", target: browserRuntime },
+      { source: "assets/index-deadbeef.js", target: genericRuntime },
+      { source: "assets/index-deadbeef.js", target: stage2Runtime },
+      { source: "sw.js", target: browserRuntime },
+      { source: "sw.js", target: genericRuntime },
+      { source: "sw.js", target: stage2Runtime },
+    ])
+    expect(leaks.precacheEntries).toEqual([browserRuntime, genericRuntime, stage2Runtime])
+  })
+
+  it("emits, loads, and precaches only the public Pages runtime", () => {
     // Given
     const output = buildWithMode("pages")
     const coreScript = /src="[^"]+\/assets\/([^" ]+\.js)"/.exec(output.index)?.[1]
-    const pilotChunks = output.assets.filter(
-      (asset) => asset.startsWith("BrowserPilotRuntime-") && asset.endsWith(".js"),
-    )
 
     // When
-    const precachesPilotRuntime = pilotChunks.some((chunk) => output.serviceWorker.includes(chunk))
+    const leaks = findPilotArtifactLeaks({
+      indexHtml: output.index,
+      precacheAssetNames: output.precacheAssets,
+      textFiles: output.textFiles,
+    })
 
     // Then
     expect(coreScript).toBeDefined()
-    expect(pilotChunks).toHaveLength(1)
     expect(output.serviceWorker).toContain(coreScript)
     expect(output.serviceWorker).toContain("index.html")
-    expect(precachesPilotRuntime).toBe(false)
+    expect(leaks).toEqual({
+      contentFiles: [],
+      emittedNamedFiles: [],
+      loadGraphReferences: [],
+      precacheEntries: [],
+    })
   })
 
   it("omits opt-in React inspection tools from production assets and the PWA precache", () => {

@@ -15,7 +15,7 @@ const ADMIN_SCREENS = [
 const ADMIN_UNBROKEN_PHRASES = [
   "결정하면",
   "한 화면에서 확인합니다.",
-  "요청하면",
+  "멤버가 요청하면",
   "(참여자 5명 미만)",
   "건강 공유 현황",
 ] as const

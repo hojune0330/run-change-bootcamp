@@ -98,35 +98,6 @@
   grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
 }
 
-.pilot-entry__form,
-.pilot-entry__identity {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.pilot-entry__identity p {
-  display: grid;
-  gap: var(--space-1);
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
-.pilot-entry__identity span {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-small);
-}
-
-.pilot-entry__status {
-  color: var(--color-text-muted);
-  margin: 0;
-  overflow-wrap: break-word;
-  word-break: keep-all;
-}
-
-.pilot-entry__status--error {
-  color: var(--color-critical);
-}
-
 .app-shell__main .participant-screen p {
   overflow-wrap: break-word;
   word-break: keep-all;
