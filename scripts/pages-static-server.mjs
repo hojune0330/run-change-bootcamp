@@ -38,6 +38,18 @@ function distPathFor(pathname) {
   return targetPath
 }
 
+function servePathFor(targetPath, fallbackPath) {
+  if (!existsSync(targetPath)) return fallbackPath
+  const targetStats = statSync(targetPath)
+  if (targetStats.isFile()) return targetPath
+  if (!targetStats.isDirectory()) return fallbackPath
+
+  const directoryIndexPath = resolve(targetPath, "index.html")
+  return existsSync(directoryIndexPath) && statSync(directoryIndexPath).isFile()
+    ? directoryIndexPath
+    : fallbackPath
+}
+
 const server = createServer((request, response) => {
   const requestUrl = new URL(request.url ?? "/", `http://${host}:${port}`)
   const targetPath = distPathFor(requestUrl.pathname)
@@ -48,11 +60,19 @@ const server = createServer((request, response) => {
     response.end("Not Found")
     return
   }
+  if (
+    existsSync(targetPath) &&
+    statSync(targetPath).isDirectory() &&
+    !requestUrl.pathname.endsWith("/")
+  ) {
+    response.statusCode = 301
+    response.setHeader("Location", `${requestUrl.pathname}/${requestUrl.search}`)
+    response.setHeader("Cache-Control", "no-cache")
+    response.end()
+    return
+  }
   const fallbackPath = resolve(distRoot, "404.html")
-  const filePath =
-    targetPath !== null && existsSync(targetPath) && statSync(targetPath).isFile()
-      ? targetPath
-      : fallbackPath
+  const filePath = servePathFor(targetPath, fallbackPath)
   const extension = extname(filePath)
   const fileStats = statSync(filePath)
   const isCompressible = compressibleExtensions.has(extension)

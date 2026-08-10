@@ -8,8 +8,13 @@ function normalizeBasePath(basePath: string): string {
   return withoutTrailingSlash === "" ? ROOT_PATH : withoutTrailingSlash
 }
 
+function normalizeTrailingSlash(pathname: string): string {
+  if (pathname === ROOT_PATH) return ROOT_PATH
+  return pathname.replace(/\/+$/, "") || ROOT_PATH
+}
+
 export function toAppPath(pathname: string, basePath = APP_BASE_PATH): string {
-  const normalizedPath = pathname === "" ? ROOT_PATH : pathname
+  const normalizedPath = normalizeTrailingSlash(pathname === "" ? ROOT_PATH : pathname)
   const normalizedBasePath = normalizeBasePath(basePath)
 
   if (normalizedBasePath === ROOT_PATH) return normalizedPath
@@ -26,7 +31,7 @@ export function toAppPath(pathname: string, basePath = APP_BASE_PATH): string {
 }
 
 export function toBrowserPath(pathname: string, basePath = APP_BASE_PATH): string {
-  const normalizedPath = pathname === "" ? ROOT_PATH : pathname
+  const normalizedPath = normalizeTrailingSlash(pathname === "" ? ROOT_PATH : pathname)
   const normalizedBasePath = normalizeBasePath(basePath)
 
   if (normalizedBasePath === ROOT_PATH) return normalizedPath

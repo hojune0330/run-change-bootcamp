@@ -56,4 +56,24 @@ describe("GitHub Pages subpath routing", () => {
       href: "/admin/settings",
     })
   })
+
+  it("normalizes GitHub Pages directory slashes without changing the base root", () => {
+    // Given
+    const pagesBasePath = "/run-change-bootcamp/"
+
+    // When
+    const trailingSlashPath = `${pagesBasePath}record/`
+
+    // Then
+    expect(toAppPath(pagesBasePath, pagesBasePath)).toBe("/")
+    expect(toAppPath(trailingSlashPath, pagesBasePath)).toBe("/record")
+    expect(resolveRoute(trailingSlashPath, pagesBasePath)).toEqual({
+      kind: "participant",
+      href: "/record",
+    })
+    expect(resolveRoute(`${pagesBasePath}about/`, pagesBasePath)).toEqual({ kind: "about" })
+    expect(resolveRoute(`${pagesBasePath}unknown/`, pagesBasePath)).toEqual({
+      kind: "not_found",
+    })
+  })
 })

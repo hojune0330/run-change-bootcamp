@@ -1,40 +1,76 @@
 import { expect, test } from "@playwright/test"
 import { z } from "zod"
+import {
+  ADMIN_HREFS,
+  COACH_HREFS,
+  PARTICIPANT_HREFS,
+  PUBLIC_HREFS,
+} from "../src/app/routes-contract.ts"
 
 const pagesBasePath = "/run-change-bootcamp/"
 const PagesAssetPathSchema = z.string().regex(/^\/run-change-bootcamp\/.+/)
+const knownDirectRouteHrefs = [
+  ...PUBLIC_HREFS,
+  ...PARTICIPANT_HREFS,
+  ...COACH_HREFS,
+  ...ADMIN_HREFS,
+] as const
+const publicHrefSet = new Set<string>(PUBLIC_HREFS)
+const participantHrefSet = new Set<string>(PARTICIPANT_HREFS)
+const coachHrefSet = new Set<string>(COACH_HREFS)
 const ManifestSchema = z.object({
   icons: z.array(z.object({ src: z.string() })),
   scope: z.literal(pagesBasePath),
   start_url: z.literal(pagesBasePath),
 })
 
-test("serves the app for a supported direct /record route after an actual static 404", async ({
-  page,
+test("serves the app for every known direct route with a Pages-base hard load", async ({
+  browser,
 }) => {
   // Given
-  const fallbackResponse = await page.request.get("./record")
+  const context = await browser.newContext({ serviceWorkers: "block" })
+  const page = await context.newPage()
+  try {
+    for (const href of knownDirectRouteHrefs) {
+      // When
+      const directResponse = await page.request.get(`.${href}`, { maxRedirects: 0 })
+      let renderedResponse = await page.goto(`.${href}`)
+      await page.evaluate(() => window.localStorage.clear())
+      await page.reload()
+      if (!publicHrefSet.has(href)) {
+        await page
+          .getByRole("button", {
+            name: participantHrefSet.has(href)
+              ? "참여자로 시작"
+              : coachHrefSet.has(href)
+                ? "코치로 시작"
+                : "관리자로 시작",
+          })
+          .click()
+        renderedResponse = await page.goto(`.${href}`)
+      }
 
-  // When
-  await page.goto("./record")
-  await page.evaluate(() => window.localStorage.clear())
-  await page.reload()
-  await page.locator("button").first().click()
-  await page.goto("./record")
+      // Then
+      expect(directResponse.status(), href).toBe(301)
+      expect(directResponse.headers()["location"], href).toBe(`${pagesBasePath}${href.slice(1)}/`)
+      expect(renderedResponse?.status() ?? 0, href).toBe(200)
+      expect(await renderedResponse?.text(), href).toContain('id="root"')
+      await expect(page).toHaveURL(new RegExp(`${href}/$`))
+      await expect(
+        page.locator(publicHrefSet.has(href) ? ".about-page" : ".app-shell"),
+      ).toBeVisible()
 
-  // Then
-  expect(fallbackResponse.status()).toBe(404)
-  expect(await fallbackResponse.text()).toContain('id="root"')
-  await expect(page).toHaveURL(/\/run-change-bootcamp\/record$/)
-  await expect(page.locator(".app-shell")).toBeVisible()
-
-  const scriptSource = PagesAssetPathSchema.parse(
-    await page.locator('script[type="module"][src]').first().getAttribute("src"),
-  )
-  const scriptResponse = await page.request.get(scriptSource)
-  expect(scriptResponse.status()).toBe(200)
-  expect(scriptResponse.headers()["content-type"]).toContain("text/javascript")
-  expect(await scriptResponse.text()).not.toContain("<!doctype html>")
+      const scriptSource = PagesAssetPathSchema.parse(
+        await page.locator('script[type="module"][src]').first().getAttribute("src"),
+      )
+      const scriptResponse = await page.request.get(scriptSource)
+      expect(scriptResponse.status(), href).toBe(200)
+      expect(scriptResponse.headers()["content-type"], href).toContain("text/javascript")
+      expect(await scriptResponse.text(), href).not.toContain("<!doctype html>")
+    }
+  } finally {
+    await context.close()
+  }
 })
 
 test("registers Pages-scoped PWA resources and serves emitted metadata", async ({ page }) => {

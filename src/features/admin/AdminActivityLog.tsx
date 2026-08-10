@@ -74,7 +74,8 @@ export function AdminActivityLog({ actionOptions, entries }: AdminActivityLogPro
 
       {filtered.length === 0 ? (
         <p className="admin-activity__empty" role="status">
-          기록된 활동이 없습니다. 코치가 발행·승인·결정하면 여기에 표시돼요.
+          기록된 활동이 없습니다. 코치가{" "}
+          <span className="admin-activity__semantic-unit">발행·승인·결정하면</span> 여기에 표시돼요.
         </p>
       ) : (
         <div className="admin-activity__table-wrap">

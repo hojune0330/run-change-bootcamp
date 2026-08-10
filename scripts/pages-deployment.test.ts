@@ -1,14 +1,21 @@
 import { execFileSync } from "node:child_process"
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs"
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join, resolve } from "node:path"
 import { minVersion, satisfies, subset, valid } from "semver"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
+import {
+  ADMIN_HREFS,
+  COACH_HREFS,
+  PARTICIPANT_HREFS,
+  PUBLIC_HREFS,
+} from "../src/app/routes-contract.ts"
 import { deploymentBuildTimeoutMs } from "./pages-deployment-timeouts.ts"
 
 const repositoryRoot = resolve(import.meta.dirname, "..")
 const viteCli = resolve(repositoryRoot, "node_modules", "vite", "bin", "vite.js")
+const preparePagesCli = resolve(repositoryRoot, "scripts", "prepare-pages.mjs")
 const packageManifestPath = resolve(repositoryRoot, "package.json")
 const nodeVersionPath = resolve(repositoryRoot, ".node-version")
 const jsdomManifestPath = resolve(repositoryRoot, "node_modules", "jsdom", "package.json")
@@ -34,6 +41,12 @@ const JsdomManifestSchema = z.object({
   version: z.string(),
   engines: z.object({ node: z.string().min(1) }),
 })
+const knownPagesRouteHrefs = [
+  ...PUBLIC_HREFS,
+  ...PARTICIPANT_HREFS,
+  ...COACH_HREFS,
+  ...ADMIN_HREFS,
+] as const
 
 function readWorkflowNodeVersionFile(): string {
   const workflow = readFileSync(pagesWorkflowPath, "utf8")
@@ -142,7 +155,53 @@ function buildWithMode(mode: "preview" | "pages"): BuildOutput {
   }
 }
 
+function buildPagesArtifact(): string {
+  const outputDirectory = mkdtempSync(join(tmpdir(), "run-change-pages-artifact-"))
+
+  try {
+    execFileSync(
+      process.execPath,
+      [viteCli, "build", "--mode", "pages", "--outDir", outputDirectory],
+      {
+        cwd: repositoryRoot,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: deploymentBuildTimeoutMs,
+      },
+    )
+    execFileSync(process.execPath, [preparePagesCli, outputDirectory], {
+      cwd: repositoryRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: deploymentBuildTimeoutMs,
+    })
+    return outputDirectory
+  } catch (error) {
+    rmSync(outputDirectory, { force: true, recursive: true })
+    throw error
+  }
+}
+
 describe("Vite/PWA deployment modes", () => {
+  it("materializes every known direct route under the Pages base artifact", () => {
+    // Given
+    const outputDirectory = buildPagesArtifact()
+
+    try {
+      // When
+      const entrypoints = knownPagesRouteHrefs.map((href) =>
+        resolve(outputDirectory, href.slice(1), "index.html"),
+      )
+
+      // Then
+      expect(existsSync(resolve(outputDirectory, "index.html"))).toBe(true)
+      expect(existsSync(resolve(outputDirectory, "404.html"))).toBe(true)
+      expect(entrypoints.every((entrypoint) => existsSync(entrypoint))).toBe(true)
+    } finally {
+      rmSync(outputDirectory, { force: true, recursive: true })
+    }
+  })
+
   it("runs the complete Pages build gate on pull requests without allowing a PR deployment", () => {
     // Given
     const workflow = readFileSync(pagesWorkflowPath, "utf8")

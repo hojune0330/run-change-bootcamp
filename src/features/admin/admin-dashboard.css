@@ -209,6 +209,10 @@
   margin: 0;
 }
 
+.admin-activity__semantic-unit {
+  white-space: nowrap;
+}
+
 .admin-activity__table-wrap {
   min-inline-size: 0;
   overflow-x: auto;

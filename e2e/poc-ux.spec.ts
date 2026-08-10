@@ -95,6 +95,10 @@ async function expectAdminCopyWithoutOrphans(page: Page): Promise<void> {
   const eyebrowText = (await eyebrow.textContent()) ?? ""
   const dateTokens = eyebrowText.match(/\d{1,2}월[ \u00a0]\d{1,2}일/g) ?? []
   await expectPhrasesOnOneLine(eyebrow, dateTokens)
+  const rangeEnd = eyebrowText.match(/–(?:\u2060)?[ \u00a0]\d{1,2}월[ \u00a0]\d{1,2}일/)?.[0]
+  if (rangeEnd !== undefined) {
+    await expectPhrasesOnOneLine(eyebrow, [rangeEnd])
+  }
 
   const description = page.locator(".admin-dashboard__header > div > span")
   if ((await description.textContent())?.includes("한 화면에서 확인합니다.")) {
@@ -216,6 +220,9 @@ test("all six admin routes are distinct, usable, and visually captured", async (
     }
     await expectNoHorizontalOverflow(page)
     await expectAdminCopyWithoutOrphans(page)
+    if (artifactName === "activity") {
+      await expectPhrasesOnOneLine(page.locator(".admin-activity"), ["발행·승인·결정하면"])
+    }
     await expectTableContentReachable(page)
     await resetCaptureViewport(page)
     await page.screenshot({ path: testInfo.outputPath(`admin-${artifactName}.png`) })

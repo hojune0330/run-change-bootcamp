@@ -48,7 +48,8 @@ describe("friendly Korean program dates", () => {
 
     // Then
     expect(dueLabel).toBe("8월 31일까지")
-    expect(rangeLabel).toBe("2026년 8월 24일 – 10월 24일")
+    expect(rangeLabel).toBe("2026년 8월 24일 –⁠ 10월 24일")
+    expect(rangeLabel).toContain("–⁠ 10월 24일")
     expect(rangeLabel).not.toMatch(/\d{1,2}월 \d{1,2}일/)
     expect(`${dueLabel} ${rangeLabel}`).not.toMatch(/\d{4}-\d{2}-\d{2}/)
   })
@@ -62,7 +63,7 @@ describe("friendly Korean program dates", () => {
     const rangeLabel = formatKoreanProgramRange(startsOn, endsOn)
 
     // Then
-    expect(rangeLabel).toBe("2026년 12월 24일 – 2027년 1월 24일")
+    expect(rangeLabel).toBe("2026년 12월 24일 –⁠ 2027년 1월 24일")
   })
 
   it.each([
