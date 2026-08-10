@@ -1,7 +1,7 @@
 import { APP_BASE_PATH, toAppPath } from "./base-path.ts"
-import { ADMIN_HREFS, COACH_HREFS, PARTICIPANT_HREFS } from "./routes-contract.ts"
+import { ADMIN_HREFS, COACH_HREFS, PARTICIPANT_HREFS, PUBLIC_HREFS } from "./routes-contract.ts"
 
-export { ADMIN_HREFS, COACH_HREFS, PARTICIPANT_HREFS } from "./routes-contract.ts"
+export { ADMIN_HREFS, COACH_HREFS, PARTICIPANT_HREFS, PUBLIC_HREFS } from "./routes-contract.ts"
 
 export type ParticipantHref = (typeof PARTICIPANT_HREFS)[number]
 export type CoachHref = (typeof COACH_HREFS)[number]
@@ -18,7 +18,7 @@ export type AppRoute =
 export function resolveRoute(pathname: string, basePath = APP_BASE_PATH): AppRoute {
   const appPath = toAppPath(pathname, basePath)
   if (appPath === "/") return { kind: "chooser" }
-  if (appPath === "/about") return { kind: "about" }
+  if (PUBLIC_HREFS.some((href) => href === appPath)) return { kind: "about" }
   const participant = PARTICIPANT_HREFS.find((href) => href === appPath)
   if (participant !== undefined) return { kind: "participant", href: participant }
   const coach = COACH_HREFS.find((href) => href === appPath)

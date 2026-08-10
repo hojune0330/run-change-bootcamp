@@ -1,3 +1,5 @@
+export const PUBLIC_HREFS = ["/about"] as const
+
 export const PARTICIPANT_HREFS = ["/today", "/feed", "/record", "/change"] as const
 
 export const COACH_HREFS = [

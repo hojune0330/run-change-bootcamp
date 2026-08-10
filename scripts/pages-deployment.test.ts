@@ -5,7 +5,12 @@ import { join, resolve } from "node:path"
 import { minVersion, satisfies, subset, valid } from "semver"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
-import { ADMIN_HREFS, COACH_HREFS, PARTICIPANT_HREFS } from "../src/app/routes-contract.ts"
+import {
+  ADMIN_HREFS,
+  COACH_HREFS,
+  PARTICIPANT_HREFS,
+  PUBLIC_HREFS,
+} from "../src/app/routes-contract.ts"
 import { deploymentBuildTimeoutMs } from "./pages-deployment-timeouts.ts"
 
 const repositoryRoot = resolve(import.meta.dirname, "..")
@@ -36,7 +41,12 @@ const JsdomManifestSchema = z.object({
   version: z.string(),
   engines: z.object({ node: z.string().min(1) }),
 })
-const knownPagesRouteHrefs = [...PARTICIPANT_HREFS, ...COACH_HREFS, ...ADMIN_HREFS] as const
+const knownPagesRouteHrefs = [
+  ...PUBLIC_HREFS,
+  ...PARTICIPANT_HREFS,
+  ...COACH_HREFS,
+  ...ADMIN_HREFS,
+] as const
 
 function readWorkflowNodeVersionFile(): string {
   const workflow = readFileSync(pagesWorkflowPath, "utf8")

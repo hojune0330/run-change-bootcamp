@@ -7,7 +7,7 @@ const distDirectory = resolve(projectRoot, outputDirectory)
 const indexPath = resolve(distDirectory, "index.html")
 const fallbackPath = resolve(distDirectory, "404.html")
 const routeContractPath = resolve(projectRoot, "src", "app", "routes-contract.ts")
-const routeContractNames = ["PARTICIPANT_HREFS", "COACH_HREFS", "ADMIN_HREFS"]
+const routeContractNames = ["PUBLIC_HREFS", "PARTICIPANT_HREFS", "COACH_HREFS", "ADMIN_HREFS"]
 
 function readRouteHrefs(name) {
   const source = readFileSync(routeContractPath, "utf8")
