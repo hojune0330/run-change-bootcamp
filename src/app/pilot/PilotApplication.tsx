@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react"
 import type { BrandConfig } from "../../design/brand-config.ts"
 import type { PilotGatewayFactory } from "../../integrations/supabase/pilot-gateway.ts"
 import type { SupabasePublicConfig } from "../../integrations/supabase/runtime-config.ts"
+import "./PilotEntry.css"
 import { PilotRuntime } from "./PilotRuntime.tsx"
 
 const BrowserPilotRuntime = lazy(() =>

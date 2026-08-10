@@ -8,11 +8,13 @@ import "./design/tokens.css"
 import "./design/global.css"
 
 const RuntimeApp =
-  import.meta.env.VITE_APP_RUNTIME === "pilot"
-    ? lazy(() =>
-        import("./app/pilot/PilotEntry.tsx").then(({ PilotEntry }) => ({ default: PilotEntry })),
-      )
-    : lazy(() => import("./app/App.tsx").then(({ App }) => ({ default: App })))
+  import.meta.env.MODE === "pages"
+    ? lazy(() => import("./app/PagesEntry.tsx").then(({ PagesEntry }) => ({ default: PagesEntry })))
+    : import.meta.env.VITE_APP_RUNTIME === "pilot"
+      ? lazy(() =>
+          import("./app/pilot/PilotEntry.tsx").then(({ PilotEntry }) => ({ default: PilotEntry })),
+        )
+      : lazy(() => import("./app/App.tsx").then(({ App }) => ({ default: App })))
 
 class MissingRootElementError extends Error {
   constructor() {
