@@ -1,4 +1,5 @@
 import { toBrowserPath } from "../app/base-path.ts"
+import { formatKoreanDate, formatKoreanDueDate } from "../app/program-clock.ts"
 import type {
   FeedViewModel,
   MyChangeViewModel,
@@ -7,6 +8,7 @@ import type {
 } from "../features/participant/index.ts"
 import type { ChangeMetricViewModel } from "../features/participant/models.ts"
 import { DEMO_PARTICIPANTS } from "../fixtures/index.ts"
+import { DEMO_PROGRAM_CLOCK } from "./program-config.ts"
 import type { DemoParticipantId, DemoState } from "./state.ts"
 
 class MissingDemoParticipantError extends Error {
@@ -25,7 +27,7 @@ export function todayModel(state: DemoState, participantId: DemoParticipantId): 
   const notice = state.notices.at(-1)
   return {
     displayName: member.displayName,
-    dateLabel: "8월 31일 월요일",
+    dateLabel: formatKoreanDate(DEMO_PROGRAM_CLOCK.today(), "full_with_weekday"),
     ...(assignment === undefined
       ? {}
       : {
@@ -33,7 +35,7 @@ export function todayModel(state: DemoState, participantId: DemoParticipantId): 
             id: assignment.id,
             title: assignment.title,
             summary: assignment.summary,
-            dueLabel: `${assignment.dueDate}까지`,
+            dueLabel: formatKoreanDueDate(assignment.dueDate),
             durationLabel: assignment.category === "running" ? "약 20분" : "약 5분",
             status: state.completions.some(
               (item) => item.participantId === participantId && item.assignmentId === assignment.id,
@@ -76,7 +78,7 @@ export function feedModel(state: DemoState, participantId: DemoParticipantId): F
 
 export function recordModel(): RecordViewModel {
   return {
-    recordedOn: "2026-08-31",
+    recordedOn: DEMO_PROGRAM_CLOCK.today(),
     supportedExtensions: ["csv", "fit", "gpx", "tcx", "xml", "json"],
   }
 }
@@ -111,7 +113,7 @@ export function myChangeModel(
         id: "metric-program-completion",
         label: "과정 완료율",
         value: `${member.completionPercent}%`,
-        changeLabel: "시드 기준",
+        changeLabel: "전체 과제 기준",
       },
       ...recordedMetrics,
       ...savedDraftMetrics,

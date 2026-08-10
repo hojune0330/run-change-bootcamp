@@ -1,3 +1,4 @@
+import { IsoDateSchema } from "../../domain/values.ts"
 import type {
   AuditEventKind,
   AuditEventViewModel,
@@ -16,26 +17,11 @@ import type {
   PilotCoachParticipantDetail,
   PilotCoachSharedMetric,
 } from "../../integrations/supabase/pilot-gateway.ts"
+import { formatKoreanDate, formatKoreanProgramRange } from "../program-clock.ts"
 
 export function formatMonthDay(iso: string): string {
-  const date = new Date(`${iso}T00:00:00`)
-  if (Number.isNaN(date.getTime())) return iso
-  return `${date.getMonth() + 1}월 ${date.getDate()}일`
-}
-
-function formatBrushedMonthDay(iso: string): string {
-  const date = new Date(`${iso}T00:00:00`)
-  if (Number.isNaN(date.getTime())) return iso
-  return `${String(date.getFullYear()).padStart(4, "0")}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`
-}
-
-function formatDateRange(startsOn: string, endsOn: string): string {
-  const start = new Date(`${startsOn}T00:00:00`)
-  const end = new Date(`${endsOn}T00:00:00`)
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return `${startsOn} — ${endsOn}`
-  }
-  return `${formatBrushedMonthDay(startsOn)} — ${end.getMonth() + 1}.${String(end.getDate()).padStart(2, "0")}`
+  const parsed = IsoDateSchema.safeParse(iso.slice(0, 10))
+  return parsed.success ? formatKoreanDate(parsed.data, "month_day") : "날짜 미정"
 }
 
 export function timeAgoLabel(iso: string | null): string {
@@ -119,7 +105,7 @@ export function buildCoachDashboardModel(dashboard: PilotCoachDashboard): CoachD
         }
   return {
     programName: dashboard.program.title,
-    dateRangeLabel: formatDateRange(dashboard.program.startsOn, dashboard.program.endsOn),
+    dateRangeLabel: formatKoreanProgramRange(dashboard.program.startsOn, dashboard.program.endsOn),
     summary: {
       totalParticipants: dashboard.summary.totalParticipants,
       missingHomeworkCount: dashboard.summary.missingHomeworkCount,

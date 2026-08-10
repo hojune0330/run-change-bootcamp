@@ -20,18 +20,8 @@ import type {
   PilotAdminSchedule,
   PilotAdminSettings,
 } from "../../integrations/supabase/pilot-gateway.ts"
+import { formatKoreanProgramRange } from "../program-clock.ts"
 import { timeAgoLabel } from "./pilot-coach-models.ts"
-
-function formatDateRange(startsOn: string, endsOn: string): string {
-  const start = new Date(`${startsOn}T00:00:00`)
-  const end = new Date(`${endsOn}T00:00:00`)
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return `${startsOn} — ${endsOn}`
-  }
-  const begin = `${String(start.getFullYear()).padStart(4, "0")}.${String(start.getMonth() + 1).padStart(2, "0")}.${String(start.getDate()).padStart(2, "0")}`
-  const finish = `${end.getMonth() + 1}.${String(end.getDate()).padStart(2, "0")}`
-  return `${begin} — ${finish}`
-}
 
 function timeTrialProtocolLabel(protocol: "12_minute" | "3k" | "5k"): string {
   switch (protocol) {
@@ -124,7 +114,7 @@ function adminMemberRosterRow(member: PilotAdminMembers["members"][number]): Adm
 export function buildAdminMembersModel(members: PilotAdminMembers): AdminMembersViewModel {
   return {
     programName: members.program.title,
-    dateRangeLabel: formatDateRange(members.program.startsOn, members.program.endsOn),
+    dateRangeLabel: formatKoreanProgramRange(members.program.startsOn, members.program.endsOn),
     summary: {
       totalMembers: members.summary.totalMembers,
       activeParticipants: members.summary.activeParticipants,
@@ -170,7 +160,7 @@ export function buildAdminScheduleModel(schedule: PilotAdminSchedule): AdminSche
         } · ${timeTrialProtocolLabel(schedule.summary.timeTrial.protocol)}`
   return {
     programName: schedule.program.title,
-    dateRangeLabel: formatDateRange(schedule.program.startsOn, schedule.program.endsOn),
+    dateRangeLabel: formatKoreanProgramRange(schedule.program.startsOn, schedule.program.endsOn),
     timeTrialLabel,
     summary: {
       totalSessions: schedule.summary.totalSessions,
@@ -239,7 +229,7 @@ export function buildAdminSettingsModel(settings: PilotAdminSettings): AdminSett
           : "준비 중"
   return {
     programName: settings.program.title,
-    dateRangeLabel: formatDateRange(settings.program.startsOn, settings.program.endsOn),
+    dateRangeLabel: formatKoreanProgramRange(settings.program.startsOn, settings.program.endsOn),
     timeTrialLabel,
     statusLabel,
     summary: {
@@ -261,7 +251,7 @@ export function buildAdminOverviewModel(overview: PilotAdminOverview): AdminDash
   const activity = overview.activity.map(adminActivityEntry)
   return {
     programName: overview.program.title,
-    dateRangeLabel: formatDateRange(overview.program.startsOn, overview.program.endsOn),
+    dateRangeLabel: formatKoreanProgramRange(overview.program.startsOn, overview.program.endsOn),
     operationStatusLabel:
       overview.program.status === "active"
         ? "정상 운영"
@@ -355,7 +345,7 @@ function adminReportCell(
 export function buildAdminReportsModel(report: PilotAdminReport): AdminReportsViewModel {
   return {
     programName: report.program.title,
-    dateRangeLabel: formatDateRange(report.program.startsOn, report.program.endsOn),
+    dateRangeLabel: formatKoreanProgramRange(report.program.startsOn, report.program.endsOn),
     summary: {
       reportCount: report.summary.reportCount,
       releasedCount: report.summary.releasedCount,

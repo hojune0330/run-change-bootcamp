@@ -13,7 +13,7 @@ export function AdminSettings({ model }: AdminSettingsProps) {
         <div>
           <p className="admin-dashboard__eyebrow">프로그램 설정 · {model.dateRangeLabel}</p>
           <h1>{model.programName}</h1>
-          <span>기록 측정 계획과 탈퇴 요청·알림 전달 상태를 한 화면에서 확인합니다.</span>
+          <span>기록 측정 계획과 탈퇴 요청·알림 전달 상태를 한 화면에서 확인합니다.</span>
         </div>
         <Badge tone="neutral">{model.statusLabel}</Badge>
       </header>

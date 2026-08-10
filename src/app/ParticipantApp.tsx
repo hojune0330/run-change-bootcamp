@@ -1,4 +1,5 @@
 import {
+  DEMO_DATA_PROVENANCE_LABEL,
   type DemoParticipantId,
   type DemoRepository,
   type DemoState,
@@ -49,6 +50,7 @@ export function ParticipantApp({
       brand={brand}
       mode="participant"
       onNavigate={onNavigate}
+      provenanceLabel={DEMO_DATA_PROVENANCE_LABEL}
       sessionLabel={sessionName}
     >
       {href === "/today" ? (

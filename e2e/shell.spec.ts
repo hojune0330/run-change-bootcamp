@@ -13,7 +13,7 @@ test("shell stays usable without horizontal overflow at its configured viewport"
   })
 
   // Then
-  await expect(page.getByRole("region", { name: "데모 세션 선택" })).toBeVisible()
+  await expect(page.getByRole("region", { name: "미리 볼 역할을 선택하세요" })).toBeVisible()
   expect(hasHorizontalOverflow).toBe(false)
   await page.screenshot({
     path: testInfo.outputPath("shell.png"),

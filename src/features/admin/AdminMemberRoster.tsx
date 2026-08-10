@@ -17,7 +17,7 @@ export function AdminMemberRoster({ model }: AdminMemberRosterProps) {
         <div>
           <p className="admin-dashboard__eyebrow">전체 명부 · {model.dateRangeLabel}</p>
           <h1>{model.programName}</h1>
-          <span>프로그램 멤버의 역할·상태·진척도와 건강 공유 현황을 확인합니다.</span>
+          <span>프로그램 멤버의 역할·상태·진척도와 건강 공유 현황을 확인합니다.</span>
         </div>
         <Badge tone="success">멤버 명부</Badge>
       </header>
@@ -50,8 +50,11 @@ export function AdminMemberRoster({ model }: AdminMemberRosterProps) {
           아직 등록된 멤버가 없습니다. 초대가 완료되면 여기에 표시돼요.
         </p>
       ) : (
-        <div className="admin-activity__table-wrap">
-          <table aria-label="멤버 명부" className="admin-activity__table">
+        <div className="admin-activity__table-wrap admin-activity__table-wrap--stacked">
+          <table
+            aria-label="멤버 명부"
+            className="admin-activity__table admin-activity__table--stacked"
+          >
             <thead>
               <tr>
                 <th scope="col">이름</th>
@@ -66,19 +69,19 @@ export function AdminMemberRoster({ model }: AdminMemberRosterProps) {
             <tbody>
               {model.members.map((member) => (
                 <tr key={member.id}>
-                  <td>{member.name}</td>
-                  <td>{member.email ?? "—"}</td>
-                  <td>
+                  <td data-label="이름">{member.name}</td>
+                  <td data-label="이메일">{member.email ?? "—"}</td>
+                  <td data-label="역할">
                     <Badge tone="neutral">{member.roleLabel}</Badge>
                   </td>
-                  <td>
+                  <td data-label="상태">
                     <Badge tone={statusTone(member.status)}>{member.statusLabel}</Badge>
                   </td>
-                  <td>{member.joinedAtLabel}</td>
-                  <td>
+                  <td data-label="참여일">{member.joinedAtLabel}</td>
+                  <td data-label="진척도">
                     {member.completionPercent}% · {member.progressLabel}
                   </td>
-                  <td>
+                  <td data-label="공유">
                     <Badge tone={member.shareTone}>{member.shareLabel}</Badge>
                   </td>
                 </tr>

@@ -18,7 +18,7 @@ export function AdminDashboard({ model }: AdminDashboardProps) {
         <div>
           <p className="admin-dashboard__eyebrow">운영 개요 · {model.dateRangeLabel}</p>
           <h1>{model.programName}</h1>
-          <span>멤버, 공유 동의, 발행 콘텐츠와 최근 활동을 한 화면에서 확인합니다.</span>
+          <span>멤버, 공유 동의, 발행 콘텐츠와 최근 활동을 한 화면에서 확인합니다.</span>
         </div>
         <Badge tone="success">{model.operationStatusLabel}</Badge>
       </header>
@@ -76,9 +76,11 @@ export function AdminDashboard({ model }: AdminDashboardProps) {
         </Card>
       </div>
 
-      <Card eyebrow="전체 활동" title="활동 로그">
-        <AdminActivityLog actionOptions={model.actionOptions} entries={model.activity} />
-      </Card>
+      <div className="admin-dashboard__full-activity">
+        <Card eyebrow="전체 활동" title="활동 로그">
+          <AdminActivityLog actionOptions={model.actionOptions} entries={model.activity} />
+        </Card>
+      </div>
     </section>
   )
 }

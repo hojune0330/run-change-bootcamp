@@ -44,11 +44,6 @@ if (rootElement === null) {
   throw new MissingRootElementError()
 }
 
-if (import.meta.env.DEV && import.meta.env.VITE_DISABLE_REACT_DEVTOOLS !== "1") {
-  void import("react-grab")
-  void import("react-scan")
-}
-
 createRoot(rootElement).render(
   <StrictMode>
     <Suspense fallback={null}>
