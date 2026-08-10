@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import type { CoachDashboardHandlers, CoachDashboardViewModel } from "./CoachDashboard.tsx"
@@ -53,6 +55,16 @@ const MODEL = {
 } satisfies CoachDashboardViewModel
 
 describe("coach dashboard composition", () => {
+  it("uses a declared surface token for summary button hover", () => {
+    // Given
+    const styles = readFileSync(resolve(import.meta.dirname, "coach-dashboard.css"), "utf8")
+
+    // Then
+    expect(styles).toContain(".coach-summary__button:hover")
+    expect(styles).toContain("background: var(--color-surface-muted)")
+    expect(styles).not.toContain("var(--color-bg-hover)")
+  })
+
   it("keeps all-overdue cohort risk visible beside every operating panel", () => {
     // Given
     render(<CoachDashboard handlers={HANDLERS} model={MODEL} />)

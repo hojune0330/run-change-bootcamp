@@ -1,24 +1,10 @@
 import { APP_BASE_PATH, toAppPath } from "./base-path.ts"
+import { ADMIN_HREFS, COACH_HREFS, PARTICIPANT_HREFS } from "./routes-contract.ts"
 
-export const PARTICIPANT_HREFS = ["/today", "/feed", "/record", "/change"] as const
+export { ADMIN_HREFS, COACH_HREFS, PARTICIPANT_HREFS } from "./routes-contract.ts"
+
 export type ParticipantHref = (typeof PARTICIPANT_HREFS)[number]
-
-export const COACH_HREFS = [
-  "/coach/cohort",
-  "/coach/assignments",
-  "/coach/feedback",
-  "/coach/notices",
-] as const
 export type CoachHref = (typeof COACH_HREFS)[number]
-
-export const ADMIN_HREFS = [
-  "/admin/overview",
-  "/admin/members",
-  "/admin/schedule",
-  "/admin/activity",
-  "/admin/reports",
-  "/admin/settings",
-] as const
 export type AdminHref = (typeof ADMIN_HREFS)[number]
 
 export type AppRoute =

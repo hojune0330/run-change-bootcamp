@@ -78,7 +78,7 @@
 }
 
 .coach-summary__button:hover {
-  background: var(--color-bg-hover);
+  background: var(--color-surface-muted);
 }
 
 .coach-summary__button:focus-visible {

@@ -67,7 +67,7 @@ describe("pilot model ProgramClock boundaries", () => {
   })
 
   it("shares the friendly, unbreakable range boundary across coach and admin models", () => {
-    const expected = "2026년 8월 24일 – 10월 24일"
+    const expected = "2026년 8월 24일 –⁠ 10월 24일"
 
     expect(buildCoachDashboardModel(COACH_DASHBOARD).dateRangeLabel).toBe(expected)
     expect(buildAdminMembersModel(ADMIN_MEMBERS).dateRangeLabel).toBe(expected)

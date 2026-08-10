@@ -63,5 +63,7 @@ export function formatKoreanProgramRange(startsOn: string, endsOn: string): stri
   const [endYear] = end.data.split("-")
   const keepMonthDayTogether = (label: string) => label.replace("월 ", "월 ")
   const endYearPrefix = startYear === endYear ? "" : `${endYear}년 `
-  return `${startYear}년 ${keepMonthDayTogether(formatKoreanDate(start.data, "month_day"))} – ${endYearPrefix}${keepMonthDayTogether(formatKoreanDate(end.data, "month_day"))}`
+  // Keep the connector with the ending date while preserving a visible gap after the dash.
+  const endRangeSeparator = "–⁠ "
+  return `${startYear}년 ${keepMonthDayTogether(formatKoreanDate(start.data, "month_day"))} ${endRangeSeparator}${endYearPrefix}${keepMonthDayTogether(formatKoreanDate(end.data, "month_day"))}`
 }
