@@ -113,7 +113,7 @@ export function myChangeModel(
         id: "metric-program-completion",
         label: "과정 완료율",
         value: `${member.completionPercent}%`,
-        changeLabel: "시드 기준",
+        changeLabel: "전체 과제 기준",
       },
       ...recordedMetrics,
       ...savedDraftMetrics,

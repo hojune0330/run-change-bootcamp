@@ -170,6 +170,8 @@ test("participant and coach preview journeys preserve synthetic-data context", a
       await page.screenshot({ path: testInfo.outputPath("participant-record.png") })
     }
   }
+  await expect(page.getByText("전체 과제 기준", { exact: true })).toBeVisible()
+  await expect(page.getByText("시드 기준", { exact: true })).toHaveCount(0)
   await resetCaptureViewport(page)
   await page.screenshot({ path: testInfo.outputPath("participant-change.png") })
 
