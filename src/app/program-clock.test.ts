@@ -53,6 +53,18 @@ describe("friendly Korean program dates", () => {
     expect(`${dueLabel} ${rangeLabel}`).not.toMatch(/\d{4}-\d{2}-\d{2}/)
   })
 
+  it("includes the ending year when a program range crosses calendar years", () => {
+    // Given
+    const startsOn = "2026-12-24"
+    const endsOn = "2027-01-24"
+
+    // When
+    const rangeLabel = formatKoreanProgramRange(startsOn, endsOn)
+
+    // Then
+    expect(rangeLabel).toBe("2026년 12월 24일 – 2027년 1월 24일")
+  })
+
   it.each([
     ["UTC crossing into the next Seoul day", "2026-08-09T15:30:00.000Z", "8월 10일까지"],
     ["negative offset crossing forward", "2026-08-09T23:30:00-05:00", "8월 10일까지"],

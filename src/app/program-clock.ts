@@ -60,6 +60,8 @@ export function formatKoreanProgramRange(startsOn: string, endsOn: string): stri
   if (!start.success || !end.success) return "일정 미정"
 
   const [startYear] = start.data.split("-")
+  const [endYear] = end.data.split("-")
   const keepMonthDayTogether = (label: string) => label.replace("월 ", "월 ")
-  return `${startYear}년 ${keepMonthDayTogether(formatKoreanDate(start.data, "month_day"))} – ${keepMonthDayTogether(formatKoreanDate(end.data, "month_day"))}`
+  const endYearPrefix = startYear === endYear ? "" : `${endYear}년 `
+  return `${startYear}년 ${keepMonthDayTogether(formatKoreanDate(start.data, "month_day"))} – ${endYearPrefix}${keepMonthDayTogether(formatKoreanDate(end.data, "month_day"))}`
 }
