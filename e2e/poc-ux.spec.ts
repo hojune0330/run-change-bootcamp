@@ -14,9 +14,9 @@ const ADMIN_SCREENS = [
 
 const ADMIN_UNBROKEN_PHRASES = [
   "결정하면",
-  "한 화면에서",
+  "한 화면에서 확인합니다.",
   "요청하면",
-  "5명 미만",
+  "(참여자 5명 미만)",
   "건강 공유 현황",
 ] as const
 
@@ -97,8 +97,8 @@ async function expectAdminCopyWithoutOrphans(page: Page): Promise<void> {
   await expectPhrasesOnOneLine(eyebrow, dateTokens)
 
   const description = page.locator(".admin-dashboard__header > div > span")
-  if ((await description.textContent())?.includes("확인합니다.")) {
-    await expectPhrasesOnOneLine(description, ["확인합니다."])
+  if ((await description.textContent())?.includes("한 화면에서 확인합니다.")) {
+    await expectPhrasesOnOneLine(description, ["한 화면에서 확인합니다."])
   }
 
   const dashboard = page.locator(".admin-dashboard")

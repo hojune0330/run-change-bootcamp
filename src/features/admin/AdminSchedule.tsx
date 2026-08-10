@@ -17,7 +17,7 @@ export function AdminSchedule({ model }: AdminScheduleProps) {
         <div>
           <p className="admin-dashboard__eyebrow">프로그램 일정 · {model.dateRangeLabel}</p>
           <h1>{model.programName}</h1>
-          <span>세션 회차별 일정과 기록 측정 계획을 한 화면에서 확인합니다.</span>
+          <span>세션 회차별 일정과 기록 측정 계획을 한 화면에서 확인합니다.</span>
         </div>
         <Badge tone="success">프로그램 일정</Badge>
       </header>

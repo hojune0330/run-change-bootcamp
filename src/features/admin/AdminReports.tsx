@@ -18,7 +18,7 @@ export function AdminReports({ model }: AdminReportsProps) {
           <p className="admin-dashboard__eyebrow">운영 보고 · {model.dateRangeLabel}</p>
           <h1>{model.programName}</h1>
           <span>
-            집계 보고서 스냅샷과 소규모 셀(참여자 5명 미만) 보호 상태를 한 화면에서 확인합니다.
+            집계 보고서 스냅샷과 소규모 셀(참여자 5명 미만) 보호 상태를 한 화면에서 확인합니다.
           </span>
         </div>
         <Badge tone="neutral">집계 전용</Badge>
