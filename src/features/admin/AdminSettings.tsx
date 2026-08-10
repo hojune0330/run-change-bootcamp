@@ -39,7 +39,7 @@ export function AdminSettings({ model }: AdminSettingsProps) {
       <Card eyebrow="삭제 요청" title="탈퇴 요청 큐">
         {model.deletionRequests.length === 0 ? (
           <p className="admin-activity__empty" role="status">
-            처리 중인 탈퇴 요청이 없습니다. 멤버가 요청하면 여기에 표시돼요.
+            처리 중인 탈퇴 요청이 없습니다. <span>멤버가&nbsp;요청하면</span> 여기에 표시돼요.
           </p>
         ) : (
           <div className="admin-activity__table-wrap">
