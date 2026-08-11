@@ -12,17 +12,16 @@ const DAY_MS = 24 * 60 * 60 * 1_000
 export const ACTIVITY_INSIGHT_TEMPLATE_VERSION = "activity-insight-v1" as const
 
 export const ACTIVITY_INSIGHT_TEMPLATES = {
-  zero_days: {
-    title: "활동 기록 요약",
-    summary: "이번 주에 확인된 활동 기록이 없어요.",
-    nextStep: "가능한 날에 활동을 기록해 보세요.",
-  },
   one_day: {
+    category: "activity_summary",
+    variant: "one_day",
     title: "활동 기록 요약",
     summary: "이번 주 활동 기록이 하루 확인됐어요.",
     nextStep: "현재 리듬에 맞춰 다음 활동을 기록해 보세요.",
   },
   multiple_days: {
+    category: "activity_summary",
+    variant: "multiple_days",
     title: "활동 기록 요약",
     summary: "이번 주 활동 기록이 여러 날 확인됐어요.",
     nextStep: "현재 리듬에 맞춰 다음 활동을 기록해 보세요.",
@@ -234,7 +233,7 @@ export function buildWeeklyActivityInsight(input: unknown): WeeklyActivityInsigh
   const isPartialWeek = isCurrentWeek && elapsedDays < 7
   const activityDays = activityDates.length
   const templateKey: ActivityInsightTemplateKey =
-    activityDays === 0 ? "zero_days" : activityDays === 1 ? "one_day" : "multiple_days"
+    activityDays === 1 ? "one_day" : "multiple_days"
   const paceSecondsPerKm =
     distanceM > 0 && durationS > 0 ? durationS / (distanceM / 1_000) : null
   const averageHeartRateBpm =

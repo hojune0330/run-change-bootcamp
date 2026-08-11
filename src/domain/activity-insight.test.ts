@@ -70,6 +70,10 @@ describe("deterministic weekly activity insight", () => {
         },
       ],
       templateKey: "one_day",
+      content: {
+        category: "activity_summary",
+        variant: "one_day",
+      },
     })
   })
 
@@ -158,16 +162,23 @@ describe("deterministic weekly activity insight", () => {
       },
       templateKey: "multiple_days",
     })
-    expect(Object.values(result?.content ?? {}).some((value) =>
-      ["준비", "부상", "진단", "비교", "경쟁", "순위"].some((term) => value.includes(term)),
-    )).toBe(false)
+    expect(result?.content).toMatchObject({
+      category: "activity_summary",
+      variant: "multiple_days",
+    })
   })
 
-  it("exposes fixed template identities without asserting customer prose", () => {
+  it("exposes fixed activity-summary template variants", () => {
     expect(Object.keys(ACTIVITY_INSIGHT_TEMPLATES)).toEqual([
-      "zero_days",
       "one_day",
       "multiple_days",
+    ])
+    expect(Object.values(ACTIVITY_INSIGHT_TEMPLATES).map(({ category, variant }) => ({
+      category,
+      variant,
+    }))).toEqual([
+      { category: "activity_summary", variant: "one_day" },
+      { category: "activity_summary", variant: "multiple_days" },
     ])
   })
 
@@ -191,13 +202,31 @@ describe("deterministic weekly activity insight", () => {
   })
 
   it("rejects duplicate, foreign, pending, and invalid records", () => {
+    const duplicateIdRecord = {
+      ...acceptedRecord,
+      serverDuplicateHmac: "d".repeat(64),
+    }
     expect(() =>
-      buildWeeklyActivityInsight({ ...insightRequest, records: [acceptedRecord, acceptedRecord] }),
+      buildWeeklyActivityInsight({
+        ...insightRequest,
+        records: [acceptedRecord, duplicateIdRecord],
+      }),
     ).toThrow()
     expect(() =>
       buildWeeklyActivityInsight({
         ...insightRequest,
         records: [{ ...acceptedRecord, participantId: "membership-foreign-01" }],
+      }),
+    ).toThrow()
+    expect(() =>
+      buildWeeklyActivityInsight({
+        ...insightRequest,
+        records: [{
+          ...acceptedRecord,
+          id: "import-artifact-foreign-program",
+          programId: "program-foreign-2026",
+          serverDuplicateHmac: "e".repeat(64),
+        }],
       }),
     ).toThrow()
     expect(() =>
