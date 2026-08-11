@@ -28,21 +28,21 @@ describe("activity insight rebuild contracts", () => {
     expect(result).toEqual({ ok: true, value: input })
   })
 
-  it("rejects duplicate or foreign participant import references", () => {
+  it("rejects duplicate IDs or forged per-import ownership fields", () => {
     // Given
     const duplicateIds = { ...validRequest, acceptedImportIds: [IMPORT_ID, IMPORT_ID] }
-    const foreignParticipant = {
+    const forgedOwnershipField = {
       ...validRequest,
       participantProfileId: "423e4567-e89b-42d3-a456-426614174000",
     }
 
     // When
     const duplicateResult = parseActivityInsightRebuildRequest(duplicateIds)
-    const foreignParticipantResult = parseActivityInsightRebuildRequest(foreignParticipant)
+    const forgedOwnershipResult = parseActivityInsightRebuildRequest(forgedOwnershipField)
 
     // Then
     expect(duplicateResult).toEqual({ ok: false, error: "invalid_request" })
-    expect(foreignParticipantResult).toEqual({ ok: false, error: "invalid_request" })
+    expect(forgedOwnershipResult).toEqual({ ok: false, error: "invalid_request" })
   })
 
   it.each([
