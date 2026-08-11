@@ -46,7 +46,7 @@ export const ActivityInsightRebuildRequestSchema = z
 export type ActivityInsightRebuildRequest = z.infer<typeof ActivityInsightRebuildRequestSchema>
 
 const ACTIVITY_INSIGHT_STATUS = ["rebuilt", "removed"] as const
-const ACTIVITY_INSIGHT_TEMPLATE_VERSION = /^activity-insight\.v[0-9]+$/
+const ACTIVITY_INSIGHT_TEMPLATE_VERSION = "activity-insight-v1" as const
 
 export const ActivityInsightRebuildResponseSchema = z
   .object({
@@ -57,7 +57,7 @@ export const ActivityInsightRebuildResponseSchema = z
     weekStart: SEOUL_WEEK_START_SCHEMA,
     weekEnd: z.iso.date().refine(isCanonicalIsoDate),
     sourceCount: z.number().int().nonnegative().max(500),
-    templateVersion: z.string().regex(ACTIVITY_INSIGHT_TEMPLATE_VERSION),
+    templateVersion: z.literal(ACTIVITY_INSIGHT_TEMPLATE_VERSION),
   })
   .strict()
   .superRefine((response, context) => {

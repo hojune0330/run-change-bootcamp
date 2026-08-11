@@ -96,7 +96,27 @@ describe("activity insight rebuild contracts", () => {
       weekStart: "2026-08-24",
       weekEnd: "2026-08-31",
       sourceCount: 1,
-      templateVersion: "activity-insight.v1",
+      templateVersion: "activity-insight-v1",
+    } as const
+
+    // When
+    const result = parseActivityInsightRebuildResponse(input)
+
+    // Then
+    expect(result).toEqual({ ok: true, value: input })
+  })
+
+  it("accepts the domain activity insight template version", () => {
+    // Given
+    const input = {
+      status: "rebuilt",
+      insightId: "423e4567-e89b-42d3-a456-426614174000",
+      programId: PROGRAM_ID,
+      participantId: PARTICIPANT_ID,
+      weekStart: "2026-08-24",
+      weekEnd: "2026-08-31",
+      sourceCount: 1,
+      templateVersion: "activity-insight-v1",
     } as const
 
     // When
@@ -118,7 +138,7 @@ describe("activity insight rebuild contracts", () => {
         weekStart: "2026-08-24",
         weekEnd: "2026-08-31",
         sourceCount: 1,
-        templateVersion: "activity-insight.v1",
+        templateVersion: "activity-insight-v1",
         [key]: {},
       }
 
