@@ -132,6 +132,19 @@ begin
   select program.identified_data_delete_after
   into target_delete_after
   from public.programs program
+  join public.program_enrollments enrollment
+    on enrollment.program_id = program.id
+   and enrollment.profile_id = target_participant
+   and enrollment.lifecycle_status in ('onboarding', 'active')
+   and enrollment.enrolled_on <= current_date
+   and (
+     enrollment.active_from is null
+     or enrollment.active_from <= current_date
+   )
+   and (
+     enrollment.active_until is null
+     or enrollment.active_until >= current_date
+   )
   where program.id = target_program
     and private.is_active_program_member(
       target_participant, target_program, 'participant'

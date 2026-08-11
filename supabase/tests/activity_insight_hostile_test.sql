@@ -324,5 +324,56 @@ begin
 end;
 $$;
 
+select 'ACTIVITY_INSIGHT_PAUSED_ENROLLMENT_PASS' as result;
+
+delete from public.program_enrollments
+where id = '70000000-0000-4000-8000-000000000142';
+
+delete from public.program_invitations
+where id = '70000000-0000-4000-8000-000000000132';
+
+do $$
+begin
+  if not private.is_active_program_member(
+    '70000000-0000-4000-8000-000000000104',
+    '70000000-0000-4000-8000-000000000010',
+    'participant'
+  ) then
+    raise exception 'missing-enrollment fixture did not reach the legacy membership path';
+  end if;
+end;
+$$;
+
+create temporary table activity_insight_missing_enrollment_response (payload jsonb not null);
+grant insert, select on activity_insight_missing_enrollment_response to service_role;
+set role service_role;
+insert into activity_insight_missing_enrollment_response (payload)
+select private.rebuild_activity_insight(
+  '70000000-0000-4000-8000-000000000010',
+  '70000000-0000-4000-8000-000000000104',
+  date_trunc('week', now() at time zone 'Asia/Seoul')::date - 7,
+  array['70000000-0000-4000-8000-000000000305'::uuid]
+);
+reset role;
+
+do $$
+begin
+  if (select payload ->> 'status' from activity_insight_missing_enrollment_response) <> 'removed'
+    or exists (
+      select 1 from public.activity_insights
+      where participant_profile_id = '70000000-0000-4000-8000-000000000104'
+    ) or exists (
+      select 1
+      from public.activity_insight_sources source
+      join public.activity_insights insight on insight.id = source.activity_insight_id
+      where insight.participant_profile_id = '70000000-0000-4000-8000-000000000104'
+    ) then
+    raise exception 'participant without a current enrollment retained an activity insight';
+  end if;
+end;
+$$;
+
+select 'ACTIVITY_INSIGHT_MISSING_ENROLLMENT_PASS' as result;
+
 select 'ACTIVITY_INSIGHT_RLS_PASS' as result;
 select 'ACTIVITY_INSIGHT_HOSTILE_PASS' as result;
