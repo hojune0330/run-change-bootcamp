@@ -57,14 +57,31 @@ as $$
   );
 $$;
 
+create or replace function public.participant_can_read_activity_insight(
+  target_insight uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.activity_insights insight
+    where insight.id = target_insight
+      and insight.participant_profile_id = (select auth.uid())
+      and private.is_active_program_member(
+        (select auth.uid()), insight.program_id, 'participant'
+      )
+      and private.activity_insight_has_active_consent(insight.id)
+  );
+$$;
+
 drop policy activity_insights_participant_select on public.activity_insights;
 create policy activity_insights_participant_select
 on public.activity_insights for select to authenticated using (
-  participant_profile_id = (select auth.uid())
-  and private.is_active_program_member(
-    (select auth.uid()), program_id, 'participant'
-  )
-  and private.activity_insight_has_active_consent(id)
+  (select public.participant_can_read_activity_insight(id))
 );
 
 delete from public.activity_insights insight
@@ -76,5 +93,11 @@ from public, anon, authenticated, service_role,
 revoke all on function private.activity_insight_has_active_consent(uuid)
 from public, anon, authenticated, service_role,
   plus_aggregate_exporter, plus_service_worker;
-grant execute on function private.activity_insight_has_active_consent(uuid)
+revoke all on function public.participant_can_read_activity_insight(uuid)
+from public, anon, authenticated, service_role,
+  plus_aggregate_exporter, plus_service_worker;
+grant execute on function public.participant_can_read_activity_insight(uuid)
 to authenticated;
+
+comment on function public.participant_can_read_activity_insight(uuid) is
+  'Authenticated participant-only RLS predicate; binds the current actor to insight ownership, membership, and active consent.';
