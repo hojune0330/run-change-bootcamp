@@ -1,3 +1,8 @@
+.app-shell:has(.pilot-workspace) > .app-shell__header {
+  position: relative;
+  z-index: 1;
+}
+
 .pilot-workspace {
   display: flex;
   flex-direction: column;

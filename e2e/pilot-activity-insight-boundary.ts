@@ -4,7 +4,7 @@ const SUPABASE_ORIGIN = "https://boundary-test.supabase.co"
 const USER_ID = "11111111-1111-4111-8111-111111111111"
 const PROGRAM_ID = "66666666-6666-4666-8666-666666666666"
 
-export type InsightScenario = "empty" | "ready" | "revoked"
+export type InsightScenario = "empty" | "malformed" | "ready" | "revoked" | "stale_empty"
 
 export type BoundaryCapture = {
   readonly activityInsightReads: () => number
@@ -182,7 +182,15 @@ export async function installPilotBoundary(
           row.participant_profile_id === requestedParticipant &&
           row.program_id === requestedProgram,
       )
-      await json(scenario === "empty" ? [] : rows)
+      if (scenario === "empty" || (scenario === "stale_empty" && activityInsightReads > 1)) {
+        await json([])
+        return
+      }
+      if (scenario === "malformed" && activityInsightReads > 1) {
+        await json(rows.map((row) => ({ ...row, activity_days: "not-a-number" })))
+        return
+      }
+      await json(rows)
       return
     }
     unexpected.push(`${request.method()} ${url.pathname}${url.search}`)
