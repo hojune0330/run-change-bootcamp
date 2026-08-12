@@ -211,6 +211,26 @@ export type PilotParticipantRecord = {
   readonly supportedExtensions: readonly string[]
 }
 
+export type PilotParticipantActivityInsight = {
+  readonly activityDays: number
+  readonly averageHeartRateBpm: number | null
+  readonly contentCategory: "activity_summary"
+  readonly contentVariant: "one_day" | "multiple_days"
+  readonly deleteAfter: string
+  readonly distanceM: number
+  readonly durationS: number
+  readonly id: string
+  readonly isPartialWeek: boolean
+  readonly paceSecondsPerKm: number | null
+  readonly participantProfileId: string
+  readonly programId: string
+  readonly sourceCount: number
+  readonly steps: number
+  readonly templateVersion: "activity-insight-v1"
+  readonly weekEnd: string
+  readonly weekStart: string
+}
+
 export type PilotConsentToggleResult = {
   readonly auditEventId: number | null
   readonly auditEventType: string | null
@@ -397,6 +417,9 @@ export interface PilotGateway {
     participantId: string,
   ): Promise<PilotOperationResult<PilotCoachParticipantDetail>>
   getParticipantRecord(programId: string): Promise<PilotOperationResult<PilotParticipantRecord>>
+  listParticipantActivityInsights(
+    programId: string,
+  ): Promise<PilotOperationResult<readonly PilotParticipantActivityInsight[]>>
   getParticipantChange(programId: string): Promise<PilotOperationResult<PilotParticipantChange>>
   getParticipantFeed(programId: string): Promise<PilotOperationResult<PilotParticipantFeed>>
   getParticipantToday(programId: string): Promise<PilotOperationResult<PilotParticipantToday>>
@@ -756,6 +779,74 @@ const ParticipantRecordSnapshotSchema = z
   })
   .strict()
   .readonly()
+const ParticipantActivityInsightRowsSchema = z
+  .array(
+    z
+      .object({
+        activity_days: z.number().int().min(1).max(7),
+        activity_insight_sources: z
+          .array(
+            z
+              .object({ count: z.number().int().positive().max(500) })
+              .strict()
+              .readonly(),
+          )
+          .length(1)
+          .readonly(),
+        average_heart_rate_bpm: z.number().finite().min(20).max(250).nullable(),
+        content_category: z.literal("activity_summary"),
+        content_variant: z.enum(["one_day", "multiple_days"]),
+        delete_after: z.iso.datetime({ offset: true }),
+        distance_m: z.number().finite().nonnegative(),
+        duration_s: z.number().finite().nonnegative(),
+        id: z.uuid(),
+        is_partial_week: z.boolean(),
+        pace_seconds_per_km: z.number().finite().positive().nullable(),
+        participant_profile_id: z.uuid(),
+        program_id: z.uuid(),
+        steps: z.number().int().nonnegative(),
+        template_version: z.literal("activity-insight-v1"),
+        week_end: z.iso.date(),
+        week_start: z.iso.date(),
+      })
+      .strict()
+      .readonly()
+      .superRefine((row, context) => {
+        const weekStart = new Date(`${row.week_start}T00:00:00.000Z`)
+        if (weekStart.getUTCDay() !== 1) {
+          context.addIssue({
+            code: "custom",
+            path: ["week_start"],
+            message: "week must start on Monday",
+          })
+          return
+        }
+        weekStart.setUTCDate(weekStart.getUTCDate() + 7)
+        if (weekStart.toISOString().slice(0, 10) !== row.week_end) {
+          context.addIssue({
+            code: "custom",
+            path: ["week_end"],
+            message: "week must span seven days",
+          })
+        }
+      }),
+  )
+  .readonly()
+const ParticipantMembershipSnapshotSchema = z.discriminatedUnion("status", [
+  z
+    .object({
+      membership_id: z.uuid(),
+      program_id: z.uuid(),
+      role: z.enum(["participant", "coach", "admin", "stakeholder"]),
+      status: z.literal("active"),
+    })
+    .strict()
+    .readonly(),
+  z
+    .object({ status: z.enum(["nonmember", "suspended", "withdrawn", "expired_link", "deleted"]) })
+    .strict()
+    .readonly(),
+])
 const ConsentToggleResultSchema = z
   .object({
     audit_event_id: z.number().int().positive().nullable().optional(),
@@ -1150,6 +1241,26 @@ async function authenticatedSession(
   return result.value === null ? failure("signed_out") : { ok: true, value: result.value }
 }
 
+async function authenticatedParticipantSession(
+  client: PilotClient,
+  programId: string,
+): Promise<PilotOperationResult<PilotClientSession>> {
+  const session = await authenticatedSession(client)
+  if (!session.ok) return session
+  const membership = await client.invokeRpc({
+    args: {},
+    function: "bootstrap_pilot_membership",
+  })
+  if (!membership.ok) return rpcFailure(membership)
+  const parsed = ParticipantMembershipSnapshotSchema.safeParse(membership.value)
+  if (!parsed.success) return failure("invalid_response")
+  if (parsed.data.status !== "active") return failure(parsed.data.status)
+  if (parsed.data.role !== "participant" || parsed.data.program_id !== programId) {
+    return failure("nonmember")
+  }
+  return session
+}
+
 function consentResult(
   result: Awaited<ReturnType<PilotClient["execute"]>>,
 ): PilotOperationResult<PilotConsentReference> {
@@ -1378,6 +1489,45 @@ function participantRecordFromSnapshot(
   return {
     recordedOn: snapshot.recorded_on,
     supportedExtensions: snapshot.supported_extensions,
+  }
+}
+
+function participantActivityInsightsFromRows(
+  rows: z.infer<typeof ParticipantActivityInsightRowsSchema>,
+  participantProfileId: string,
+  programId: string,
+): PilotOperationResult<readonly PilotParticipantActivityInsight[]> {
+  let previousWeekStart: string | null = null
+  for (const row of rows) {
+    if (row.participant_profile_id !== participantProfileId || row.program_id !== programId) {
+      return failure("nonmember")
+    }
+    if (previousWeekStart !== null && row.week_start >= previousWeekStart) {
+      return failure("invalid_response")
+    }
+    previousWeekStart = row.week_start
+  }
+  return {
+    ok: true,
+    value: rows.map((row) => ({
+      activityDays: row.activity_days,
+      averageHeartRateBpm: row.average_heart_rate_bpm,
+      contentCategory: row.content_category,
+      contentVariant: row.content_variant,
+      deleteAfter: row.delete_after,
+      distanceM: row.distance_m,
+      durationS: row.duration_s,
+      id: row.id,
+      isPartialWeek: row.is_partial_week,
+      paceSecondsPerKm: row.pace_seconds_per_km,
+      participantProfileId: row.participant_profile_id,
+      programId: row.program_id,
+      sourceCount: row.activity_insight_sources[0]?.count ?? 0,
+      steps: row.steps,
+      templateVersion: row.template_version,
+      weekEnd: row.week_end,
+      weekStart: row.week_start,
+    })),
   }
 }
 
@@ -1925,6 +2075,25 @@ export function createPilotGateway(client: PilotClient): PilotGateway {
       return parsed.success
         ? { ok: true, value: participantRecordFromSnapshot(parsed.data) }
         : failure("invalid_response", false)
+    },
+    listParticipantActivityInsights: async (programId) => {
+      const session = await authenticatedParticipantSession(client, programId)
+      if (!session.ok) return session
+      const result = await client.execute({
+        columns:
+          "id,program_id,participant_profile_id,week_start,week_end,template_version,content_category,content_variant,distance_m,duration_s,steps,pace_seconds_per_km,activity_days,average_heart_rate_bpm,is_partial_week,delete_after,activity_insight_sources(count)",
+        filters: {
+          participant_profile_id: session.value.userId,
+          program_id: programId,
+        },
+        kind: "list_participant_activity_insights",
+        order: { ascending: false, column: "week_start" },
+        table: "activity_insights",
+      })
+      if (!result.ok) return executeFailure(result)
+      const parsed = ParticipantActivityInsightRowsSchema.safeParse(result.value)
+      if (!parsed.success) return failure("invalid_response", false)
+      return participantActivityInsightsFromRows(parsed.data, session.value.userId, programId)
     },
     getParticipantChange: async (programId) => {
       const session = await authenticatedSession(client)

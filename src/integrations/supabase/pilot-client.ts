@@ -192,6 +192,17 @@ export type PilotDataRequest =
       readonly table: "audit_events"
     }
   | {
+      readonly columns: "id,program_id,participant_profile_id,week_start,week_end,template_version,content_category,content_variant,distance_m,duration_s,steps,pace_seconds_per_km,activity_days,average_heart_rate_bpm,is_partial_week,delete_after,activity_insight_sources(count)"
+      readonly filters: {
+        readonly participant_profile_id: string
+        readonly program_id: string
+      }
+      readonly kind: "list_participant_activity_insights"
+      readonly order: { readonly ascending: false; readonly column: "week_start" }
+      readonly signal?: AbortSignal
+      readonly table: "activity_insights"
+    }
+  | {
       readonly kind: "publish_assignment"
       readonly returning: "id"
       readonly signal?: AbortSignal

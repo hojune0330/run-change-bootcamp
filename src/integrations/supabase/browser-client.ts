@@ -185,6 +185,19 @@ export function createBrowserSupabaseClient(config: SupabasePublicConfig): Pilot
             ? { ok: true, value: result.data }
             : providerFailure(result.error)
         }
+        case "list_participant_activity_insights": {
+          let query = supabase
+            .from(request.table)
+            .select(request.columns)
+            .eq("participant_profile_id", request.filters.participant_profile_id)
+            .eq("program_id", request.filters.program_id)
+            .order(request.order.column, { ascending: request.order.ascending })
+          if (request.signal !== undefined) query = query.abortSignal(request.signal)
+          const result = await query
+          return result.error === null
+            ? { ok: true, value: result.data }
+            : providerFailure(result.error)
+        }
         case "publish_assignment": {
           let query = supabase.from(request.table).insert(request.values).select(request.returning)
           if (request.signal !== undefined) query = query.abortSignal(request.signal)

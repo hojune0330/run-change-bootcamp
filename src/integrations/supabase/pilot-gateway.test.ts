@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import type { PilotClientResult } from "./pilot-client.ts"
 import {
   createPilotGateway,
   type PilotClient,
@@ -23,6 +24,7 @@ const PROGRAM_ID = "66666666-6666-4666-8666-666666666666"
 const SESSION_ID = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee"
 const SUBMISSION_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 const UPLOAD_ID = "abababab-abab-4bab-8bab-abababababab"
+const INSIGHT_ID = "abababab-abab-4bab-8bab-abababababac"
 
 const DASHBOARD_SNAPSHOT = {
   feedback_queue: [
@@ -402,7 +404,37 @@ type FakePilotClient = PilotClient & {
   readonly signOutCalls: number[]
 }
 
-function createFakeClient(session: PilotClientSession | null): FakePilotClient {
+type FakePilotClientOptions = {
+  readonly activityInsightResult?: PilotClientResult<unknown>
+  readonly membershipSnapshot?: unknown
+}
+
+const ACTIVITY_INSIGHT_ROWS = [
+  {
+    activity_days: 2,
+    activity_insight_sources: [{ count: 3 }],
+    average_heart_rate_bpm: 138,
+    content_category: "activity_summary",
+    content_variant: "multiple_days",
+    delete_after: "2026-12-31T00:00:00.000Z",
+    distance_m: 8000,
+    duration_s: 3000,
+    id: INSIGHT_ID,
+    is_partial_week: false,
+    pace_seconds_per_km: 375,
+    participant_profile_id: AUTH_USER_ID,
+    program_id: PROGRAM_ID,
+    steps: 9200,
+    template_version: "activity-insight-v1",
+    week_end: "2026-09-07",
+    week_start: "2026-08-31",
+  },
+] as const
+
+function createFakeClient(
+  session: PilotClientSession | null,
+  options: FakePilotClientOptions = {},
+): FakePilotClient {
   const consentToggleResult: { value: unknown } = {
     value: { audit_event_id: AUDIT_ID, audit_event_type: "consent.granted", status: "enabled" },
   }
@@ -450,6 +482,8 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
               },
             ],
           }
+        case "list_participant_activity_insights":
+          return options.activityInsightResult ?? { ok: true, value: ACTIVITY_INSIGHT_ROWS }
         case "publish_announcement":
           return { ok: true, value: { id: NOTICE_ID } }
         case "publish_assignment":
@@ -475,7 +509,7 @@ function createFakeClient(session: PilotClientSession | null): FakePilotClient {
         case "bootstrap_pilot_membership":
           return {
             ok: true,
-            value: {
+            value: options.membershipSnapshot ?? {
               membership_id: MEMBERSHIP_ID,
               program_id: PROGRAM_ID,
               role: "participant",
@@ -1886,5 +1920,109 @@ describe("Supabase pilot gateway", () => {
     // Then
     expect(result).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
     expect(client.rpcRequests).toEqual([])
+  })
+
+  it("lists only the authenticated participant's ordered insight headers and source counts", async () => {
+    // Given
+    const client = createFakeClient({ email: "runner@example.com", userId: AUTH_USER_ID })
+    const gateway = createPilotGateway(client)
+
+    // When
+    const result = await gateway.listParticipantActivityInsights(PROGRAM_ID)
+
+    // Then
+    expect(result).toEqual({
+      ok: true,
+      value: [
+        {
+          activityDays: 2,
+          averageHeartRateBpm: 138,
+          contentCategory: "activity_summary",
+          contentVariant: "multiple_days",
+          deleteAfter: "2026-12-31T00:00:00.000Z",
+          distanceM: 8000,
+          durationS: 3000,
+          id: INSIGHT_ID,
+          isPartialWeek: false,
+          paceSecondsPerKm: 375,
+          participantProfileId: AUTH_USER_ID,
+          programId: PROGRAM_ID,
+          sourceCount: 3,
+          steps: 9200,
+          templateVersion: "activity-insight-v1",
+          weekEnd: "2026-09-07",
+          weekStart: "2026-08-31",
+        },
+      ],
+    })
+    expect(client.dataRequests).toEqual([
+      {
+        columns:
+          "id,program_id,participant_profile_id,week_start,week_end,template_version,content_category,content_variant,distance_m,duration_s,steps,pace_seconds_per_km,activity_days,average_heart_rate_bpm,is_partial_week,delete_after,activity_insight_sources(count)",
+        filters: { participant_profile_id: AUTH_USER_ID, program_id: PROGRAM_ID },
+        kind: "list_participant_activity_insights",
+        order: { ascending: false, column: "week_start" },
+        table: "activity_insights",
+      },
+    ])
+  })
+
+  it("fails closed for signed-out, nonparticipant, malformed, foreign, and provider responses", async () => {
+    // Given
+    const signedOutClient = createFakeClient(null)
+    const signedOutGateway = createPilotGateway(signedOutClient)
+    const nonparticipantClient = createFakeClient(
+      { email: "runner@example.com", userId: AUTH_USER_ID },
+      { membershipSnapshot: { status: "nonmember" } },
+    )
+    const nonparticipantGateway = createPilotGateway(nonparticipantClient)
+    const malformedClient = createFakeClient(
+      { email: "runner@example.com", userId: AUTH_USER_ID },
+      { activityInsightResult: { ok: true, value: [{ week_start: "2026-08-31" }] } },
+    )
+    const malformedGateway = createPilotGateway(malformedClient)
+    const foreignClient = createFakeClient(
+      { email: "runner@example.com", userId: AUTH_USER_ID },
+      {
+        activityInsightResult: {
+          ok: true,
+          value: ACTIVITY_INSIGHT_ROWS.map((row) => ({
+            ...row,
+            participant_profile_id: GRANTEE_ID,
+          })),
+        },
+      },
+    )
+    const foreignGateway = createPilotGateway(foreignClient)
+    const providerClient = createFakeClient(
+      { email: "runner@example.com", userId: AUTH_USER_ID },
+      {
+        activityInsightResult: {
+          error: {
+            kind: "provider",
+            message: "activity insight query failed",
+            retryable: false,
+          },
+          ok: false,
+        },
+      },
+    )
+    const providerGateway = createPilotGateway(providerClient)
+
+    // When
+    const signedOut = await signedOutGateway.listParticipantActivityInsights(PROGRAM_ID)
+    const nonparticipant = await nonparticipantGateway.listParticipantActivityInsights(PROGRAM_ID)
+    const malformed = await malformedGateway.listParticipantActivityInsights(PROGRAM_ID)
+    const foreign = await foreignGateway.listParticipantActivityInsights(PROGRAM_ID)
+    const provider = await providerGateway.listParticipantActivityInsights(PROGRAM_ID)
+
+    // Then
+    expect(signedOut).toEqual({ ok: false, error: { kind: "signed_out", retryable: false } })
+    expect(nonparticipant).toEqual({ ok: false, error: { kind: "nonmember", retryable: false } })
+    expect(malformed).toEqual({ ok: false, error: { kind: "invalid_response", retryable: false } })
+    expect(foreign).toEqual({ ok: false, error: { kind: "nonmember", retryable: false } })
+    expect(provider).toEqual({ ok: false, error: { kind: "provider_error", retryable: false } })
+    expect(signedOutClient.dataRequests).toEqual([])
+    expect(nonparticipantClient.dataRequests).toEqual([])
   })
 })

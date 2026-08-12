@@ -107,6 +107,9 @@ function createGateway(session: PilotSessionState = { kind: "signed_out" }): Pil
         supportedExtensions: ["csv", "fit", "gpx", "tcx", "xml", "json"],
       },
     })),
+    listParticipantActivityInsights: vi.fn<PilotGateway["listParticipantActivityInsights"]>(
+      async () => ({ ok: true, value: [] }),
+    ),
     getParticipantToday: vi.fn<PilotGateway["getParticipantToday"]>(async () => ({
       ok: true,
       value: {
