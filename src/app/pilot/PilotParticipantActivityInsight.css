@@ -31,6 +31,15 @@
   word-break: keep-all;
 }
 
+.pilot-activity-insight__keep-together {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.pilot-activity-insight__retry {
+  margin-block-start: var(--space-4);
+}
+
 .pilot-activity-insight__provenance {
   display: grid;
   gap: var(--space-3);

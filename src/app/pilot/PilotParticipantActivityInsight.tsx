@@ -130,7 +130,8 @@ export function PilotParticipantActivityInsight({
           <Card eyebrow="검토된 가져오기" title="아직 표시할 요약이 없어요" tone="muted">
             <p className="pilot-activity-insight__state">
               검토된 가져오기 기록이 없어요.
-              <br /> 데이터 처리 동의가 철회되면 요약은 표시되지 않아요.
+              <br /> 데이터 처리 동의가 철회되면 요약은{" "}
+              <span className="pilot-activity-insight__keep-together">표시되지 않아요.</span>
             </p>
           </Card>
         </div>
@@ -149,19 +150,15 @@ export function PilotParticipantActivityInsight({
     case "error":
       return (
         <div className="pilot-activity-insight">
-          <Card
-            action={
-              <Button onClick={() => setRevision((current) => current + 1)} variant="secondary">
-                다시 시도
-              </Button>
-            }
-            eyebrow="검토된 활동 기록"
-            title="활동 요약을 불러오지 못했어요"
-            tone="muted"
-          >
+          <Card eyebrow="검토된 활동 기록" title="활동 요약을 불러오지 못했어요" tone="muted">
             <p className="pilot-activity-insight__state" role="alert">
               잠시 후 다시 확인해 주세요. 이전 요약은 화면에 남기지 않아요.
             </p>
+            <div className="pilot-activity-insight__retry">
+              <Button onClick={() => setRevision((current) => current + 1)} variant="secondary">
+                다시 시도
+              </Button>
+            </div>
           </Card>
         </div>
       )
@@ -216,7 +213,8 @@ export function PilotParticipantActivityInsight({
               <p className="pilot-activity-insight__disclosure">
                 출처는 검토된 가져오기 기록입니다.
                 <br /> 계정 동기화 데이터가 아닙니다.
-                <br /> 이 요약은 의료 조언이나 건강 상태 판단을 제공하지 않습니다.
+                <br /> 이 요약은 의료 조언이나 건강 상태 판단을{" "}
+                <span className="pilot-activity-insight__keep-together">제공하지 않습니다.</span>
               </p>
             </div>
           </Card>

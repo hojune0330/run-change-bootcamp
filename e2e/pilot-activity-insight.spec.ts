@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, type Locator, test } from "@playwright/test"
 import {
   authenticateParticipant,
   type InsightScenario,
@@ -19,6 +19,31 @@ const SCENARIOS: readonly InsightScenario[] = [
   "stale_empty",
 ]
 const { PILOT_ACTIVITY_INSIGHT_E2E } = process.env
+
+async function expectSemanticTextGroupOnOneLine(locator: Locator, text: string) {
+  const geometry = await locator.evaluate((element, semanticText) => {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+    while (walker.nextNode()) {
+      const node = walker.currentNode
+      const start = node.textContent?.indexOf(semanticText) ?? -1
+      if (start < 0) continue
+      const range = document.createRange()
+      range.setStart(node, start)
+      range.setEnd(node, start + semanticText.length)
+      return {
+        found: true,
+        lineTops: [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+      }
+    }
+    return { found: false, lineTops: [] }
+  }, text)
+
+  expect(geometry.found, `Expected to find the semantic text group: ${text}`).toBe(true)
+  expect(
+    new Set(geometry.lineTops).size,
+    `Expected the Korean semantic text group to stay on one line: ${text}`,
+  ).toBe(1)
+}
 
 test.describe("private participant activity insight", () => {
   test.skip(PILOT_ACTIVITY_INSIGHT_E2E !== "1", "requires the private pilot build")
@@ -69,6 +94,25 @@ test.describe("private participant activity insight", () => {
         await expect(page.getByRole("alert")).toBeVisible()
       } else {
         await expect(page.getByRole("heading", { name: "활동 요약이 제거되었어요" })).toBeVisible()
+      }
+
+      if (testInfo.project.name === "mobile-375" && scenario === "ready") {
+        await expectSemanticTextGroupOnOneLine(
+          page.locator(".pilot-activity-insight__disclosure"),
+          "제공하지 않습니다",
+        )
+      }
+      if (testInfo.project.name === "mobile-375" && scenario === "empty") {
+        await expectSemanticTextGroupOnOneLine(
+          page.locator(".pilot-activity-insight__state"),
+          "표시되지 않아요",
+        )
+      }
+      if (testInfo.project.name === "mobile-375" && scenario === "malformed") {
+        await expectSemanticTextGroupOnOneLine(
+          page.getByRole("heading", { name: "활동 요약을 불러오지 못했어요" }),
+          "불러오지 못했어요",
+        )
       }
       await expect(page.locator("body")).not.toContainText(
         /Garmin|OAuth|MCP|FIT|provider_identity|raw_payload|source_row_id|182|146|377|18,200/i,
