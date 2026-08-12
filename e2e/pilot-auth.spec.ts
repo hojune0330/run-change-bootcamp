@@ -202,13 +202,14 @@ async function phraseLineCount(page: Page, phrase: string): Promise<number> {
 }
 
 function requiredEvidenceDir(): string {
-  const evidenceDir = process.env["PILOT_AUTH_EVIDENCE_DIR"]
+  const { PILOT_AUTH_EVIDENCE_DIR: evidenceDir } = process.env
   if (evidenceDir === undefined) throw new Error("PILOT_AUTH_EVIDENCE_DIR is required")
   return evidenceDir
 }
+const { PILOT_AUTH_E2E } = process.env
 
 test.describe("invite-only pilot auth browser boundary", () => {
-  test.skip(process.env["PILOT_AUTH_E2E"] !== "1", "requires the dedicated pilot build")
+  test.skip(PILOT_AUTH_E2E !== "1", "requires the dedicated pilot build")
 
   test.beforeEach(async ({ page }) => {
     await page.goto("./")

@@ -37,14 +37,11 @@ function reactDevToolsPlugin(): Plugin {
 export default defineConfig(({ command, mode }) => {
   const basePath = mode === PAGES_BUILD_MODE ? PAGES_BASE_PATH : LOCAL_BASE_PATH
   const environment = loadEnv(mode, process.cwd(), "")
+  const { VITE_DISABLE_REACT_DEVTOOLS, VITE_ENABLE_DEV_TOOLS } = environment
   const devToolsEnabled = shouldLoadReactDevTools({
     DEV: command === "serve",
-    ...(environment["VITE_DISABLE_REACT_DEVTOOLS"] === undefined
-      ? {}
-      : { VITE_DISABLE_REACT_DEVTOOLS: environment["VITE_DISABLE_REACT_DEVTOOLS"] }),
-    ...(environment["VITE_ENABLE_DEV_TOOLS"] === undefined
-      ? {}
-      : { VITE_ENABLE_DEV_TOOLS: environment["VITE_ENABLE_DEV_TOOLS"] }),
+    ...(VITE_DISABLE_REACT_DEVTOOLS === undefined ? {} : { VITE_DISABLE_REACT_DEVTOOLS }),
+    ...(VITE_ENABLE_DEV_TOOLS === undefined ? {} : { VITE_ENABLE_DEV_TOOLS }),
   })
 
   return {

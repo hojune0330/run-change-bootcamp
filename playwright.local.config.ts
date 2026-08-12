@@ -1,7 +1,7 @@
 import { defineConfig } from "@playwright/test"
 import { sharedPlaywrightConfig } from "./playwright.config.ts"
 
-const serverPort = process.env["PLAYWRIGHT_PORT"] ?? "4173"
+const { PLAYWRIGHT_PORT: serverPort = "4173" } = process.env
 const serverOrigin = `http://127.0.0.1:${serverPort}`
 
 export default defineConfig(sharedPlaywrightConfig, {

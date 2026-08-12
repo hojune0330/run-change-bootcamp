@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test"
 
-const serverPort = process.env["PLAYWRIGHT_PORT"] ?? "4191"
+const { PLAYWRIGHT_PORT: serverPort = "4191" } = process.env
 
 // biome-ignore lint/style/noDefaultExport: Playwright discovers configuration through a default export.
 export default defineConfig({

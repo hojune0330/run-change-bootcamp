@@ -6,7 +6,7 @@ import {
 } from "./pilot-activity-insight-boundary.ts"
 
 function evidenceDir(): string {
-  const directory = process.env["PILOT_ACTIVITY_INSIGHT_EVIDENCE_DIR"]
+  const { PILOT_ACTIVITY_INSIGHT_EVIDENCE_DIR: directory } = process.env
   if (directory === undefined) throw new Error("PILOT_ACTIVITY_INSIGHT_EVIDENCE_DIR is required")
   return directory
 }
@@ -18,9 +18,10 @@ const SCENARIOS: readonly InsightScenario[] = [
   "malformed",
   "stale_empty",
 ]
+const { PILOT_ACTIVITY_INSIGHT_E2E } = process.env
 
 test.describe("private participant activity insight", () => {
-  test.skip(process.env["PILOT_ACTIVITY_INSIGHT_E2E"] !== "1", "requires the private pilot build")
+  test.skip(PILOT_ACTIVITY_INSIGHT_E2E !== "1", "requires the private pilot build")
 
   for (const scenario of SCENARIOS) {
     test(`renders the ${scenario} state without overflow`, async ({ page }, testInfo) => {
