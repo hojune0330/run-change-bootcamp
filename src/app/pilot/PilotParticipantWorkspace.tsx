@@ -29,6 +29,7 @@ import type {
 } from "../../integrations/supabase/pilot-gateway.ts"
 import { AppShell } from "../AppShell.tsx"
 import { PARTICIPANT_HREFS, type ParticipantHref } from "../routes.ts"
+import { PilotParticipantActivityInsight } from "./PilotParticipantActivityInsight.tsx"
 import { importActivityFile } from "./pilot-participant-import.ts"
 import {
   buildParticipantChangeModel,
@@ -311,14 +312,22 @@ export function PilotParticipantWorkspace({
           </p>
         ) : null}
         {activeHref === "/today" ? (
-          <TodayScreen
-            brand={brand}
-            handlers={{
-              onCompleteAssignment: (id) => completeAssignment(id),
-            }}
-            onRetry={() => void retry()}
-            state={todayState}
-          />
+          <>
+            <TodayScreen
+              brand={brand}
+              handlers={{
+                onCompleteAssignment: (id) => completeAssignment(id),
+              }}
+              onRetry={() => void retry()}
+              state={todayState}
+            />
+            <PilotParticipantActivityInsight
+              gateway={gateway}
+              key={`${membership.programId}:${membership.userId}`}
+              participantProfileId={membership.userId}
+              programId={membership.programId}
+            />
+          </>
         ) : null}
         {activeHref === "/feed" ? (
           <FeedScreen
