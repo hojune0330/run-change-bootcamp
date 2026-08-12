@@ -1,9 +1,9 @@
 import { z } from "zod"
-import {
-  AcceptedStructuredImportRecordSchema,
-  type AcceptedStructuredImportRecord,
-} from "./imports-model"
 import { MembershipIdSchema } from "./ids"
+import {
+  type AcceptedStructuredImportRecord,
+  AcceptedStructuredImportRecordSchema,
+} from "./imports-model"
 import { IsoDateSchema, IsoDateTimeSchema } from "./values"
 
 const SEOUL_TIME_ZONE = "Asia/Seoul" as const
@@ -29,7 +29,8 @@ export const ACTIVITY_INSIGHT_TEMPLATES = {
 } as const
 
 export type ActivityInsightTemplateKey = keyof typeof ACTIVITY_INSIGHT_TEMPLATES
-export type ActivityInsightTemplate = (typeof ACTIVITY_INSIGHT_TEMPLATES)[ActivityInsightTemplateKey]
+export type ActivityInsightTemplate =
+  (typeof ACTIVITY_INSIGHT_TEMPLATES)[ActivityInsightTemplateKey]
 
 export type ActivityInsightProvenance = {
   readonly recordId: AcceptedStructuredImportRecord["id"]
@@ -188,7 +189,9 @@ export function buildWeeklyActivityInsight(input: unknown): WeeklyActivityInsigh
     recordIds.add(record.id)
     duplicateHmacs.add(record.serverDuplicateHmac)
     if (record.programId !== request.programId || record.participantId !== request.participantId) {
-      throw new ActivityInsightInputError("activity record belongs to another participant or program")
+      throw new ActivityInsightInputError(
+        "activity record belongs to another participant or program",
+      )
     }
     if (record.qualityFlags.includes("duplicate_suspected")) {
       throw new ActivityInsightInputError("duplicate-suspected activity records are not eligible")
@@ -227,17 +230,12 @@ export function buildWeeklyActivityInsight(input: unknown): WeeklyActivityInsigh
   ].toSorted()
   const asOfMs = parseInstant(asOf)
   const isCurrentWeek = asOfMs >= periodStartMs && asOfMs < periodEndMs
-  const elapsedDays = isCurrentWeek
-    ? calendarDaysBetween(weekStart, seoulCalendarDate(asOfMs))
-    : 7
+  const elapsedDays = isCurrentWeek ? calendarDaysBetween(weekStart, seoulCalendarDate(asOfMs)) : 7
   const isPartialWeek = isCurrentWeek && elapsedDays < 7
   const activityDays = activityDates.length
-  const templateKey: ActivityInsightTemplateKey =
-    activityDays === 1 ? "one_day" : "multiple_days"
-  const paceSecondsPerKm =
-    distanceM > 0 && durationS > 0 ? durationS / (distanceM / 1_000) : null
-  const averageHeartRateBpm =
-    weightedDurationS > 0 ? weightedHeartRate / weightedDurationS : null
+  const templateKey: ActivityInsightTemplateKey = activityDays === 1 ? "one_day" : "multiple_days"
+  const paceSecondsPerKm = distanceM > 0 && durationS > 0 ? durationS / (distanceM / 1_000) : null
+  const averageHeartRateBpm = weightedDurationS > 0 ? weightedHeartRate / weightedDurationS : null
 
   return {
     kind: "weekly_activity_insight",

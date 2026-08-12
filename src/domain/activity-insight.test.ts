@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  ACTIVITY_INSIGHT_TEMPLATES,
-  buildWeeklyActivityInsight,
-} from "./activity-insight"
+import { ACTIVITY_INSIGHT_TEMPLATES, buildWeeklyActivityInsight } from "./activity-insight"
 
 const participantId = "membership-participant-01"
 const programId = "program-plus-run-2026"
@@ -169,14 +166,13 @@ describe("deterministic weekly activity insight", () => {
   })
 
   it("exposes fixed activity-summary template variants", () => {
-    expect(Object.keys(ACTIVITY_INSIGHT_TEMPLATES)).toEqual([
-      "one_day",
-      "multiple_days",
-    ])
-    expect(Object.values(ACTIVITY_INSIGHT_TEMPLATES).map(({ category, variant }) => ({
-      category,
-      variant,
-    }))).toEqual([
+    expect(Object.keys(ACTIVITY_INSIGHT_TEMPLATES)).toEqual(["one_day", "multiple_days"])
+    expect(
+      Object.values(ACTIVITY_INSIGHT_TEMPLATES).map(({ category, variant }) => ({
+        category,
+        variant,
+      })),
+    ).toEqual([
       { category: "activity_summary", variant: "one_day" },
       { category: "activity_summary", variant: "multiple_days" },
     ])
@@ -221,12 +217,14 @@ describe("deterministic weekly activity insight", () => {
     expect(() =>
       buildWeeklyActivityInsight({
         ...insightRequest,
-        records: [{
-          ...acceptedRecord,
-          id: "import-artifact-foreign-program",
-          programId: "program-foreign-2026",
-          serverDuplicateHmac: "e".repeat(64),
-        }],
+        records: [
+          {
+            ...acceptedRecord,
+            id: "import-artifact-foreign-program",
+            programId: "program-foreign-2026",
+            serverDuplicateHmac: "e".repeat(64),
+          },
+        ],
       }),
     ).toThrow()
     expect(() =>
