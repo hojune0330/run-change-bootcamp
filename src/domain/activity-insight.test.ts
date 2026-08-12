@@ -70,6 +70,9 @@ describe("deterministic weekly activity insight", () => {
       content: {
         category: "activity_summary",
         variant: "one_day",
+        title: "활동 기록 요약",
+        summary: "이번 주 활동 기록이 하루 확인됐어요.",
+        nextStep: "현재 리듬에 맞춰 다음 활동을 기록해 보세요.",
       },
     })
   })
@@ -162,6 +165,9 @@ describe("deterministic weekly activity insight", () => {
     expect(result?.content).toMatchObject({
       category: "activity_summary",
       variant: "multiple_days",
+      title: "활동 기록 요약",
+      summary: "이번 주 활동 기록이 여러 날 확인됐어요.",
+      nextStep: "현재 리듬에 맞춰 다음 활동을 기록해 보세요.",
     })
   })
 
