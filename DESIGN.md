@@ -184,6 +184,14 @@ Only `transform` and `opacity` animate. There is no decorative entrance motion i
 foundation shell. Under `prefers-reduced-motion: reduce`, transitions and animations use
 near-zero duration and smooth scrolling is disabled.
 
+### Motion insight
+
+The participant preview may reveal a synthetic weekly insight while scrolling, but only at
+`min-width: 64rem` with no reduced-motion preference. It uses a transform with the local
+`--motion-insight-entry-offset` token while text stays at full contrast; it never pins or covers
+the application shell. At every other size or preference, all insight content is immediately
+static and readable.
+
 ## 7. Depth & Surface
 
 Strategy: borders plus tonal shift.

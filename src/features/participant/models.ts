@@ -35,12 +35,25 @@ export type BacklogAssignmentViewModel = {
   readonly status: "pending" | "completed"
 }
 
+export type MotionInsightChapterViewModel = {
+  readonly label: string
+  readonly value: string
+  readonly description: string
+}
+
+export type MotionInsightViewModel = {
+  readonly sourceLabel: string
+  readonly periodLabel: string
+  readonly chapters: readonly MotionInsightChapterViewModel[]
+}
+
 export type TodayViewModel = {
   readonly displayName: string
   readonly dateLabel: string
   readonly announcement?: AnnouncementViewModel
   readonly assignment?: AssignmentViewModel
   readonly backlog?: readonly BacklogAssignmentViewModel[]
+  readonly motionInsight?: MotionInsightViewModel
   readonly streakDays?: number
 }
 

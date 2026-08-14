@@ -76,6 +76,118 @@
   overflow-wrap: anywhere;
 }
 
+.motion-insight {
+  --motion-insight-entry-offset: var(--space-3);
+
+  background: var(--color-surface-muted);
+  border: var(--border-width) solid var(--color-border);
+  display: grid;
+  gap: var(--space-4);
+  min-inline-size: 0;
+  padding: var(--space-5);
+}
+
+.motion-insight__header {
+  align-items: start;
+  display: flex;
+  gap: var(--space-4);
+  justify-content: space-between;
+  min-inline-size: 0;
+}
+
+.motion-insight__header h2,
+.motion-insight__eyebrow,
+.motion-insight__source,
+.motion-insight__period,
+.motion-insight__chapters p,
+.motion-insight__chapters strong,
+.motion-insight__chapters span {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.motion-insight__header h2 {
+  font-size: var(--font-size-h2);
+  line-height: 1.35;
+}
+
+.motion-insight__eyebrow,
+.motion-insight__source,
+.motion-insight__period,
+.motion-insight__chapters p {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  letter-spacing: 0.04em;
+}
+
+.motion-insight__source {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  flex: 0 1 auto;
+  padding: var(--space-1) var(--space-2);
+  text-align: end;
+}
+
+.motion-insight__chapters {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.motion-insight__chapters li {
+  border-block-start: var(--border-width) solid var(--color-border);
+  display: grid;
+  gap: var(--space-2);
+  min-inline-size: 0;
+  padding-block-start: var(--space-3);
+}
+
+.motion-insight__chapters strong {
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-metric);
+  line-height: 1;
+}
+
+.motion-insight__chapters span {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+@media (max-width: 30rem) {
+  .motion-insight__header {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .motion-insight__source {
+    text-align: start;
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 48rem) {
+  .motion-insight {
+    min-block-size: 17rem;
+  }
+
+  .motion-insight__chapters {
+    grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-insight__chapters li {
+    transform: none;
+  }
+}
+
 .participant-stack > p,
 .participant-state-copy,
 .participant-empty-copy,
