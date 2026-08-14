@@ -1,6 +1,10 @@
 # GitHub Pages deployment
 
-Status as of 2026-08-01: [PR #1](https://github.com/hojune0330/run-change-bootcamp/pull/1)
+## Current public deployment
+
+The public seeded preview is deployed from `main` at source SHA [`51cc142`](https://github.com/hojune0330/run-change-bootcamp/commit/51cc142ea8174ec4e8a9f488f607549ec52d3d35) (`51cc142ea8174ec4e8a9f488f607549ec52d3d35`). The successful [Pages run 31398439150](https://github.com/hojune0330/run-change-bootcamp/actions/runs/31398439150) produced that deployment. The current `agent/athlete-time-resume` branch is an unpublished local branch and is not represented by the public preview.
+
+Historical status as of 2026-08-01: [PR #1](https://github.com/hojune0330/run-change-bootcamp/pull/1)
 merged the Pages workflow. Its first `main` run,
 [30679484294](https://github.com/hojune0330/run-change-bootcamp/actions/runs/30679484294),
 failed during runtime setup because it selected Node.js 22.12.0 while pnpm 11.9.0 requires a
@@ -16,7 +20,7 @@ Deployment `5702409847` has successful status `16217793869`.
 
 Repository: `hojune0330/run-change-bootcamp`
 
-The current public seeded preview is deployed at:
+The public seeded preview is deployed at:
 
 `https://hojune0330.github.io/run-change-bootcamp/`
 
@@ -65,6 +69,7 @@ fallback are emitted below `/run-change-bootcamp/`. No runtime or deployment sec
 ## Deployment status
 
 The `Deploy to GitHub Pages` workflow publishes the `dist` artifact through the existing Pages
-configuration and exposes the final URL through the `github-pages` deployment environment. The
-successful PR #3 run and deployment listed above are the current status; future changes still need
-the same workflow gate before they replace the public preview.
+configuration and exposes the final URL through the `github-pages` deployment environment. Future
+changes, including the unpublished local branch, still need the same workflow gate before they
+replace the public preview. Hosted Supabase, real accounts, and real participant data are not
+operational as part of this deployment.
