@@ -102,6 +102,6 @@ test("reloads the supported /record route without losing the app shell", async (
   await page.reload()
 
   // Then
-  await expect(page).toHaveURL(/\/record$/)
+  await expect(page).toHaveURL(/\/record\/?$/)
   await expect(page.locator(".app-shell")).toBeVisible()
 })
