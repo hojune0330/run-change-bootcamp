@@ -58,6 +58,21 @@ jobs:
       - name: Run responsive POC UX gate
         run: pnpm test:e2e:poc:artifact
 
+      - name: Build private pilot activity-insight artifact
+        env:
+          VITE_APP_RUNTIME: pilot
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_boundary_test_ci
+          VITE_SUPABASE_URL: https://boundary-test.supabase.co
+        run: |
+          mkdir -p .artifacts/pilot-activity-insight-evidence
+          pnpm build:local
+
+      - name: Run private pilot activity-insight gate
+        env:
+          PILOT_ACTIVITY_INSIGHT_E2E: "1"
+          PILOT_ACTIVITY_INSIGHT_EVIDENCE_DIR: .artifacts/pilot-activity-insight-evidence
+        run: pnpm test:e2e:pilot-activity-insight:artifact
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:

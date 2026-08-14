@@ -158,10 +158,23 @@ function freshDatabase(connection, logName) {
   applyMigrations(connection, logName)
 }
 
+function runActivityInsightSuite(connection, logName) {
+  sqlFile(connection, "activity_insight_fixture.sql", logName, "ACTIVITY_INSIGHT_FIXTURE_READY")
+  sqlFile(
+    connection,
+    "activity_insight_acceptance_test.sql",
+    logName,
+    "ACTIVITY_INSIGHT_ACCEPTANCE_PASS",
+  )
+  sqlFile(connection, "activity_insight_happy_test.sql", logName, "ACTIVITY_INSIGHT_HAPPY_PASS")
+  sqlFile(connection, "activity_insight_hostile_test.sql", logName, "ACTIVITY_INSIGHT_HOSTILE_PASS")
+}
+
 function runFreshSuite() {
   withDatabase("fresh_schema", "fresh-install.log", (connection, logName) => {
     freshDatabase(connection, logName)
     sqlFile(connection, "security_schema_test.sql", logName, "SECURITY_SCHEMA_PASS")
+    runActivityInsightSuite(connection, logName)
   })
   withDatabase("measurement", "preserve-measurement.log", (connection, logName) => {
     freshDatabase(connection, logName)
@@ -209,6 +222,7 @@ function runUpgradeSuite() {
       logName,
       "SECURITY_FUNCTION_BOUNDARY_PASS",
     )
+    runActivityInsightSuite(connection, logName)
   })
   note("SECURITY_UPGRADE_SUITE_PASS")
 }

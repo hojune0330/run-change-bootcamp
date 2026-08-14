@@ -143,9 +143,8 @@ export function parseScreenshotDraftRequest(input: unknown): ParseResult<Screens
   if (!isRecord(input) || !hasOnlyKeys(input, ["uploadId", "idempotencyKey", "deidentified"])) {
     return { ok: false, error: "invalid_request" }
   }
-  const uploadId = input["uploadId"]
-  const idempotencyKey = input["idempotencyKey"]
-  if (!isUuid(uploadId) || !isIdempotencyKey(idempotencyKey) || input["deidentified"] !== true) {
+  const { uploadId, idempotencyKey, deidentified } = input
+  if (!isUuid(uploadId) || !isIdempotencyKey(idempotencyKey) || deidentified !== true) {
     return { ok: false, error: "invalid_request" }
   }
   return { ok: true, value: { uploadId, idempotencyKey, deidentified: true } }
@@ -155,8 +154,7 @@ export function parseFeedbackDraftRequest(input: unknown): ParseResult<FeedbackD
   if (!isRecord(input) || !hasOnlyKeys(input, ["submissionId", "idempotencyKey"])) {
     return { ok: false, error: "invalid_request" }
   }
-  const submissionId = input["submissionId"]
-  const idempotencyKey = input["idempotencyKey"]
+  const { submissionId, idempotencyKey } = input
   if (!isUuid(submissionId) || !isIdempotencyKey(idempotencyKey)) {
     return { ok: false, error: "invalid_request" }
   }
@@ -167,9 +165,7 @@ export function parseFeedbackApprovalRequest(input: unknown): ParseResult<Feedba
   if (!isRecord(input) || !hasOnlyKeys(input, ["feedbackId", "decision", "note"])) {
     return { ok: false, error: "invalid_request" }
   }
-  const feedbackId = input["feedbackId"]
-  const decision = input["decision"]
-  const note = input["note"]
+  const { feedbackId, decision, note } = input
   if (!isUuid(feedbackId) || (decision !== "approved" && decision !== "rejected")) {
     return { ok: false, error: "invalid_request" }
   }

@@ -4,18 +4,19 @@ PLUS Run 부트캠프 PoC는 8주 러닝 부트캠프 운영을 위해 만든 �
 
 이 저장소는 제품 검증용 스냅샷입니다. 공개 상태와 데이터 경계는 아래 공개 시드 프리뷰 및 데이터·개인정보·AI 안전 섹션을 기준으로 합니다.
 
-## 2026-08-04 POC 보고 상태
+## 2026-08-15 현재 기준선
 
 - 클라이언트 보고 범위와 데모 순서는 [PLUS Run 클라이언트 보고용 POC](docs/PLUS-RUN-POC-REPORT.md)에 정리했습니다.
-- 현재 로컬 후보는 타입·테스트·PostgreSQL 17.10 보안 계약과 초대 전용 인증 브라우저 시나리오를 통과했습니다.
-- 공개 프리뷰에는 이번 POC의 배포 산출물이 반영되어 있습니다. 현재 배포 source SHA는 [`d8d3d24c`](https://github.com/hojune0330/run-change-bootcamp/commit/d8d3d24c08d758011f127271c4d7bc419f84dd4a)이며, [Pages 배포 run 30888076982](https://github.com/hojune0330/run-change-bootcamp/actions/runs/30888076982)가 2026-08-04에 성공했습니다.
-- 호스팅 서비스와 실제 계정은 연결하지 않았으며, 운영 승인 전 실제 직원 초대를 활성화하지 않습니다.
+- 공개 프리뷰의 기준선은 배포된 `main`입니다. 현재 통합 브랜치의 변경 사항은 아직 Pages에 배포되지 않았습니다. Node.js `v22.23.2`와 pnpm `11.9.0`에서 typecheck, unit/integration/deployment 테스트, lint, build, 전체 브라우저 gate를 통과했으며, PostgreSQL 17.10 보안 gate는 로컬 `psql` 런타임 부재로 필수 PR CI에서 확인합니다.
+- 공개 프리뷰는 배포된 `main`의 source SHA [`51cc142`](https://github.com/hojune0330/run-change-bootcamp/commit/51cc142ea8174ec4e8a9f488f607549ec52d3d35)에서 생성되었고, [Pages 배포 run 31398439150](https://github.com/hojune0330/run-change-bootcamp/actions/runs/31398439150)가 성공했습니다.
+- 호스팅 Supabase와 실제 계정·데이터는 연결하지 않았으며, 운영 승인 전 실제 직원 초대를 활성화하지 않습니다.
 
 ## V3 공개 상태: PLUS Run POC 공개 프리뷰
 
 - `V3`는 이 저장소의 현재 공개 시드 프리뷰 문서 상태를 뜻하며, `T9 프로덕션 파일럿`(실제 운영 데이터와 서비스를 연결하는 후속 단계)과는 별도입니다.
 - 공개 POC 프리뷰: <https://hojune0330.github.io/run-change-bootcamp/>
-- 현재 공개 source: [`d8d3d24c`](https://github.com/hojune0330/run-change-bootcamp/commit/d8d3d24c08d758011f127271c4d7bc419f84dd4a) · [배포 기록](https://github.com/hojune0330/run-change-bootcamp/actions/runs/30888076982)
+- 현재 공개 source: [`51cc142`](https://github.com/hojune0330/run-change-bootcamp/commit/51cc142ea8174ec4e8a9f488f607549ec52d3d35) (full SHA `51cc142ea8174ec4e8a9f488f607549ec52d3d35`) · [배포 기록](https://github.com/hojune0330/run-change-bootcamp/actions/runs/31398439150)
+- 위 공개 프리뷰에는 배포된 `main`만 반영되며, 현재 통합 브랜치의 변경 사항은 아직 포함되지 않습니다.
 - 배포 기록과 직접 경로의 HTTP 404/SPA 동작은 [GitHub Pages 배포 문서](docs/github-pages.md)에서 확인할 수 있습니다.
 - 공개 URL은 운영 계정이나 배포된 백엔드와 연결되지 않은 브라우저 로컬 프리뷰입니다. 입력값·파일 처리·리셋 범위는 아래 데이터·개인정보·AI 안전 섹션에 정리합니다.
 
@@ -23,15 +24,16 @@ PLUS Run 부트캠프 PoC는 8주 러닝 부트캠프 운영을 위해 만든 �
 
 | 표현 | 이 저장소에서 뜻하는 범위 | 현재 상태 |
 |---|---|---|
-| 정적 계약 확인(static contract checked) | 타입, 단위/통합 테스트, SQL/RLS 계약을 로컬에서 검사 | 확인됨 |
-| 로컬 런타임(local runtime) | Node 22 브라우저 프리뷰와 PostgreSQL 17.10 보안 시나리오를 로컬 프로세스로 실행 | POC 후보 확인됨 |
-| 호스팅 프리뷰(hosted preview) | GitHub Pages의 공개 POC 데모 | 배포됨; source `d8d3d24c` · Pages run 30888076982 |
-| 파일럿 준비(pilot ready) | 호스팅 Supabase, 실제 인증 설정, 마이그레이션/RLS, 운영 계정 시나리오까지 검증 | 기반 확인됨; 호스팅·운영 승인은 아직 |
+| 정적 계약 확인(static contract checked) | 타입, 단위/통합 테스트, SQL/RLS 계약을 로컬에서 검사 | Node 22.23.2/pnpm 11.9.0에서 typecheck·unit/integration/deployment·lint·build·전체 브라우저 gate 통과; PostgreSQL 17.10 보안은 필수 PR CI |
+| 로컬 런타임(local runtime) | Node 22 브라우저 프리뷰와 PostgreSQL 17.10 보안 시나리오를 로컬 프로세스로 실행 | Node 22.23.2/pnpm 11.9.0 브라우저 gate 통과; PostgreSQL 17.10 보안은 로컬 `psql` 부재로 PR CI에서 확인 |
+| 호스팅 프리뷰(hosted preview) | GitHub Pages의 공개 POC 데모 | 배포된 `main` source `51cc142` · Pages run 31398439150; 통합 브랜치는 미배포 |
+| 파일럿 준비(pilot ready) | 호스팅 Supabase, 실제 인증 설정, 마이그레이션/RLS, 운영 계정 시나리오까지 검증 | 호스팅·실제 계정·운영 데이터는 아직 미검증 |
 
-이번 POC 후보는 파일럿 모드의 설정 차단, 초대 전용 이메일 로그인, 역할 라우팅, 로그아웃,
-세션 무효화와 동의·감사 데이터 게이트웨이 계약을 로컬에서 확인했습니다. 실제 자격 증명,
-이메일 전달이나 호스팅 Supabase를 검증했다는 뜻은 아니며, 파일럿 화면에도 운영 데이터
-연결이 준비 단계라고 명시합니다.
+공개 `main`/기존 POC 기록은 파일럿 모드의 설정 차단, 초대 전용 이메일 로그인, 역할 라우팅,
+로그아웃, 세션 무효화와 동의·감사 데이터 게이트웨이 계약의 확인 범위를 담습니다. 현재
+통합 브랜치에서는 위 Node/type/test/lint/build/브라우저 gate를 통과했지만, PostgreSQL 17.10
+보안 gate는 필수 PR CI에서 확인해야 합니다. 이는 실제 자격 증명·이메일 전달이나 호스팅
+Supabase를 검증했다는 뜻이 아닙니다. 파일럿 화면에는 운영 데이터 연결이 준비 단계라고 명시합니다.
 
 ## 주요 기능
 

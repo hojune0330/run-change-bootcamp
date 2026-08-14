@@ -79,16 +79,18 @@ function isSupportedPublicKey(value: string): boolean {
 
   const header = parseJwtObject(encodedHeader)
   const payload = parseJwtObject(encodedPayload)
+  const { alg, typ } = header ?? {}
   if (
     encodedHeader !== LEGACY_JWT_HEADER_SEGMENT ||
-    header?.["alg"] !== "HS256" ||
-    header?.["typ"] !== "JWT" ||
+    alg !== "HS256" ||
+    typ !== "JWT" ||
     payload === undefined
   ) {
     return false
   }
 
-  return PUBLIC_LEGACY_JWT_ROLES.some((role) => role === payload["role"])
+  const { role: payloadRole } = payload
+  return PUBLIC_LEGACY_JWT_ROLES.some((role) => role === payloadRole)
 }
 
 const SupabaseUrlSchema = z

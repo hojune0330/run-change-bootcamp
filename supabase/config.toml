@@ -13,6 +13,9 @@ secrets = "env(SEND_EMAIL_HOOK_SECRET)"
 [functions.screenshot-to-metric-draft]
 verify_jwt = true
 
+[functions.accept-activity-import]
+verify_jwt = true
+
 [functions.draft-feedback]
 verify_jwt = true
 

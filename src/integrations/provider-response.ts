@@ -44,11 +44,7 @@ function isMetricUnit(value: unknown): value is string {
 
 function parseMetric(input: unknown): MetricDraft | null {
   if (!isRecord(input)) return null
-  const metricType = input["metricType"]
-  const value = input["value"]
-  const unit = input["unit"]
-  const observedAt = input["observedAt"]
-  const confidence = input["confidence"]
+  const { metricType, value, unit, observedAt, confidence } = input
   if (!isMetricType(metricType) || !isMetricUnit(unit)) return null
   if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1_000_000_000) {
     return null
@@ -73,10 +69,13 @@ function parseMetric(input: unknown): MetricDraft | null {
 export function parseMetricDraftOutput(
   input: unknown,
 ): { readonly ok: true; readonly value: readonly MetricDraft[] } | ProviderResponseError {
-  if (!isRecord(input) || !Array.isArray(input["metrics"])) {
+  if (!isRecord(input)) {
     return { ok: false, error: "invalid_provider_response" }
   }
-  const rawMetrics = input["metrics"]
+  const { metrics: rawMetrics } = input
+  if (!Array.isArray(rawMetrics)) {
+    return { ok: false, error: "invalid_provider_response" }
+  }
   if (rawMetrics.length < 1 || rawMetrics.length > 10) {
     return { ok: false, error: "invalid_provider_response" }
   }
@@ -93,8 +92,7 @@ export function parseFeedbackDraftOutput(
   input: unknown,
 ): { readonly ok: true; readonly value: FeedbackDraft } | ProviderResponseError {
   if (!isRecord(input)) return { ok: false, error: "invalid_provider_response" }
-  const draftText = input["draftText"]
-  const classification = input["classification"]
+  const { draftText, classification } = input
   if (typeof draftText !== "string" || draftText.trim().length < 1 || draftText.length > 2_000) {
     return { ok: false, error: "invalid_provider_response" }
   }

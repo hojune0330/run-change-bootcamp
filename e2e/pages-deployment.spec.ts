@@ -52,7 +52,8 @@ test("serves the app for every known direct route with a Pages-base hard load", 
 
       // Then
       expect(directResponse.status(), href).toBe(301)
-      expect(directResponse.headers()["location"], href).toBe(`${pagesBasePath}${href.slice(1)}/`)
+      const { location: redirectLocation } = directResponse.headers()
+      expect(redirectLocation, href).toBe(`${pagesBasePath}${href.slice(1)}/`)
       expect(renderedResponse?.status() ?? 0, href).toBe(200)
       expect(await renderedResponse?.text(), href).toContain('id="root"')
       await expect(page).toHaveURL(new RegExp(`${href}/$`))
@@ -130,12 +131,14 @@ test("varies compressed assets by content encoding and revalidates each represen
   // Then
   const gzipHeaders = gzipResponse.headers()
   const identityHeaders = identityResponse.headers()
-  const gzipTag = z.string().parse(gzipHeaders["etag"])
-  const identityTag = z.string().parse(identityHeaders["etag"])
+  const { etag: gzipEtag, vary: gzipVary } = gzipHeaders
+  const { etag: identityEtag, vary: identityVary } = identityHeaders
+  const gzipTag = z.string().parse(gzipEtag)
+  const identityTag = z.string().parse(identityEtag)
   expect(gzipHeaders["content-encoding"]).toBe("gzip")
-  expect(gzipHeaders["vary"]).toBe("Accept-Encoding")
+  expect(gzipVary).toBe("Accept-Encoding")
   expect(identityHeaders["content-encoding"]).toBeUndefined()
-  expect(identityHeaders["vary"]).toBe("Accept-Encoding")
+  expect(identityVary).toBe("Accept-Encoding")
   expect(gzipTag).not.toBe(identityTag)
 
   const wrongRepresentation = await request.get(scriptSource, {

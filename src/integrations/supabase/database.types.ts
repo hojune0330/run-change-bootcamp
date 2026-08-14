@@ -65,24 +65,28 @@ export type Database = {
           {
             foreignKeyName: "accepted_structured_imports_accepted_by_fkey"
             columns: ["accepted_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "accepted_structured_imports_consent_grant_id_fkey"
             columns: ["consent_grant_id"]
+            isOneToOne: false
             referencedRelation: "consent_grants"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "accepted_structured_imports_participant_profile_id_fkey"
             columns: ["participant_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "accepted_structured_imports_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -147,6 +151,7 @@ export type Database = {
           {
             foreignKeyName: "account_deletion_requests_profile_id_fkey"
             columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -187,7 +192,110 @@ export type Database = {
           {
             foreignKeyName: "account_deletion_tombstones_request_id_fkey"
             columns: ["request_id"]
+            isOneToOne: true
             referencedRelation: "account_deletion_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_insight_sources: {
+        Row: {
+          accepted_structured_import_id: string
+          activity_insight_id: string
+        }
+        Insert: {
+          accepted_structured_import_id: string
+          activity_insight_id: string
+        }
+        Update: {
+          accepted_structured_import_id?: string
+          activity_insight_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_insight_sources_accepted_structured_import_id_fkey"
+            columns: ["accepted_structured_import_id"]
+            isOneToOne: false
+            referencedRelation: "accepted_structured_imports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_insight_sources_activity_insight_id_fkey"
+            columns: ["activity_insight_id"]
+            isOneToOne: false
+            referencedRelation: "activity_insights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_insights: {
+        Row: {
+          activity_days: number
+          average_heart_rate_bpm: number | null
+          content_category: string
+          content_variant: string
+          delete_after: string
+          distance_m: number
+          duration_s: number
+          id: string
+          is_partial_week: boolean
+          pace_seconds_per_km: number | null
+          participant_profile_id: string
+          program_id: string
+          steps: number
+          template_version: string
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          activity_days: number
+          average_heart_rate_bpm?: number | null
+          content_category: string
+          content_variant: string
+          delete_after: string
+          distance_m: number
+          duration_s: number
+          id?: string
+          is_partial_week: boolean
+          pace_seconds_per_km?: number | null
+          participant_profile_id: string
+          program_id: string
+          steps: number
+          template_version: string
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          activity_days?: number
+          average_heart_rate_bpm?: number | null
+          content_category?: string
+          content_variant?: string
+          delete_after?: string
+          distance_m?: number
+          duration_s?: number
+          id?: string
+          is_partial_week?: boolean
+          pace_seconds_per_km?: number | null
+          participant_profile_id?: string
+          program_id?: string
+          steps?: number
+          template_version?: string
+          week_end?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_insights_participant_profile_id_fkey"
+            columns: ["participant_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_insights_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
             referencedColumns: ["id"]
           },
         ]
@@ -212,6 +320,7 @@ export type Database = {
           {
             foreignKeyName: "aggregate_retention_deadlines_snapshot_id_fkey"
             columns: ["snapshot_id"]
+            isOneToOne: true
             referencedRelation: "measurement_report_snapshots"
             referencedColumns: ["id"]
           },
@@ -270,6 +379,7 @@ export type Database = {
           {
             foreignKeyName: "ai_control_attestations_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -322,12 +432,14 @@ export type Database = {
           {
             foreignKeyName: "ai_requests_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "ai_requests_requested_by_fkey"
             columns: ["requested_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -339,6 +451,7 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          pinned: boolean
           program_id: string
           published_at: string | null
           title: string
@@ -348,6 +461,7 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          pinned?: boolean
           program_id: string
           published_at?: string | null
           title: string
@@ -357,6 +471,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          pinned?: boolean
           program_id?: string
           published_at?: string | null
           title?: string
@@ -365,12 +480,14 @@ export type Database = {
           {
             foreignKeyName: "announcements_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "announcements_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -432,36 +549,42 @@ export type Database = {
           {
             foreignKeyName: "anonymous_faq_copies_participant_opt_in_id_fkey"
             columns: ["participant_opt_in_id"]
+            isOneToOne: true
             referencedRelation: "faq_participant_opt_ins"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "anonymous_faq_copies_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "anonymous_faq_copies_published_by_profile_id_fkey"
             columns: ["published_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "anonymous_faq_copies_source_proposal_id_fkey"
             columns: ["source_proposal_id"]
+            isOneToOne: true
             referencedRelation: "faq_redaction_proposals"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "anonymous_faq_copies_source_thread_id_program_id_fkey"
             columns: ["source_thread_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "private_question_threads"
             referencedColumns: ["id", "program_id"]
           },
           {
             foreignKeyName: "anonymous_faq_copies_unpublished_by_profile_id_fkey"
             columns: ["unpublished_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -511,6 +634,7 @@ export type Database = {
           {
             foreignKeyName: "assessment_attempt_conditions_attempt_id_fkey"
             columns: ["attempt_id"]
+            isOneToOne: true
             referencedRelation: "assessment_attempts"
             referencedColumns: ["id"]
           },
@@ -569,24 +693,28 @@ export type Database = {
           {
             foreignKeyName: "assessment_attempts_assessment_session_id_program_id_proto_fkey"
             columns: ["assessment_session_id", "program_id", "protocol_version_id"]
+            isOneToOne: false
             referencedRelation: "assessment_sessions"
             referencedColumns: ["id", "program_id", "protocol_version_id"]
           },
           {
             foreignKeyName: "assessment_attempts_enrollment_id_program_id_fkey"
             columns: ["enrollment_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "program_enrollments"
             referencedColumns: ["id", "program_id"]
           },
           {
             foreignKeyName: "assessment_attempts_original_attempt_id_fkey"
             columns: ["original_attempt_id"]
+            isOneToOne: false
             referencedRelation: "assessment_attempts"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "assessment_attempts_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -630,18 +758,21 @@ export type Database = {
           {
             foreignKeyName: "assessment_protocol_versions_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "assessment_protocol_versions_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "assessment_protocol_versions_template_code_template_versio_fkey"
             columns: ["template_code", "template_version"]
+            isOneToOne: false
             referencedRelation: "measurement_protocol_templates"
             referencedColumns: ["code", "version"]
           },
@@ -679,12 +810,14 @@ export type Database = {
           {
             foreignKeyName: "assessment_sessions_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "assessment_sessions_protocol_version_id_program_id_fkey"
             columns: ["protocol_version_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "assessment_protocol_versions"
             referencedColumns: ["id", "program_id"]
           },
@@ -731,18 +864,21 @@ export type Database = {
           {
             foreignKeyName: "assignments_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "assignments_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "assignments_session_id_fkey"
             columns: ["session_id"]
+            isOneToOne: false
             referencedRelation: "program_sessions"
             referencedColumns: ["id"]
           },
@@ -789,18 +925,21 @@ export type Database = {
           {
             foreignKeyName: "audit_events_actor_profile_id_fkey"
             columns: ["actor_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "audit_events_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "audit_events_subject_profile_id_fkey"
             columns: ["subject_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -883,24 +1022,28 @@ export type Database = {
           {
             foreignKeyName: "consent_grants_participant_profile_id_fkey"
             columns: ["participant_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "consent_grants_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "consent_grants_recipient_profile_id_fkey"
             columns: ["recipient_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "consent_grants_withdrawn_by_profile_id_fkey"
             columns: ["withdrawn_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -950,12 +1093,14 @@ export type Database = {
           {
             foreignKeyName: "data_uploads_owner_profile_id_fkey"
             columns: ["owner_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "data_uploads_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -990,6 +1135,7 @@ export type Database = {
           {
             foreignKeyName: "deletion_job_alerts_request_id_fkey"
             columns: ["request_id"]
+            isOneToOne: false
             referencedRelation: "account_deletion_requests"
             referencedColumns: ["id"]
           },
@@ -1042,24 +1188,28 @@ export type Database = {
           {
             foreignKeyName: "faq_participant_opt_ins_participant_profile_id_fkey"
             columns: ["participant_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "faq_participant_opt_ins_proposal_id_fkey"
             columns: ["proposal_id"]
+            isOneToOne: true
             referencedRelation: "faq_redaction_proposals"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "faq_participant_opt_ins_thread_id_program_id_fkey"
             columns: ["thread_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "private_question_threads"
             referencedColumns: ["id", "program_id"]
           },
           {
             foreignKeyName: "faq_participant_opt_ins_withdrawn_by_profile_id_fkey"
             columns: ["withdrawn_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1115,18 +1265,21 @@ export type Database = {
           {
             foreignKeyName: "faq_redaction_proposals_proposed_by_profile_id_fkey"
             columns: ["proposed_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "faq_redaction_proposals_reviewed_by_profile_id_fkey"
             columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "faq_redaction_proposals_thread_id_program_id_fkey"
             columns: ["thread_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "private_question_threads"
             referencedColumns: ["id", "program_id"]
           },
@@ -1191,18 +1344,21 @@ export type Database = {
           {
             foreignKeyName: "feed_comments_author_profile_id_fkey"
             columns: ["author_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feed_comments_moderated_by_profile_id_fkey"
             columns: ["moderated_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feed_comments_post_id_fkey"
             columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "feed_posts"
             referencedColumns: ["id"]
           },
@@ -1279,24 +1435,28 @@ export type Database = {
           {
             foreignKeyName: "feed_posts_author_profile_id_fkey"
             columns: ["author_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feed_posts_moderated_by_profile_id_fkey"
             columns: ["moderated_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feed_posts_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feed_posts_submission_id_fkey"
             columns: ["submission_id"]
+            isOneToOne: false
             referencedRelation: "homework_submissions"
             referencedColumns: ["id"]
           },
@@ -1325,12 +1485,14 @@ export type Database = {
           {
             foreignKeyName: "feed_reactions_author_profile_id_fkey"
             columns: ["author_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feed_reactions_post_id_fkey"
             columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "feed_posts"
             referencedColumns: ["id"]
           },
@@ -1365,12 +1527,14 @@ export type Database = {
           {
             foreignKeyName: "feed_share_events_actor_profile_id_fkey"
             columns: ["actor_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feed_share_events_post_id_fkey"
             columns: ["post_id"]
+            isOneToOne: false
             referencedRelation: "feed_posts"
             referencedColumns: ["id"]
           },
@@ -1435,48 +1599,56 @@ export type Database = {
           {
             foreignKeyName: "feedback_items_ai_control_attestation_id_fkey"
             columns: ["ai_control_attestation_id"]
+            isOneToOne: false
             referencedRelation: "ai_control_attestations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feedback_items_ai_request_id_fkey"
             columns: ["ai_request_id"]
+            isOneToOne: true
             referencedRelation: "ai_requests"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feedback_items_approved_by_fkey"
             columns: ["approved_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feedback_items_consent_grant_id_fkey"
             columns: ["consent_grant_id"]
+            isOneToOne: false
             referencedRelation: "consent_grants"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feedback_items_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feedback_items_participant_id_fkey"
             columns: ["participant_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feedback_items_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feedback_items_submission_id_fkey"
             columns: ["submission_id"]
+            isOneToOne: false
             referencedRelation: "homework_submissions"
             referencedColumns: ["id"]
           },
@@ -1514,18 +1686,21 @@ export type Database = {
           {
             foreignKeyName: "feedback_review_events_consent_grant_id_fkey"
             columns: ["consent_grant_id"]
+            isOneToOne: false
             referencedRelation: "consent_grants"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feedback_review_events_feedback_id_fkey"
             columns: ["feedback_id"]
+            isOneToOne: false
             referencedRelation: "feedback_items"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "feedback_review_events_reviewer_profile_id_fkey"
             columns: ["reviewer_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1569,12 +1744,14 @@ export type Database = {
           {
             foreignKeyName: "governance_release_statuses_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "governance_release_statuses_protocol_version_id_program_id_fkey"
             columns: ["protocol_version_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "assessment_protocol_versions"
             referencedColumns: ["id", "program_id"]
           },
@@ -1618,18 +1795,21 @@ export type Database = {
           {
             foreignKeyName: "homework_submissions_assignment_id_fkey"
             columns: ["assignment_id"]
+            isOneToOne: false
             referencedRelation: "assignments"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "homework_submissions_participant_id_fkey"
             columns: ["participant_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "homework_submissions_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -1748,18 +1928,21 @@ export type Database = {
           {
             foreignKeyName: "measurement_report_snapshots_governance_release_status_id__fkey"
             columns: ["governance_release_status_id", "program_id", "protocol_version_id"]
+            isOneToOne: false
             referencedRelation: "governance_release_statuses"
             referencedColumns: ["id", "program_id", "protocol_version_id"]
           },
           {
             foreignKeyName: "measurement_report_snapshots_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "measurement_report_snapshots_protocol_version_id_program_i_fkey"
             columns: ["protocol_version_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "assessment_protocol_versions"
             referencedColumns: ["id", "program_id"]
           },
@@ -1812,30 +1995,35 @@ export type Database = {
           {
             foreignKeyName: "metric_consents_consent_grant_id_fkey"
             columns: ["consent_grant_id"]
+            isOneToOne: false
             referencedRelation: "consent_grants"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "metric_consents_grantee_profile_id_fkey"
             columns: ["grantee_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "metric_consents_metric_record_id_fkey"
             columns: ["metric_record_id"]
+            isOneToOne: false
             referencedRelation: "metric_records"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "metric_consents_named_coach_grant_id_fkey"
             columns: ["named_coach_grant_id"]
+            isOneToOne: false
             referencedRelation: "named_coach_grants"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "metric_consents_owner_profile_id_fkey"
             columns: ["owner_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1903,30 +2091,35 @@ export type Database = {
           {
             foreignKeyName: "metric_records_ai_request_fk"
             columns: ["ai_request_id"]
+            isOneToOne: false
             referencedRelation: "ai_requests"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "metric_records_owner_profile_id_fkey"
             columns: ["owner_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "metric_records_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "metric_records_submission_id_fkey"
             columns: ["submission_id"]
+            isOneToOne: false
             referencedRelation: "homework_submissions"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "metric_records_upload_id_fkey"
             columns: ["upload_id"]
+            isOneToOne: false
             referencedRelation: "data_uploads"
             referencedColumns: ["id"]
           },
@@ -1979,30 +2172,35 @@ export type Database = {
           {
             foreignKeyName: "named_coach_grants_coach_profile_id_fkey"
             columns: ["coach_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "named_coach_grants_consent_grant_id_fkey"
             columns: ["consent_grant_id"]
+            isOneToOne: true
             referencedRelation: "consent_grants"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "named_coach_grants_participant_profile_id_fkey"
             columns: ["participant_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "named_coach_grants_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "named_coach_grants_withdrawn_by_profile_id_fkey"
             columns: ["withdrawn_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2052,12 +2250,14 @@ export type Database = {
           {
             foreignKeyName: "notification_digest_queue_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "notification_digest_queue_recipient_profile_id_fkey"
             columns: ["recipient_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2107,6 +2307,7 @@ export type Database = {
           {
             foreignKeyName: "notification_outbox_notification_id_fkey"
             columns: ["notification_id"]
+            isOneToOne: false
             referencedRelation: "notification_records"
             referencedColumns: ["id"]
           },
@@ -2147,6 +2348,7 @@ export type Database = {
           {
             foreignKeyName: "notification_preferences_participant_profile_id_fkey"
             columns: ["participant_profile_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2223,12 +2425,14 @@ export type Database = {
           {
             foreignKeyName: "notification_records_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "notification_records_recipient_profile_id_fkey"
             columns: ["recipient_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2269,12 +2473,14 @@ export type Database = {
           {
             foreignKeyName: "organization_memberships_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "organization_memberships_profile_id_fkey"
             columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2300,22 +2506,22 @@ export type Database = {
       }
       pilot_auth_lifecycle_signals: {
         Row: {
-          changed_at: string
           change_kind: string
+          changed_at: string
           profile_id: string
           program_id: string
           revision: number
         }
         Insert: {
-          changed_at?: string
           change_kind: string
+          changed_at?: string
           profile_id: string
           program_id: string
           revision?: number
         }
         Update: {
-          changed_at?: string
           change_kind?: string
+          changed_at?: string
           profile_id?: string
           program_id?: string
           revision?: number
@@ -2369,18 +2575,21 @@ export type Database = {
           {
             foreignKeyName: "private_question_answers_author_profile_id_fkey"
             columns: ["author_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "private_question_answers_deleted_by_profile_id_fkey"
             columns: ["deleted_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "private_question_answers_thread_id_program_id_fkey"
             columns: ["thread_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "private_question_threads"
             referencedColumns: ["id", "program_id"]
           },
@@ -2451,30 +2660,35 @@ export type Database = {
           {
             foreignKeyName: "private_question_threads_archived_by_profile_id_fkey"
             columns: ["archived_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "private_question_threads_closed_by_profile_id_fkey"
             columns: ["closed_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "private_question_threads_deleted_by_profile_id_fkey"
             columns: ["deleted_by_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "private_question_threads_participant_profile_id_fkey"
             columns: ["participant_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "private_question_threads_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -2536,12 +2750,14 @@ export type Database = {
           {
             foreignKeyName: "program_attrition_events_enrollment_id_program_id_fkey"
             columns: ["enrollment_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "program_enrollments"
             referencedColumns: ["id", "program_id"]
           },
           {
             foreignKeyName: "program_attrition_events_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -2594,24 +2810,28 @@ export type Database = {
           {
             foreignKeyName: "program_enrollments_invitation_id_fkey"
             columns: ["invitation_id"]
+            isOneToOne: false
             referencedRelation: "program_invitations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "program_enrollments_profile_id_fkey"
             columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "program_enrollments_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "program_enrollments_program_membership_id_program_id_profi_fkey"
             columns: ["program_membership_id", "program_id", "profile_id"]
+            isOneToOne: false
             referencedRelation: "program_memberships"
             referencedColumns: ["id", "program_id", "profile_id"]
           },
@@ -2664,12 +2884,14 @@ export type Database = {
           {
             foreignKeyName: "program_invitations_invitee_profile_id_fkey"
             columns: ["invitee_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "program_invitations_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -2710,12 +2932,14 @@ export type Database = {
           {
             foreignKeyName: "program_memberships_profile_id_fkey"
             columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "program_memberships_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -2750,6 +2974,7 @@ export type Database = {
           {
             foreignKeyName: "program_sessions_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -2796,12 +3021,14 @@ export type Database = {
           {
             foreignKeyName: "programs_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "programs_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -2845,6 +3072,7 @@ export type Database = {
           {
             foreignKeyName: "push_subscriptions_profile_id_fkey"
             columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -2885,6 +3113,7 @@ export type Database = {
           {
             foreignKeyName: "report_aggregate_cells_snapshot_id_fkey"
             columns: ["snapshot_id"]
+            isOneToOne: false
             referencedRelation: "measurement_report_snapshots"
             referencedColumns: ["id"]
           },
@@ -2940,18 +3169,21 @@ export type Database = {
           {
             foreignKeyName: "resting_heart_rate_readings_enrollment_id_program_id_fkey"
             columns: ["enrollment_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "program_enrollments"
             referencedColumns: ["id", "program_id"]
           },
           {
             foreignKeyName: "resting_heart_rate_readings_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "resting_heart_rate_readings_protocol_version_id_program_id_fkey"
             columns: ["protocol_version_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "assessment_protocol_versions"
             referencedColumns: ["id", "program_id"]
           },
@@ -3028,24 +3260,28 @@ export type Database = {
           {
             foreignKeyName: "screenshot_draft_jobs_ai_control_attestation_id_fkey"
             columns: ["ai_control_attestation_id"]
+            isOneToOne: false
             referencedRelation: "ai_control_attestations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "screenshot_draft_jobs_consent_grant_id_fkey"
             columns: ["consent_grant_id"]
+            isOneToOne: false
             referencedRelation: "consent_grants"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "screenshot_draft_jobs_participant_profile_id_fkey"
             columns: ["participant_profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "screenshot_draft_jobs_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -3089,12 +3325,14 @@ export type Database = {
           {
             foreignKeyName: "session_adherence_evidence_prescription_id_fkey"
             columns: ["prescription_id"]
+            isOneToOne: false
             referencedRelation: "training_prescriptions"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "session_adherence_evidence_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -3126,6 +3364,7 @@ export type Database = {
           {
             foreignKeyName: "tenant_configs_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -3157,12 +3396,14 @@ export type Database = {
           {
             foreignKeyName: "time_trial_decisions_decided_by_fkey"
             columns: ["decided_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "time_trial_decisions_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: true
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -3203,18 +3444,21 @@ export type Database = {
           {
             foreignKeyName: "training_prescriptions_enrollment_id_program_id_fkey"
             columns: ["enrollment_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "program_enrollments"
             referencedColumns: ["id", "program_id"]
           },
           {
             foreignKeyName: "training_prescriptions_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "training_prescriptions_session_id_program_id_fkey"
             columns: ["session_id", "program_id"]
+            isOneToOne: false
             referencedRelation: "program_sessions"
             referencedColumns: ["id", "program_id"]
           },
@@ -3251,6 +3495,7 @@ export type Database = {
           {
             foreignKeyName: "anonymous_faq_copies_program_id_fkey"
             columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -3258,6 +3503,27 @@ export type Database = {
       }
     }
     Functions: {
+      admin_activity_snapshot: {
+        Args: { target_program: string }
+        Returns: Json
+      }
+      admin_members_snapshot: {
+        Args: { target_program: string }
+        Returns: Json
+      }
+      admin_overview_snapshot: {
+        Args: { target_program: string }
+        Returns: Json
+      }
+      admin_report_snapshot: { Args: { target_program: string }; Returns: Json }
+      admin_schedule_snapshot: {
+        Args: { target_program: string }
+        Returns: Json
+      }
+      admin_settings_snapshot: {
+        Args: { target_program: string }
+        Returns: Json
+      }
       bootstrap_pilot_membership: { Args: never; Returns: Json }
       cancel_account_deletion: {
         Args: { target_request: string }
@@ -3271,6 +3537,14 @@ export type Database = {
         }
         Returns: Json
       }
+      coach_dashboard_snapshot: {
+        Args: { target_program: string }
+        Returns: Json
+      }
+      coach_participant_detail_snapshot: {
+        Args: { target_participant: string; target_program: string }
+        Returns: Json
+      }
       delete_named_coach_private_answer: {
         Args: { target_answer: string }
         Returns: undefined
@@ -3282,6 +3556,16 @@ export type Database = {
       edit_participant_private_question: {
         Args: { target_question_body: string; target_thread: string }
         Returns: undefined
+      }
+      import_activity_draft: {
+        Args: {
+          draft_records: Json
+          file_name: string
+          file_size: number
+          target_program: string
+          upload_kind: string
+        }
+        Returns: Json
       }
       moderate_feed_comment: {
         Args: {
@@ -3299,9 +3583,40 @@ export type Database = {
         }
         Returns: undefined
       }
+      participant_change_snapshot: {
+        Args: { target_program: string }
+        Returns: Json
+      }
+      participant_feed_snapshot: {
+        Args: { target_program: string }
+        Returns: Json
+      }
+      participant_record_snapshot: {
+        Args: { target_program: string }
+        Returns: Json
+      }
+      participant_set_metric_consent: {
+        Args: { target_enabled: boolean; target_program: string }
+        Returns: Json
+      }
+      participant_today_snapshot: {
+        Args: { target_program: string }
+        Returns: Json
+      }
       publish_anonymous_faq: {
         Args: { target_opt_in: string; target_proposal: string }
         Returns: string
+      }
+      read_named_coach_measurement_details: {
+        Args: { target_participant: string; target_program: string }
+        Returns: {
+          numeric_value: number
+          observed_at: string
+          record_id: string
+          record_kind: string
+          review_status: string
+          unit: string
+        }[]
       }
       read_named_coach_private_question: {
         Args: { target_thread: string }
@@ -3342,6 +3657,32 @@ export type Database = {
           source: string
           unit: string
           verification_status: string
+        }[]
+      }
+      read_named_coach_structured_metrics: {
+        Args: { target_participant: string; target_program: string }
+        Returns: {
+          metric_kind: string
+          numeric_value: number
+          observed_at: string
+          parser_name: string
+          parser_version: string
+          quality_flags: string[]
+          source_family: string
+          source_model: string
+          structured_import_id: string
+          unit: string
+        }[]
+      }
+      read_participant_measurement_details: {
+        Args: { target_program: string }
+        Returns: {
+          numeric_value: number
+          observed_at: string
+          record_id: string
+          record_kind: string
+          review_status: string
+          unit: string
         }[]
       }
       read_participant_private_question: {
@@ -3385,6 +3726,35 @@ export type Database = {
           verification_status: string
         }[]
       }
+      read_participant_structured_metrics: {
+        Args: { target_program: string }
+        Returns: {
+          metric_kind: string
+          numeric_value: number
+          observed_at: string
+          parser_name: string
+          parser_version: string
+          quality_flags: string[]
+          source_family: string
+          source_model: string
+          structured_import_id: string
+          unit: string
+        }[]
+      }
+      read_suppressed_report_snapshot: {
+        Args: { target_snapshot: string }
+        Returns: {
+          calculation_version: string
+          column_key: string
+          generated_at: string
+          numeric_value: number
+          participant_count: number
+          row_key: string
+          snapshot_id: string
+          suppressed: boolean
+          suppression_reason: string
+        }[]
+      }
       request_account_deletion: { Args: never; Returns: string }
       review_feedback: {
         Args: {
@@ -3397,6 +3767,10 @@ export type Database = {
       route_named_coach_private_question: {
         Args: { target_routing_status: string; target_thread: string }
         Returns: undefined
+      }
+      save_activity_draft: {
+        Args: { target_program: string; target_upload_id: string }
+        Returns: Json
       }
       soft_delete_feed_comment: {
         Args: { target_comment_id: string }

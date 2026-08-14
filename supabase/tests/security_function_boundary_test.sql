@@ -106,10 +106,11 @@ select pg_temp.assert_true(
     'create_screenshot_draft_job(target_program uuid, target_participant uuid, target_consent uuid, target_attestation uuid, target_idempotency_key text, target_mime_type text, target_byte_length integer)',
     'enqueue_notification_event(target_recipient uuid, target_program uuid, target_category text, target_template text, target_entity_type text, target_entity_id uuid, target_event_key text, target_scheduled_at timestamp with time zone)',
     'finish_screenshot_draft_job(target_job uuid, target_status text, target_error_code text)',
+    'rebuild_activity_insight(target_program uuid, target_participant uuid, target_week_start date, target_accepted_import_ids uuid[])',
     'record_account_deletion_failure(target_request uuid, target_error_code text)',
     'scan_deletion_job_alerts(target_now timestamp with time zone)'
   ],
-  'service worker can execute exactly the lifecycle worker allowlist'
+  'service worker can execute exactly the lifecycle and activity insight allowlist'
 );
 
 select pg_temp.assert_true(

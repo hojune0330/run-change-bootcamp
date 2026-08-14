@@ -6,6 +6,7 @@ import { type BrandConfig, DEFAULT_BRAND } from "../../design/brand-config.ts"
 import { ActionFeedback } from "./ActionFeedback.tsx"
 import { type ActionFeedbackState, rejectedActionFeedback } from "./action-feedback-state.ts"
 import { LoadableBoundary } from "./LoadableBoundary.tsx"
+import { MotionInsight } from "./MotionInsight.tsx"
 import {
   type AssignmentViewModel,
   assertParticipantNever,
@@ -123,6 +124,10 @@ export function TodayScreen({ brand = DEFAULT_BRAND, state, handlers, onRetry }:
               <p className="participant-greeting__date">{model.dateLabel}</p>
               <p className="participant-greeting__name">{model.displayName}, 하나만 완료해요.</p>
             </div>
+
+            {model.motionInsight === undefined ? null : (
+              <MotionInsight insight={model.motionInsight} />
+            )}
 
             {model.streakDays !== undefined && model.streakDays > 0 ? (
               <Card
