@@ -4,7 +4,7 @@ PLUS Run 부트캠프 PoC는 8주 러닝 부트캠프 운영을 위해 만든 �
 
 이 저장소는 제품 검증용 스냅샷입니다. 공개 상태와 데이터 경계는 아래 공개 시드 프리뷰 및 데이터·개인정보·AI 안전 섹션을 기준으로 합니다.
 
-## 2026-08-14 현재 기준선
+## 2026-08-15 현재 기준선
 
 - 클라이언트 보고 범위와 데모 순서는 [PLUS Run 클라이언트 보고용 POC](docs/PLUS-RUN-POC-REPORT.md)에 정리했습니다.
 - 공개 프리뷰의 기준선은 배포된 `main`입니다. 현재 통합 브랜치의 변경 사항은 아직 Pages에 배포되지 않았습니다. Node.js `v22.23.2`와 pnpm `11.9.0`에서 typecheck, unit/integration/deployment 테스트, lint, build, 전체 브라우저 gate를 통과했으며, PostgreSQL 17.10 보안 gate는 로컬 `psql` 런타임 부재로 필수 PR CI에서 확인합니다.
@@ -26,7 +26,7 @@ PLUS Run 부트캠프 PoC는 8주 러닝 부트캠프 운영을 위해 만든 �
 |---|---|---|
 | 정적 계약 확인(static contract checked) | 타입, 단위/통합 테스트, SQL/RLS 계약을 로컬에서 검사 | Node 22.23.2/pnpm 11.9.0에서 typecheck·unit/integration/deployment·lint·build·전체 브라우저 gate 통과; PostgreSQL 17.10 보안은 필수 PR CI |
 | 로컬 런타임(local runtime) | Node 22 브라우저 프리뷰와 PostgreSQL 17.10 보안 시나리오를 로컬 프로세스로 실행 | Node 22.23.2/pnpm 11.9.0 브라우저 gate 통과; PostgreSQL 17.10 보안은 로컬 `psql` 부재로 PR CI에서 확인 |
-| 호스팅 프리뷰(hosted preview) | GitHub Pages의 공개 POC 데모 | 배포된 `main` source `51cc142` · Pages run 31398439150; 로컬 브랜치는 미배포 |
+| 호스팅 프리뷰(hosted preview) | GitHub Pages의 공개 POC 데모 | 배포된 `main` source `51cc142` · Pages run 31398439150; 통합 브랜치는 미배포 |
 | 파일럿 준비(pilot ready) | 호스팅 Supabase, 실제 인증 설정, 마이그레이션/RLS, 운영 계정 시나리오까지 검증 | 호스팅·실제 계정·운영 데이터는 아직 미검증 |
 
 공개 `main`/기존 POC 기록은 파일럿 모드의 설정 차단, 초대 전용 이메일 로그인, 역할 라우팅,

@@ -1,6 +1,6 @@
 # PLUS Run 파일럿 배선 로드맵
 
-## 현재 기준선 (2026-08-14)
+## 현재 기준선 (2026-08-15)
 
 - 공개 프리뷰는 배포된 `main` source `51cc142`와 성공한 Pages run `31398439150`을 기준으로 합니다. 현재 통합 브랜치의 변경 사항은 아직 Pages에 배포되지 않았으며 공개 프리뷰에 포함되지 않습니다.
 - Node.js `v22.23.2`와 pnpm `11.9.0`에서 typecheck, unit/integration/deployment 테스트, lint, build, 전체 브라우저 gate를 통과했습니다. PostgreSQL 17.10 보안 gate는 로컬 `psql` 런타임 부재로 필수 PR CI에서 확인합니다.
