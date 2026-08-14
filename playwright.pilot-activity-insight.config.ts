@@ -1,6 +1,7 @@
 import { defineConfig } from "@playwright/test"
 
 const { PLAYWRIGHT_PORT: serverPort = "4191" } = process.env
+const serverOrigin = `http://127.0.0.1:${serverPort}`
 
 // biome-ignore lint/style/noDefaultExport: Playwright discovers configuration through a default export.
 export default defineConfig({
@@ -22,11 +23,16 @@ export default defineConfig({
   testMatch: "pilot-activity-insight.spec.ts",
   timeout: 30_000,
   use: {
-    baseURL: `http://127.0.0.1:${serverPort}/`,
+    baseURL: `${serverOrigin}/`,
     colorScheme: "light",
     locale: "ko-KR",
     screenshot: "only-on-failure",
     trace: "on",
+  },
+  webServer: {
+    command: `pnpm preview:local --host 127.0.0.1 --port ${serverPort}`,
+    reuseExistingServer: false,
+    url: `${serverOrigin}/`,
   },
   workers: 1,
 })

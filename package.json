@@ -25,6 +25,7 @@
     "test:e2e:pages": "pnpm test:e2e",
     "test:e2e:pages:artifact": "playwright test e2e/pages-deployment.spec.ts --project=desktop-1280",
     "test:e2e:poc:artifact": "playwright test e2e/poc-ux.spec.ts",
+    "test:e2e:pilot-activity-insight:artifact": "playwright test --config playwright.pilot-activity-insight.config.ts",
     "test:e2e:local": "pnpm build:local && playwright test --config playwright.local.config.ts",
     "test:db:fresh": "node scripts/security/run-postgres-suite.mjs fresh",
     "test:db:upgrade": "node scripts/security/run-postgres-suite.mjs upgrade",

@@ -2,7 +2,7 @@
 
 ## Current public deployment
 
-The public seeded preview is deployed from `main` at source SHA [`51cc142`](https://github.com/hojune0330/run-change-bootcamp/commit/51cc142ea8174ec4e8a9f488f607549ec52d3d35) (`51cc142ea8174ec4e8a9f488f607549ec52d3d35`). The successful [Pages run 31398439150](https://github.com/hojune0330/run-change-bootcamp/actions/runs/31398439150) produced that deployment. The current `agent/athlete-time-resume` branch is an unpublished local branch and is not represented by the public preview.
+The public seeded preview is deployed from `main` at source SHA [`51cc142`](https://github.com/hojune0330/run-change-bootcamp/commit/51cc142ea8174ec4e8a9f488f607549ec52d3d35) (`51cc142ea8174ec4e8a9f488f607549ec52d3d35`). The successful [Pages run 31398439150](https://github.com/hojune0330/run-change-bootcamp/actions/runs/31398439150) produced that deployment. The current integration branch changes are not deployed to Pages and are not represented by the public preview.
 
 Historical status as of 2026-08-01: [PR #1](https://github.com/hojune0330/run-change-bootcamp/pull/1)
 merged the Pages workflow. Its first `main` run,
@@ -42,6 +42,22 @@ pnpm preview:local  # previews .artifacts/local-preview at /
 pnpm test:e2e:local # rebuilds the local artifact, then runs non-Pages E2E
 ```
 
+The PR build also runs the private pilot activity-insight regression gate against the same isolated
+local artifact. It uses boundary-test public values only, writes screenshots to the ignored
+`.artifacts/pilot-activity-insight-evidence` directory, and covers mobile 375px, tablet 768px,
+desktop 1280px, and desktop 1280px reduced-motion projects:
+
+```bash
+VITE_APP_RUNTIME=pilot \
+VITE_SUPABASE_URL=https://boundary-test.supabase.co \
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_boundary_test_ci \
+pnpm build:local
+mkdir -p .artifacts/pilot-activity-insight-evidence
+PILOT_ACTIVITY_INSIGHT_E2E=1 \
+PILOT_ACTIVITY_INSIGHT_EVIDENCE_DIR=.artifacts/pilot-activity-insight-evidence \
+pnpm test:e2e:pilot-activity-insight:artifact
+```
+
 For static-host fidelity, run `pnpm build` followed by `pnpm serve:pages`. That server returns the
 generated `404.html` with an actual 404 status for the supported direct route
 `/run-change-bootcamp/record`, matching GitHub Pages while still allowing the client router to mount.
@@ -59,9 +75,11 @@ to the direct route or hard-reloading it renders the record UI; the direct-route
 
 Before uploading `dist`, `.github/workflows/deploy-pages.yml` runs the normal Vitest suite, the
 serialized deployment-build suite, type and lint checks, a Pages build, deterministic Playwright
-Chromium installation, and `pnpm test:e2e:pages:artifact`. The browser gate has no conditional skips
-and verifies the Pages base path, the `/record` direct route, PWA registration and scope, emitted
-metadata, compression and representation validators, and traversal/base-path rejection.
+Chromium installation, `pnpm test:e2e:pages:artifact`, the responsive POC gate, and the private
+pilot activity-insight gate. The Pages browser gate has no conditional skips and verifies the Pages
+base path, the `/record` direct route, PWA registration and scope, emitted metadata, compression
+and representation validators, and traversal/base-path rejection. The pilot gate uses a separate
+root-based artifact and does not alter the uploaded Pages `dist` directory.
 
 The PWA manifest, service-worker registration, icon URLs, service-worker scope, and navigation
 fallback are emitted below `/run-change-bootcamp/`. No runtime or deployment secrets are required.
@@ -70,6 +88,6 @@ fallback are emitted below `/run-change-bootcamp/`. No runtime or deployment sec
 
 The `Deploy to GitHub Pages` workflow publishes the `dist` artifact through the existing Pages
 configuration and exposes the final URL through the `github-pages` deployment environment. Future
-changes, including the unpublished local branch, still need the same workflow gate before they
+changes, including the current integration branch, still need the same workflow gate before they
 replace the public preview. Hosted Supabase, real accounts, and real participant data are not
 operational as part of this deployment.
